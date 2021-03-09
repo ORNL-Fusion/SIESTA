@@ -123,7 +123,11 @@ public:
     static siesta_grid<GIRD_CLASS> load(const std::string &restart_file,
                                         const std::string &name) {
         int ncid;
-        nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
+        int status nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
+        if (status) {
+            std::cout << "Failed to open " << restart_file << std::endl;
+            exit(status)
+        }
 
         int varid;
         int nrad;
@@ -149,7 +153,11 @@ public:
     static double load_scalar(const std::string &restart_file,
                               const std::string &name) {
         int ncid;
-        nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
+        int status nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
+        if (status) {
+            std::cout << "Failed to open " << restart_file << std::endl;
+            exit(status)
+        }
 
         int varid;
         double temp;
@@ -172,7 +180,11 @@ public:
     static siesta_fourier<GIRD_CLASS, PARITY> load_fourier(const std::string &restart_file,
                                                            const std::string &name) {
         int ncid;
-        nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
+        int status nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
+        if (status) {
+            std::cout << "Failed to open " << restart_file << std::endl;
+            exit(status)
+        }
 
         int varid;
         int nrad;
@@ -231,8 +243,12 @@ public:
     static siesta_fourier<GIRD_CLASS, PARITY> load_fourier_denorm(const std::string &restart_file,
                                                                   const std::string &name) {
         int ncid;
-        nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
-
+        int status nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
+        if (status) {
+            std::cout << "Failed to open " << restart_file << std::endl;
+            exit(status)
+        }
+        
         int varid;
         int nrad;
         nc_inq_varid(ncid, "nrad", &varid);
