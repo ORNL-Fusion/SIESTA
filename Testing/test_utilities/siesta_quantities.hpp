@@ -126,7 +126,7 @@ public:
         int status nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
         if (status) {
             std::cout << "Failed to open " << restart_file << std::endl;
-            exit(status)
+            exit(status);
         }
 
         int varid;
@@ -156,7 +156,7 @@ public:
         int status nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
         if (status) {
             std::cout << "Failed to open " << restart_file << std::endl;
-            exit(status)
+            exit(status);
         }
 
         int varid;
@@ -183,7 +183,7 @@ public:
         int status nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
         if (status) {
             std::cout << "Failed to open " << restart_file << std::endl;
-            exit(status)
+            exit(status);
         }
 
         int varid;
@@ -246,9 +246,9 @@ public:
         int status nc_open(restart_file.c_str(), NC_NOWRITE, &ncid);
         if (status) {
             std::cout << "Failed to open " << restart_file << std::endl;
-            exit(status)
+            exit(status);
         }
-        
+
         int varid;
         int nrad;
         nc_inq_varid(ncid, "nrad", &varid);
