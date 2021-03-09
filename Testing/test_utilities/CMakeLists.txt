@@ -7,4 +7,5 @@ target_sources(xsiesta_test
                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/parity.hpp>
                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/grid_quantity.cpp>
                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/commandline_parser.cpp>
+               $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/commandline_parser.hpp>
 )
