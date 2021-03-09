@@ -275,7 +275,7 @@ void test(std::function<double(const double,const double,const double)> div,
             std::cout << " divergence = "
                       << diff << std::endl;
 
-            for (s = 0; s <= 1.0; s += 0.00001) {
+            for (s = 0; s <= 1.0; s += 0.001) {
                 diff = abs(div(s, u, v));
                 std::cout << s << " "
                           << diff << std::endl;
@@ -332,7 +332,7 @@ void test(std::function<double(const double)> vmec,
                       << " difference between vmec and siesta = "
                       << diff << std::endl;
 
-            for (s = 0; s <= 1.0; s += 0.00001) {
+            for (s = 0; s <= 1.0; s += 0.001) {
                 vmec_value = vmec(s);
                 siesta_value = siesta(s);
                 diff = abs(vmec_value - siesta_value);
