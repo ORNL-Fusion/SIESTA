@@ -2017,14 +2017,14 @@ SUBROUTINE Initialize( inN, inM )
   INTEGER :: mpierr !<MPI error code
   INTEGER :: globrow !<Loop variable
   INTEGER :: globrowoff !<Temporary variable
-  INTEGER :: flag   !< =0 if mpi NOT presently initialized
+  LOGICAL :: flag   !< false if mpi NOT presently initialized
   REAL :: logNbase2 !<Temporary variable
 
   !-----------------------------------------------------------------------------
   LBCYLIC_INIT=.TRUE.
 #if defined(MPI_OPT)
   CALL MPI_Initialized (flag, mpierr)
-  IF ( flag .EQ. 0 ) THEN
+  IF (.not.flag) THEN
     CALL MPI_Init( mpierr )
   END IF
   use_mpiwtime = .TRUE.
