@@ -1,0 +1,25 @@
+ &SIESTA_INFO
+ ETA_FACTOR = 1.E-4
+ LCOLSCALE = T
+ LADD_PERT = F
+ LRESISTIVE = F
+ LRESTART   = F
+ LRECON    = T
+ lasym     = F
+ NITER = 1000
+ NSIN      = 100
+ MPOLIN    = 5 ! 12
+ NTORIN    = 0 ! 8
+ FTOL      = 1.E-25,
+ levmarq_param = 1.0E-1,
+ MUPAR     =  0.0
+ WOUT_FILE      = 'wout_test.vmec.nc',
+ RESTART_EXT    = 'restart_w7x',
+ MRES    = 2,
+ HELPERT = 5.0E-4,
+ L_TRACING = F
+ NVS = 100
+ NUS = 101
+ NSS = 101
+ NPHIS = 2
+ /
