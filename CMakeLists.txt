@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.14)
 
 project (siesta C CXX Fortran)
+set (CMAKE_CXX_STANDARD 11)
 
 add_library (siesta)
 add_dependencies (siesta bmw)
