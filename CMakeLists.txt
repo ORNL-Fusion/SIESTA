@@ -14,3 +14,14 @@ target_link_libraries (xsiesta siesta)
 
 add_subdirectory (Sources)
 
+################################################################################
+#  Testing                                                                     #
+################################################################################
+
+#  Build test utilities.
+add_executable (xsiesta_test)
+add_dependencies (xsiesta_test stell)
+
+target_link_libraries (xsiesta_test stell)
+
+add_subdirectory (Testing)
