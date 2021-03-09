@@ -141,7 +141,8 @@ USE shared_data, ONLY: ndims
 INTEGER, INTENT(IN) :: mpol_in,ntor_in,blkrownum,numprocs,myrank 
 INTEGER :: length
 INTEGER :: i, FLAG, tmpint
-INTEGER*8 :: nBuffSize 
+INTEGER :: nBuffSize
+!INTEGER*8 :: nBuffSize
 !INTEGER, PARAMETER :: localprec = SELECTED_INT_KIND(24)
 !INTEGER (localprec) :: nBuffSize
 
