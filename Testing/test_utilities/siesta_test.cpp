@@ -3,6 +3,7 @@
 #include <random>
 #include <chrono>
 #include <functional>
+#include <cmath>
 
 #include "vmec_quantities.hpp"
 #include "siesta_quantities.hpp"
@@ -104,10 +105,10 @@ void dump(std::function<double()> vmec,
           const bool relative) {
     const double vmec_value = vmec();
     const double siesta_value = siesta();
-    double diff = abs(vmec_value - siesta_value);
+    double diff = std::abs(vmec_value - siesta_value);
 
     if (relative) {
-        diff /= std::max(abs(vmec_value), abs(siesta_value));
+        diff /= std::max(std::abs(vmec_value), std::abs(siesta_value));
     }
 
     std::cout << vmec_value   << " ";
@@ -128,10 +129,10 @@ void dump(std::function<double(const double s)> vmec,
     for (double s = 0; s <= 1.0; s += 0.005) {
         const double vmec_value = vmec(s);
         const double siesta_value = siesta(s);
-        double diff = abs(vmec_value - siesta_value);
+        double diff = std::abs(vmec_value - siesta_value);
 
         if (relative) {
-            diff /= std::max(abs(vmec_value), abs(siesta_value));
+            diff /= std::max(std::abs(vmec_value), std::abs(siesta_value));
         }
 
         std::cout << s << " ";
@@ -157,10 +158,10 @@ void dump(std::function<double(const double, const double, const double)> vmec,
     for (double s = 0; s <= 1.0; s += 0.005) {
         const double vmec_value = vmec(s, u, v);
         const double siesta_value = siesta(s, u, v);
-        double diff = abs(vmec_value - siesta_value);
+        double diff = std::abs(vmec_value - siesta_value);
 
         if (relative) {
-            diff /= std::max(abs(vmec_value), abs(siesta_value));
+            diff /= std::max(std::abs(vmec_value), std::abs(siesta_value));
         }
 
         std::cout << s << " ";
@@ -201,10 +202,10 @@ void test(std::function<double(const double,const double,const double)> vmec,
         const double v = zero_to_twopi(engine);
         double vmec_value = vmec(s, u, v);
         double siesta_value = siesta(s, u, v);
-        double diff = abs(vmec_value - siesta_value);
+        double diff = std::abs(vmec_value - siesta_value);
 
         if (relative) {
-            diff /= std::max(abs(vmec_value), abs(siesta_value));
+            diff /= std::max(std::abs(vmec_value), std::abs(siesta_value));
         }
 
         const bool pass = diff < tolarance;
@@ -221,10 +222,11 @@ void test(std::function<double(const double,const double,const double)> vmec,
             for (s = 0; s <= 1.0; s += 0.001) {
                 vmec_value = vmec(s, u, v);
                 siesta_value = siesta(s, u, v);
-                diff = abs(vmec_value - siesta_value);
+                diff = std::abs(vmec_value - siesta_value);
 
                 if (relative) {
-                    diff /= std::max(abs(vmec_value), abs(siesta_value));
+                    diff /= std::max(std::abs(vmec_value),
+                                     std::abs(siesta_value));
                 }
 
                 std::cout << s << " "
@@ -264,7 +266,7 @@ void test(std::function<double(const double,const double,const double)> div,
         double s = min_to_max(engine);
         const double u = zero_to_twopi(engine);
         const double v = zero_to_twopi(engine);
-        double diff = abs(div(s, u, v));
+        double diff = std::abs(div(s, u, v));
 
         const bool pass = diff < tolarance;
 
@@ -276,7 +278,7 @@ void test(std::function<double(const double,const double,const double)> div,
                       << diff << std::endl;
 
             for (s = 0; s <= 1.0; s += 0.001) {
-                diff = abs(div(s, u, v));
+                diff = std::abs(div(s, u, v));
                 std::cout << s << " "
                           << diff << std::endl;
             }
@@ -317,10 +319,10 @@ void test(std::function<double(const double)> vmec,
         double s = min_to_max(engine);
         double vmec_value = vmec(s);
         double siesta_value = siesta(s);
-        double diff = abs(vmec_value - siesta_value);
+        double diff = std::abs(vmec_value - siesta_value);
 
         if (relative) {
-            diff /= std::max(abs(vmec_value), abs(siesta_value));
+            diff /= std::max(std::abs(vmec_value), std::abs(siesta_value));
         }
 
         const bool pass = diff < tolarance;
@@ -335,10 +337,11 @@ void test(std::function<double(const double)> vmec,
             for (s = 0; s <= 1.0; s += 0.001) {
                 vmec_value = vmec(s);
                 siesta_value = siesta(s);
-                diff = abs(vmec_value - siesta_value);
+                diff = std::abs(vmec_value - siesta_value);
 
                 if (relative) {
-                    diff /= std::max(abs(vmec_value), abs(siesta_value));
+                    diff /= std::max(std::abs(vmec_value),
+                                     std::abs(siesta_value));
                 }
 
                 std::cout << s << " "
@@ -375,10 +378,10 @@ void test(std::function<double(void)> vmec,
 
     double vmec_value = vmec();
     double siesta_value = siesta();
-    double diff = abs(vmec_value - siesta_value);
+    double diff = std::abs(vmec_value - siesta_value);
 
     if (relative) {
-        diff /= std::max(abs(vmec_value), abs(siesta_value));
+        diff /= std::max(std::abs(vmec_value), std::abs(siesta_value));
     }
 
     const bool pass = diff < tolarance;
