@@ -231,6 +231,7 @@
         IF (iam .EQ. MIN(nprocs-1,maxprocs-1)) npmax = maxprocs
         ALLOCATE (pprof(ndum+(maxprocs-ndum*nprocs)))
         index1 = 0
+        c_flx = (/ 1.0, 0.0, 0.0 /)
 
         DO lk = 1, nphis                                                  ! Start producing (PGPLOT) PRESSURE file in cylindrical coords
           zeta0 = (2*(lk-1)*pi)/(nfp_w*nphis)                             ! Choose all TOROIDAL X-sections in a period [0, 2*pi/NFP], but avoiding last one.
@@ -245,8 +246,9 @@
 !SPH: NOTE THIS LOGIC WILL MAKE THE ANSWERS SLIGHTLY DEPENDENT ON NPROCS,
 !     SINCE C_FLX_OLD WILL BE SLIGHTLY DIFFERENT IF nmpi=npmin DOESN'T
 !     START AT IK=1!
-              IF (ik > 1 .AND. nmpi.GT.npmin .AND. (c_flx(1) <= one     &
-                         .AND. c_flx(1) > zero)) THEN                     ! In this case, use previous solution
+              IF (ik   .GT. 1     .AND.                                        &
+                  nmpi .GT. npmin .AND.                                        &
+                  (c_flx(1) .LE. one .AND. c_flx(1) .GT. zero)) THEN      ! In this case, use previous solution
                 c_flx = c_flx_old                                         ! as initial guess
               ELSE
                  c_flx(1:2) = 0                                           ! Guess for flux coordinate solution          
