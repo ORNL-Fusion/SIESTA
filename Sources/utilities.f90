@@ -260,9 +260,9 @@
 
 !  Start of executable code
       nsmin = LBOUND(vecf, 3)
-      CALL assert(nsmin .ge. LBOUND(vech,3), 'LBOUND WRONG IN to_full_mesh3')
+!      CALL assert(nsmin .ge. LBOUND(vech,3), 'LBOUND WRONG IN to_full_mesh3')
       nsmax = UBOUND(vecf, 3)
-      CALL assert(nsmax .le. UBOUND(vech,3), 'UBOUND WRONG IN to_full_mesh3')
+!      CALL assert(nsmax .le. UBOUND(vech,3), 'UBOUND WRONG IN to_full_mesh3')
 
       vecf(:,:,nsmin:nsmax - 1) = 0.5*(vech(:,:,nsmin + 1:nsmax)               &
                                 +      vech(:,:,nsmin:nsmax - 1))
@@ -300,9 +300,9 @@
 
 !  Start of executable code
       nsmin = LBOUND(vecf,2)
-      CALL ASSERT(nsmin .ge. LBOUND(vech,2), 'LBOUND WRONG IN to_full_mesh2')
+!      CALL ASSERT(nsmin .ge. LBOUND(vech,2), 'LBOUND WRONG IN to_full_mesh2')
       nsmax = UBOUND(vecf,2)
-      CALL ASSERT(nsmax .le. UBOUND(vech,2), 'UBOUND WRONG IN to_full_mesh2')
+!      CALL ASSERT(nsmax .le. UBOUND(vech,2), 'UBOUND WRONG IN to_full_mesh2')
 
       vecf(:,nsmin:nsmax - 1) = 0.5*(vech(:,nsmin:nsmax - 1)                   &
                               +      vech(:,nsmin + 1:nsmax))
@@ -965,8 +965,8 @@ LOGICAL :: test
       CALL GradientFull(divmnf, jbsupsmnh)
       CALL set_bndy_half_to_full_ds(jbsupsmnh, divmnf, nsmin, fours, f_none)
 
-      ALLOCATE(jbsupumnf(0:mpol,-ntor:ntor,nsmin:nsmax))
-      ALLOCATE(jbsupvmnf(0:mpol,-ntor:ntor,nsmin:nsmax))
+      ALLOCATE(jbsupumnf(0:mpol,-ntor:ntor,nsmin:nsmax+1))
+      ALLOCATE(jbsupvmnf(0:mpol,-ntor:ntor,nsmin:nsmax+1))
 
       CALL to_full_mesh(jbsupumnh, jbsupumnf)
       CALL to_full_mesh(jbsupvmnh, jbsupvmnf)

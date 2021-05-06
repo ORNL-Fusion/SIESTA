@@ -80,8 +80,8 @@ INTEGER                 :: s,m,n
       IF (ALLOCATED(divbmncf)) THEN
          DEALLOCATE(divbmncf)
       END IF
-      ALLOCATE(divbmnsf(0:mpol,-ntor:ntor,nsmin:nsmax),                      &
-               divbmncf(0:mpol,-ntor:ntor,nsmin:nsmax), stat=istat)
+      ALLOCATE(divbmnsf(0:mpol,-ntor:ntor,nsmin:nsmax+1),                      &
+               divbmncf(0:mpol,-ntor:ntor,nsmin:nsmax+1), stat=istat)
       CALL ASSERT(istat.EQ.0,'Allocation failed in divb')
 
       divbmnsf = 0
