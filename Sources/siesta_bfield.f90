@@ -38,6 +38,7 @@
       USE descriptor_mod, ONLY: INHESSIAN
       USE siesta_namelist, ONLY: lresistive, eta_factor
       USE shared_data, ONLY: lasym, fsq_res, fsq_total, buv_res
+      USE utilities, ONLY: set_zero
 
       IMPLICIT NONE
 
@@ -140,9 +141,11 @@
       END IF
 
 !  Update Bfield using Faraday's Law
+      CALL set_zero(djbsupsmnsh, djbsupumnch, djbsupvmnch)
       CALL Faraday(djbsupsmnsh, djbsupumnch, djbsupvmnch,                      &
                    esubsijf, esubuijf, esubvijf, f_sin, nsmin, nsmax)
       IF (lasym) THEN
+         CALL set_zero(djbsupsmnch, djbsupumnsh, djbsupvmnsh)
          CALL Faraday(djbsupsmnch, djbsupumnsh, djbsupvmnsh,                   &
                       esubsijf, esubuijf, esubvijf, f_cos, nsmin, nsmax)
       END IF

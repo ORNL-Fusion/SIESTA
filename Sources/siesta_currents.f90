@@ -69,6 +69,7 @@
       USE mpi_inc
       USE descriptor_mod, ONLY: SIESTA_COMM
       USE shared_data, ONLY: siesta_curtor, unit_out
+      USE utilities, ONLY: set_zero
 
       IMPLICIT NONE
 
@@ -87,7 +88,7 @@
       REAL (dp)                                               :: beta
       REAL (dp)                                               :: ton
       REAL (dp)                                               :: toff
-      REAL (dp), DIMENSION(6)                                 :: temp(6)
+      REAL (dp), DIMENSION(6)                                 :: temp
       REAL (dp)                                               :: tmp
       INTEGER                                                 :: nsmin
       INTEGER                                                 :: nsmax
@@ -130,6 +131,7 @@
       END IF
 
       IF (lmagen) THEN
+         CALL set_zero(bsq)
          bsq(:,:,nmin:nmax) = bsupsijh(:,:,nmin:nmax)*bsubsijh(:,:,nmin:nmax)  &
                             + bsupuijh(:,:,nmin:nmax)*bsubuijh(:,:,nmin:nmax)  &
                             + bsupvijh(:,:,nmin:nmax)*bsubvijh(:,:,nmin:nmax)

@@ -61,6 +61,14 @@
          MODULE PROCEDURE set_bndy_fouier_m0, set_bndy_fouier_m0_vec
       END INTERFACE
 
+!-------------------------------------------------------------------------------
+!>  Interface to set a zero quantity for either scalar @ref set_zero or vector
+!>  @ref set_zero_vec quantities.
+!-------------------------------------------------------------------------------
+      INTERFACE set_zero
+         MODULE PROCEDURE set_zero, set_zero_vec
+      END INTERFACE
+
       CONTAINS
 
 !*******************************************************************************
@@ -858,6 +866,44 @@ LOGICAL :: test
          CALL set_bndy_fouier_m0(amnu, f_cos)
          CALL set_bndy_fouier_m0(amnv, f_cos)
       END IF
+
+      END SUBROUTINE
+
+!-------------------------------------------------------------------------------
+!>  @brief Sets quantity to zero.
+!>
+!>  @param[inout] amn    Fourier quantity.
+!-------------------------------------------------------------------------------
+      PURE SUBROUTINE set_zero(amn)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      REAL (dp), DIMENSION(:,:,:), INTENT(inout) :: amn
+
+!  Start of executable code
+      amn = 0.0
+
+      END SUBROUTINE
+
+!-------------------------------------------------------------------------------
+!>  @brief Sets quantity to zero.
+!>
+!>  @param[inout] amn    Fourier quantity.
+!-------------------------------------------------------------------------------
+      PURE SUBROUTINE set_zero_vec(amns, amnu, amnv)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      REAL (dp), DIMENSION(:,:,:), INTENT(inout) :: amns
+      REAL (dp), DIMENSION(:,:,:), INTENT(inout) :: amnu
+      REAL (dp), DIMENSION(:,:,:), INTENT(inout) :: amnv
+
+!  Start of executable code
+      CALL set_zero(amns)
+      CALL set_zero(amnu)
+      CALL set_zero(amnv)
 
       END SUBROUTINE
 

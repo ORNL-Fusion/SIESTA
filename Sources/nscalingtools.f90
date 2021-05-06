@@ -377,11 +377,14 @@ REAL(dp), DIMENSION(M), INTENT(IN) :: coldata
 INTEGER, INTENT(IN) :: br, ic, it
 
 IF (it.EQ.UPPER) THEN          !UPPER DIAGONAL
-  CALL SetBlockRowCol(br,ic,coldata,UPPER)
+!  CALL SetBlockRowCol(br,ic,coldata,UPPER)
+  CALL SetMatrixRowColU(br, coldata, ic)
 ELSE IF (it.EQ.DIAG) THEN      !MAIN DIAGONAL
-  CALL SetBlockRowCol(br,ic,coldata,DIAG)
+!  CALL SetBlockRowCol(br,ic,coldata,DIAG)
+  CALL SetMatrixRowColD(br, coldata, ic)
 ELSE IF (it.EQ.LOWER) THEN     !LOWER DIAGONAL
-  CALL SetBlockRowCol(br,ic,coldata,LOWER)
+!  CALL SetBlockRowCol(br,ic,coldata,LOWER)
+  CALL SetMatrixRowColL(br, coldata, ic)
 ELSE IF (it.EQ.SAVEDIAG) THEN  !SAVED DIAGONAL
   CALL StoreDiagonal(br,ic,coldata)
 ELSE
@@ -411,6 +414,8 @@ FOUND=.FALSE.
 CALL search(blockRowNum,FOUND,procNum)
 IF (FOUND) THEN
   IF(procNum-1.EQ.rank) THEN
+    CALL SetBlockTriDataStruct(blockRowType, blockRowNum, columnNum, columnData)
+#if 0
     IF (blockRowType.EQ.UPPER) THEN
       CALL SetBlockTriDataStruct(UPPER,blockRowNum,columnNum,columnData)
     ELSE IF (blockRowType.EQ.SAVEDIAG) THEN
@@ -422,6 +427,7 @@ IF (FOUND) THEN
     ELSE
       CALL ASSERT(.FALSE.,'send error, blockRowType:')
     END IF
+#endif
   ELSE
     IF (BUFFERED) THEN     
       CALL MPI_BSend(sendbuf,positn,MPI_PACKED,procNum-1,blockRowType,SIESTA_COMM,MPI_ERR)
@@ -469,13 +475,16 @@ IF (FLAG) THEN
     CALL ASSERT(.FALSE.,'receive 2 error')
   END IF
 
-  IF (it.EQ.1) THEN      !UPPER DIAGONAL
-    CALL SetBlockRowCol(br,ic,coldata,1)
-  ELSE IF (it.EQ.2) THEN !MAIN DIAGONAL
-    CALL SetBlockRowCol(br,ic,coldata,2)
-  ELSE IF (it.EQ.3) THEN !LOWER DIAGONAL
-    CALL SetBlockRowCol(br,ic,coldata,3)
-  ELSE IF (it.EQ.4) THEN !SAVED DIAGONAL
+  IF (it.EQ.UPPER) THEN      !UPPER DIAGONAL
+!    CALL SetBlockRowCol(br,ic,coldata,1)
+    CALL SetMatrixRowColU(br, coldata, ic)
+  ELSE IF (it.EQ.DIAG) THEN !MAIN DIAGONAL
+!    CALL SetBlockRowCol(br,ic,coldata,2)
+    CALL SetMatrixRowColD(br, coldata, ic)
+  ELSE IF (it.EQ.LOWER) THEN !LOWER DIAGONAL
+!    CALL SetBlockRowCol(br,ic,coldata,3)
+    CALL SetMatrixRowColL(br, coldata, ic)
+  ELSE IF (it.EQ.SAVEDIAG) THEN !SAVED DIAGONAL
     CALL StoreDiagonal(br,ic,coldata)
   ELSE
     WRITE(*,*)'Something wrong in ', rank,MPI_Status(MPI_TAG),br,ic,it 
@@ -512,6 +521,7 @@ END SUBROUTINE GetFullSolution
 !------------------------------------------------
 
 !------------------------------------------------
+#if 0
 SUBROUTINE SetBlockRowCol( globrow, colnum, buf, opt)
   INTEGER :: globrow 
   REAL(dp), INTENT(IN), DIMENSION(M) :: buf
@@ -526,6 +536,7 @@ SUBROUTINE SetBlockRowCol( globrow, colnum, buf, opt)
     WRITE(*,*) 'Error in diagonal type option'
   END IF
 END SUBROUTINE SetBlockRowCol
+#endif
 !------------------------------------------------
 
 !-------------------------------------------------------------------------------

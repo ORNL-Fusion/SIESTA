@@ -63,7 +63,7 @@
       USE fourier, ONLY: f_cos, f_sin, f_sum, f_du, f_dv
       USE quantities, ONLY: gvsupumnsf => fsupumnsf, gvsupvmnsf => fsupvmnsf,  &
                             gvsupumncf => fsupumncf, gvsupvmncf => fsupvmncf
-      USE utilities, ONLY: set_bndy_fouier_m0, m0
+      USE utilities, ONLY: set_bndy_fouier_m0, m0, set_zero
       USE shared_data, ONLY: delta_t
       USE island_params, ONLY: fourier_context
 
@@ -174,10 +174,12 @@
                                - workij1(:,:,nsmin:nsmax)
 
 !  Convert to Fourier space.
+      CALL set_zero(djpmnch)
       CALL fourier_context%tomnsp(workij1(:,:,nsmin:nsmax),                    &
                                   djpmnch(:,:,nsmin:nsmax), f_cos)
       djpmnch(:,:,nsmin:nsmax) = delta_t*djpmnch(:,:,nsmin:nsmax)
       IF (lasym) THEN
+         CALL set_zero(djpmnsh)
          CALL fourier_context%tomnsp(workij1(:,:,nsmin:nsmax),                 &
                                      djpmnsh(:,:,nsmin:nsmax), f_sin)
          djpmnsh(:,:,nsmin:nsmax) = delta_t*djpmnsh(:,:,nsmin:nsmax)

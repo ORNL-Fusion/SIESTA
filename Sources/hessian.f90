@@ -15,11 +15,13 @@
         rcounts, disp, startglobrow, endglobrow, nranks, rank,          &
         SKSDBG, TOFU, UPPER, LOWER, DIAG, SAVEDIAG, nrecd,              &
         SYMMETRYCHECK, totRecvs, PACKSIZE, WriteTime, send, receive,    &
-        SetBlockTriDataStruct, GetFullSolution
+!        SetBlockTriDataStruct, GetFullSolution
+        GetFullSolution
       USE blocktridiagonalsolver_s, ONLY: ApplyParallelScaling,         &
         ForwardSolve, SetMatrixRHS, BackwardSolve, GetSolutionVector,   &
         CheckSymmetry, Dmin_TRI, MAXEIGEN_TRI, FindMinMax_Tri,          &
-        CheckConditionNumber
+        CheckConditionNumber, SetMatrixRowColL, SetMatrixRowColD,       &
+        SetMatrixRowColU, StoreDiagonal
       USE mpi_inc
       USE v3_utilities, ONLY: assert, assert_eq
 
@@ -220,7 +222,7 @@
 
 !  Start of executable code
       gc(:,nsmin:nsmax) = gc(:,nsmin:nsmax)*colscale(:,nsmin:nsmax)
-            
+
       END SUBROUTINE
 
       SUBROUTINE Compute_Hessian_Blocks (func, ldiagonal)
@@ -394,7 +396,8 @@
                       DataItem=0
                       DataItem(icol)=temp
                    END IF
-                   CALL SetBlockTriDataStruct(UPPER,js1,icol,DataItem) 
+ !                  CALL SetBlockTriDataStruct(UPPER,js1,icol,DataItem)
+                   CALL SetMatrixRowColU(js1, DataItem, icol)
                 END IF
 
                 !dblk(js)
@@ -408,8 +411,10 @@
                       DataItem(icol)=temp
                    END IF
 
-                   CALL SetBlockTriDataStruct(SAVEDIAG,js,icol,DataItem) 
-                   CALL SetBlockTriDataStruct(DIAG,js,icol,DataItem) 
+!                   CALL SetBlockTriDataStruct(SAVEDIAG,js,icol,DataItem)
+                   CALL StoreDiagonal(js, icol, DataItem)
+!                   CALL SetBlockTriDataStruct(DIAG,js,icol,DataItem)
+                   CALL SetMatrixRowColD(js, DataItem, icol)
                  END IF
 
                 !lblk(js+1) 
@@ -421,7 +426,8 @@
                       DataItem=0
                       DataItem(icol)=temp
                    END IF
-                   CALL SetBlockTriDataStruct(LOWER,js1,icol,DataItem) 
+!                   CALL SetBlockTriDataStruct(LOWER,js1,icol,DataItem)
+                   CALL SetMatrixRowColL(js1, DataItem, icol)
                 END IF
               END DO SKIP3_MESH_LG
             END DO MESH_3PT_LG

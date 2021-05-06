@@ -271,7 +271,7 @@
                     pijh0_du(n1,n2,nsmin1:nsmax),                       &
                     pijh0_dv(n1,n2,nsmin1:nsmax),                       &
                     pijf0(n1,n2,nsmin1:nsmax1),                         &
-                    pijf0_ds(n1,n2,nsmin1:nsmax), stat=istat)
+                    pijf0_ds(n1,n2,nsmin1:nsmax1), stat=istat)
           ELSE
           ALLOCATE (ksupsijf0(n1,n2,n3), ksupuijf0(n1,n2,n3),           &
                     ksupvijf0(n1,n2,n3), ksupsijf(n1,n2,n3),               &

@@ -271,7 +271,7 @@
 
 !  Local Variables
       INTEGER :: istat
-      INTEGER :: n1
+      INTEGER :: n1                   ,i
 
 !  Start of executable code.
 !  Natural boundary condition at origin. l_push_s and l_push_u can't both be
@@ -332,7 +332,7 @@
                              fsubsmnsf, fsubumncf, fsubvmncf)
                               
       l_Compute_Hessian = .false.
-     
+
       col_scale(:,:,1,:) = scale_s
       col_scale(:,:,2,:) = scale_u
       IF (lasym) THEN

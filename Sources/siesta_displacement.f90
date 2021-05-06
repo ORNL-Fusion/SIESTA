@@ -49,10 +49,12 @@
                             gvsupumncf => fsupumncf, gvsupvmncf => fsupvmncf
       USE fourier, ONLY: f_sin, f_cos
 
+USE descriptor_mod, ONLY: iam
+
       IMPLICIT NONE
 
 !  local variables
-      INTEGER   :: istat
+      INTEGER   :: istat                      ,i
       REAL (dp) :: ton
       REAL (dp) :: toff
 
@@ -95,7 +97,7 @@
                              l_push_edge, col_scale
       USE v3_utilities, ONLY: assert_eq
       USE island_params, ONLY: fourier_context
-      USE utilities, ONLY: set_bndy_fouier_m0, set_bndy_full_origin
+      USE utilities, ONLY: set_bndy_fouier_m0, set_bndy_full_origin, set_zero
       USE siesta_namelist, ONLY: l_vessel
 
       IMPLICIT NONE
@@ -165,6 +167,7 @@
       END IF
 
 !  Calculate contravariant (SUP) velocities in real space on full mesh
+      CALL set_zero(jvsupsijf, jvsupuijf, jvsupvijf)
       CALL fourier_context%toijsp(gvsupsmnf(:,:,nsmin:nsmax),                  &
                                   jvsupsijf(:,:,nsmin:nsmax), fcomb, fours)
       CALL fourier_context%toijsp(gvsupumnf(:,:,nsmin:nsmax),                  &

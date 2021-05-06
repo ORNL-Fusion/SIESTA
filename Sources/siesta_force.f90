@@ -44,7 +44,7 @@
       USE timer_mod
       USE shared_data, ONLY: l_linearize, l_getwmhd, lverbose, l_pedge
       USE nscalingtools, ONLY: startglobrow, endglobrow, MPI_ERR
-      USE utilities, ONLY: GradientFull, to_full_mesh
+      USE utilities, ONLY: GradientFull, to_full_mesh, set_zero
       USE quantities
       USE mpi_inc
 
@@ -92,7 +92,7 @@
       REAL (dp)                                :: skston
       REAL (dp)                                :: skstoff
       INTEGER                                  :: nsmin
-      INTEGER                                  :: nsmax
+      INTEGER                                  :: nsmax                    ,i
 
 !  Start of executable code
       CALL second0(skston)
@@ -145,6 +145,7 @@
 
 !  Calculate contravariant components of J = curl B (Ksup = gsqrt*Jsup)
 !  and update the magnetic energy if nonlinear force is being computed.
+      CALL set_zero(ksupsijf, ksupuijf, ksupvijf)
       CALL cv_currents(bsupsijh, bsupuijh, bsupvijh,                           &
                        ksupsijf, ksupuijf, ksupvijf,                           &
                        .not.l_linearize .OR. l_getwmhd, .false.)
@@ -183,15 +184,16 @@
                      'bsupsijf(ns) != 0 in UPDATE_FORCE')
       END IF
 
+      CALL set_zero(fsubsmncf, fsubumnsf, fsubvmnsf)
       CALL GetMHDForce(fsubsmncf, fsubumnsf, fsubvmnsf,                        &
                        pijh, KxBsij, KxBuij, KxBvij, pardamp, f_cos)
       IF (lasym) THEN
+         CALL set_zero(fsubsmnsf, fsubumncf, fsubvmncf)
          CALL GetMHDForce(fsubsmnsf, fsubumncf, fsubvmncf,                     &
                           pijh, KxBsij, KxBuij, KxBvij, pardamp, f_sin)
       END IF
 
       CALL Apply_ColScale(gc, col_scale, nsmin, nsmax)
-	   
       DEALLOCATE(pijf1, KxBsij, KxBuij, KxBvij, pijh, stat=istat)
       IF (ALLOCATED(pardamp)) THEN
          DEALLOCATE(pardamp)

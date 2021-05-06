@@ -49,7 +49,7 @@
       REAL (dp) :: skstoff
       LOGICAL   :: ltype
       INTEGER   :: nsmin
-      INTEGER   :: nsmax
+      INTEGER   :: nsmax                            ,i
 
 !  Start if executable code.
       CALL second0(ton)

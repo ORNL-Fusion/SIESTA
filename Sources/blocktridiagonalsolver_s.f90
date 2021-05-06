@@ -5167,6 +5167,7 @@ END SUBROUTINE ParMatVec
 
 !-------------------------------------------------------------------------------
 SUBROUTINE GetColSum(cs)
+USE descriptor_mod, ONLY: iam
 !-------------------------------------------------------------------------------
 REAL (dp), DIMENSION(M, N), INTENT(OUT) :: cs
 !-------------------------------------------------------------------------------
@@ -5200,29 +5201,38 @@ INTEGER :: MPI_STAT(MPI_STATUS_SIZE)
 REAL(dp), DIMENSION(:), ALLOCATABLE :: tmp1, tmp2
 INTEGER :: numBlockRows
 
-numBlockRows = endglobrow-startglobrow+1
+numBlockRows = endglobrow - startglobrow + 1
 
-top=rank-1; IF(rank.EQ.0) top=MPI_PROC_NULL
-bot=rank+1; IF(rank.EQ.nranks-1) bot=MPI_PROC_NULL
+top = rank - 1
+IF (rank .EQ. 0) THEN
+   top = MPI_PROC_NULL
+END IF
+
+bot = rank + 1
+IF (rank .EQ. nranks - 1) THEN
+   bot = MPI_PROC_NULL
+END IF
 
 ALLOCATE (TopScaleFac(M), BotScaleFac(M), tmp1(M), tmp2(M), stat=ic)
 CALL ASSERT(ic.eq.0,'STAT != 0 IN InitScaleFactors')
 
-DO ic=1, M
-IF (lequi1) THEN
-  tmp1(ic)=SUM(ABS(orig(1)%L(:,ic)))
-  tmp2(ic)=SUM(ABS(orig(numBlockRows)%U(:,ic)))
-ELSE
-  tmp1(ic)=MAXVAL(ABS(orig(1)%L(:,ic)))
-  tmp2(ic)=MAXVAL(ABS(orig(numBlockRows)%U(:,ic)))
-ENDIF
+DO ic = 1, M
+   IF (lequi1) THEN
+      tmp1(ic) = SUM(ABS(orig(1)%L(:,ic)))
+      tmp2(ic) = SUM(ABS(orig(numBlockRows)%U(:,ic)))
+   ELSE
+      tmp1(ic) = MAXVAL(ABS(orig(1)%L(:,ic)))
+      tmp2(ic) = MAXVAL(ABS(orig(numBlockRows)%U(:,ic)))
+   END IF
 END DO
 
-CALL MPI_Sendrecv(tmp1,M,MPI_REAL8,top,1,                               &
-  BotScaleFac,M,MPI_REAL8,bot,1,SIESTA_COMM,MPI_STAT,MPI_ERR)
+CALL MPI_Sendrecv(tmp1,        M, MPI_REAL8, top, 1,                           &
+                  BotScaleFac, M, MPI_REAL8, bot, 1,                           &
+                  SIESTA_COMM, MPI_STAT, MPI_ERR)
 
-CALL MPI_Sendrecv(tmp2,M,MPI_REAL8,bot,1,                               &
-  TopScaleFac,M,MPI_REAL8,top,1,SIESTA_COMM,MPI_STAT,MPI_ERR)
+CALL MPI_Sendrecv(tmp2,        M, MPI_REAL8, bot, 1,                           &
+                  TopScaleFac, M, MPI_REAL8, top, 1,                           &
+                  SIESTA_COMM, MPI_STAT, MPI_ERR)
 
 DEALLOCATE(tmp1, tmp2)
 
@@ -5236,7 +5246,7 @@ INTEGER, INTENT(IN)   :: js
 REAL(dp), INTENT(OUT) :: scalevector(M)
 !-------------------------------------------------------------------------------
 REAL(dp), ALLOCATABLE :: coltmp(:)
-REAL(dp) :: eps
+REAL(dp) :: eps               ,tu,tl,td
 INTEGER  :: ic, ir
 !-------------------------------------------------------------------------------
 
@@ -5249,37 +5259,45 @@ DO ic=1, M
 
    coltmp = ABS(orig(ir)%D(:,ic))
    IF (lequi1) THEN
+!IF (js.eq.52) td = SUM(coltmp)
       scalevector(ic) = SUM(coltmp)
    ELSE
       scalevector(ic) = MAXVAL(coltmp)
    END IF
 
    IF (js.GT.startglobrow) THEN
-   coltmp = ABS(orig(ir-1)%U(:,ic))
-   IF (lequi1) THEN
-      scalevector(ic) = scalevector(ic) + SUM(coltmp)
-      IF (js.EQ.endglobrow .AND. js.NE.N)                               &
-      scalevector(ic) = scalevector(ic) + BotScaleFac(ic)
-   ELSE
-      scalevector(ic) = MAX(scalevector(ic),MAXVAL(coltmp))
-      IF (js.EQ.endglobrow .AND. js.NE.N)                               &
-      scalevector(ic) = MAX(scalevector(ic),BotScaleFac(ic))
-   END IF
+      coltmp = ABS(orig(ir-1)%U(:,ic))
+!IF (js.eq.52) tu = SUM(coltmp)
+      IF (lequi1) THEN
+         scalevector(ic) = SUM(coltmp) + scalevector(ic)
+         IF (js.EQ.endglobrow .AND. js.NE.N) THEN
+            scalevector(ic) = scalevector(ic) + BotScaleFac(ic)
+         END IF
+      ELSE
+         scalevector(ic) = MAX(scalevector(ic),MAXVAL(coltmp))
+         IF (js.EQ.endglobrow .AND. js.NE.N) THEN
+            scalevector(ic) = MAX(scalevector(ic),BotScaleFac(ic))
+         END IF
+      END IF
    END IF
 
    IF (js.LT.endglobrow) THEN
-   coltmp = ABS(orig(ir+1)%L(:,ic))
-   IF (lequi1) THEN
-      scalevector(ic) = scalevector(ic) + SUM(coltmp)
-      IF (js.EQ.startglobrow .AND. js.NE.1)                             &
-      scalevector(ic) = scalevector(ic) + TopScaleFac(ic)
-   ELSE
-      scalevector(ic) = MAX(scalevector(ic),MAXVAL(coltmp))
-      IF (js.EQ.startglobrow .AND. js.NE.1)                             &
-      scalevector(ic) = MAX(scalevector(ic),TopScaleFac(ic))
+      coltmp = ABS(orig(ir+1)%L(:,ic))
+!IF (js.eq.52) tl = SUM(coltmp)
+      IF (lequi1) THEN
+         IF (js.EQ.startglobrow .AND. js.NE.1) THEN
+!IF (js.eq.52) tu = TopScaleFac(ic)
+            scalevector(ic) = TopScaleFac(ic) + scalevector(ic)
+         END IF
+         scalevector(ic) = scalevector(ic) + SUM(coltmp)
+      ELSE
+         scalevector(ic) = MAX(scalevector(ic),MAXVAL(coltmp))
+         IF (js.EQ.startglobrow .AND. js.NE.1) THEN
+            scalevector(ic) = MAX(scalevector(ic),TopScaleFac(ic))
+         END IF
+      END IF
    END IF
-   END IF
-   
+
 END DO
 
 DEALLOCATE (coltmp)
