@@ -1,17 +1,20 @@
 cmake_minimum_required (VERSION 3.14)
 
 project (siesta C CXX Fortran)
-set (CMAKE_CXX_STANDARD 11)
 
 add_library (siesta)
-add_dependencies (siesta bmw)
 
-target_link_libraries (siesta bmw)
-target_include_directories (siesta PUBLIC $<TARGET_PROPERTY:bmw,BINARY_DIR>)
+target_link_libraries (siesta PUBLIC bmw)
+target_include_directories (siesta
+
+                            PUBLIC
+
+                            $<TARGET_PROPERTY:siesta,BINARY_DIR>
+)
 
 add_executable (xsiesta)
-add_dependencies (xsiesta siesta)
-target_link_libraries (xsiesta siesta)
+
+target_link_libraries (xsiesta PUBLIC siesta)
 
 add_subdirectory (Sources)
 
@@ -21,8 +24,8 @@ add_subdirectory (Sources)
 
 #  Build test utilities.
 add_executable (xsiesta_test)
-add_dependencies (xsiesta_test stell)
 
-target_link_libraries (xsiesta_test stell)
+target_link_libraries (xsiesta_test PUBLIC stell)
+target_compile_features (xsiesta_test PRIVATE cxx_std_11)
 
 add_subdirectory (Testing)
