@@ -62,7 +62,7 @@ INTEGER, ALLOCATABLE, DIMENSION(:) :: mnspcounts, mnspdisps
 LOGICAL, PRIVATE :: SetUpTOMNSPAllGatherDONE=.FALSE.
 
 #if defined(MPI_OPT)
-INTEGER :: MPI_Status(MPI_STATUS_SIZE)
+INTEGER :: siesta_MPI_Status(MPI_STATUS_SIZE)
 #endif 
 !------------------------------------------------
 
@@ -385,7 +385,7 @@ ELSE IF (it.EQ.LOWER) THEN     !LOWER DIAGONAL
 ELSE IF (it.EQ.SAVEDIAG) THEN  !SAVED DIAGONAL
   CALL StoreDiagonal(br,ic,coldata)
 ELSE
-  WRITE(*,*)'Something wrong in ', rank,MPI_Status(MPI_TAG),br,ic,it 
+  WRITE(*,*)'Something wrong in ', rank, siesta_MPI_Status(MPI_TAG),br,ic,it
   CALL ASSERT(.FALSE., 'IT wrong SetBlockTriDataStruct:')
 END IF
 END SUBROUTINE SetBlockTriDataStruct
@@ -447,13 +447,13 @@ INTEGER :: br, ic, it
 INTEGER :: positn
 
 FLAG=.TRUE.
-IF(IPROBEFLAG) CALL MPI_Iprobe (MPI_ANY_SOURCE,MPI_ANY_TAG,SIESTA_COMM,FLAG,MPI_Status,MPI_ERR)
+IF(IPROBEFLAG) CALL MPI_Iprobe (MPI_ANY_SOURCE,MPI_ANY_TAG,SIESTA_COMM,FLAG,siesta_MPI_Status,MPI_ERR)
 IF (FLAG) THEN
   CALL MPI_Recv(recvbuf,PACKSIZE,MPI_PACKED,MPI_ANY_SOURCE,&
-  &MPI_ANY_TAG,SIESTA_COMM,MPI_Status,MPI_ERR)
+  &MPI_ANY_TAG,SIESTA_COMM,siesta_MPI_Status,MPI_ERR)
   nrecd=nrecd+1
   
-  it=MPI_Status(MPI_TAG)
+  it=siesta_MPI_Status(MPI_TAG)
   IF (it.NE.1.AND.it.NE.2.AND.it.NE.3.AND.it.NE.4) THEN
     WRITE(TOFU,*) 'MPI_TAG:',it; FLUSH(TOFU)
     CALL ASSERT(.FALSE.,'receive 1 error')
@@ -478,7 +478,7 @@ IF (FLAG) THEN
   ELSE IF (it.EQ.4) THEN !SAVED DIAGONAL
     CALL StoreDiagonal(br,ic,coldata)
   ELSE
-    WRITE(*,*)'Something wrong in ', rank,MPI_Status(MPI_TAG),br,ic,it 
+    WRITE(*,*)'Something wrong in ', rank,siesta_MPI_Status(MPI_TAG),br,ic,it
     CALL ASSERT(.FALSE.,'receive 3 error')
   END IF
 END IF
