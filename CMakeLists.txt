@@ -5,6 +5,12 @@ project (siesta C CXX Fortran)
 add_library (siesta)
 
 target_link_libraries (siesta PUBLIC bmw)
+target_include_directories (siesta
+
+                            PUBLIC
+
+                            $<TARGET_PROPERTY:siesta,BINARY_DIR>
+)
 
 add_executable (xsiesta)
 
