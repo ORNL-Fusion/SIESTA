@@ -36,7 +36,7 @@
           l_tracing1=>l_tracing,                                        & ! NRS, NZS = resolution(CYL) in PHI-plane
           l_silo_output1=>l_silo_output, l_silo3D1=> l_silo3D   
 #if defined(MPI_OPT)
-      USE nscalingtools, ONLY: MPI_STATUS
+      USE nscalingtools, ONLY: siesta_MPI_Status
       USE mpi_inc
 #endif
       USE descriptor_mod, ONLY: iam, nprocs, SIESTA_COMM
@@ -442,7 +442,7 @@
            IF (lk .GT. 1) THEN
               IF (iam .EQ. 0) THEN
                  CALL MPI_RECV(pprof,ndum,MPI_REAL8,from,tag,           &
-                               SIESTA_COMM,MPI_STATUS,MPI_ERR)
+                               SIESTA_COMM,siesta_MPI_Status,MPI_ERR)
               ELSE IF (iam .EQ. from) THEN
                  CALL MPI_SEND(pprof,ndum,MPI_REAL8,to,tag,             &
                                SIESTA_COMM,MPI_ERR)
@@ -475,7 +475,7 @@
            IF (lk .GT. 1) THEN
               IF (iam .EQ. 0) THEN
                 CALL MPI_RECV(pack_bfld,6*ndum,MPI_REAL8,from,          &
-                              tag,SIESTA_COMM,MPI_STATUS,MPI_ERR)
+                              tag,SIESTA_COMM,siesta_MPI_Status,MPI_ERR)
               ELSE IF (iam .EQ. from) THEN
                  CALL MPI_SEND(pack_bfld,6*ndum,MPI_REAL8,to,           &
                                tag,SIESTA_COMM,MPI_ERR)
@@ -1400,7 +1400,7 @@
            from=lk-1
            IF (iam .EQ. 0) THEN
               CALL MPI_RECV(tmp_silo(ioff),nchunk,MPI_REAL,from,        &
-                            tag,SIESTA_COMM,MPI_STATUS,MPI_ERR)
+                            tag,SIESTA_COMM,siesta_MPI_Status,MPI_ERR)
               ioff = ioff+nchunk
            ELSE IF (iam .EQ. from) THEN
               CALL MPI_SEND(pack_silo(1,index0),nchunk,MPI_REAL,to,     &
