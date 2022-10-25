@@ -63,7 +63,7 @@
 
       CALL second0(skston)
       CALL funct_island
-      brhs = -gc 
+      brhs = -gc
       IF (PARFUNCTISL) THEN
          CALL gather_array(brhs)
       END IF
