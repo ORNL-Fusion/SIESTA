@@ -600,8 +600,10 @@
          CALL gather_array(gc)
 
 #if defined(MPI_OPT)
-         CALL MPI_ALLREDUCE(MPI_IN_PLACE, siesta_curtor, 1, MPI_REAL8,         &
-                            MPI_SUM, SIESTA_COMM, MPI_ERR)
+         if (PARSOLVER) THEN
+            CALL MPI_ALLREDUCE(MPI_IN_PLACE, siesta_curtor, 1, MPI_REAL8,      &
+                               MPI_SUM, SIESTA_COMM, MPI_ERR)
+         END IF
 #endif
 
          IF (niter .gt. 1 .and. iam .eq. 0) THEN
