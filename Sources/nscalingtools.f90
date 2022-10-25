@@ -74,7 +74,7 @@ SUBROUTINE  MyEnvVariables
 !--------------------------------------------------------------------------
 ! Default values of environment values that users are allowed to change
 !--------------------------------------------------------------------------
-PARSOLVER=.TRUE.
+!PARSOLVER=.TRUE.
 PARFUNCTISL=.TRUE.
 !--------------------------------------------------------------------------
 
