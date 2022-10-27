@@ -74,31 +74,31 @@ SUBROUTINE  MyEnvVariables
 !--------------------------------------------------------------------------
 ! Default values of environment values that users are allowed to change
 !--------------------------------------------------------------------------
-!PARSOLVER=.TRUE.
-PARFUNCTISL=.TRUE.
+!PARSOLVER = .TRUE.
+PARFUNCTISL = .TRUE.
 !--------------------------------------------------------------------------
 
 !--------------------------------------------------------------------------
 ! Default values of environment values that users are NOT allowed to change
 !--------------------------------------------------------------------------
-OUTPUT_TIMINGS=.FALSE. !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
-PARGMRES=.TRUE.        !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
-BUFFERED=.FALSE.       !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
-SYMMETRYCHECK=.TRUE.   !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
-SKSDBG=.FALSE.         !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
-KPDBG=.FALSE.          !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
+OUTPUT_TIMINGS = .FALSE. !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
+PARGMRES = .TRUE.        !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
+BUFFERED = .FALSE.       !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
+SYMMETRYCHECK = .TRUE.   !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
+SKSDBG = .FALSE.         !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
+KPDBG = .FALSE.          !SKS: USERS MUST NOT CHANGE THIS VALUE: 04/26/2013
 !--------------------------------------------------------------------------
 
 !--------------------------------------------------------------------------
 ! Read non-default values, if any
 !--------------------------------------------------------------------------
-envvar='PARSOLVER'
+envvar = 'PARSOLVER'
 CALL GETENV(envvar,envval)
-IF (envval.EQ.'ScaLAPACK' .OR. envval.EQ.'FALSE') THEN
-  PARSOLVER=.FALSE.
-  PARFUNCTISL=.FALSE.
-  PARGMRES=.FALSE.
-  OUTPUT_TIMINGS=.FALSE.
+IF (envval .EQ. 'ScaLAPACK' .OR. envval .EQ. 'FALSE') THEN
+  PARSOLVER = .FALSE.
+  PARFUNCTISL = .FALSE.
+  PARGMRES = .FALSE.
+  OUTPUT_TIMINGS = .FALSE.
 END IF
 END SUBROUTINE MyEnvVariables
 !--------------------------------------------------------------------------
@@ -110,13 +110,15 @@ INTEGER :: iam, nprocs, istat
 CHARACTER(100) :: fname, cfname
 CHARACTER(50) :: ciam, cnprocs
 
-WRITE(ciam,*) iam; WRITE(cnprocs,*) nprocs
-ciam=ADJUSTL(ciam); cnprocs=ADJUSTL(cnprocs)
-TOFU = 2*nprocs+iam
+WRITE(ciam,*) iam
+WRITE(cnprocs,*) nprocs
+ciam = ADJUSTL(ciam)
+cnprocs = ADJUSTL(cnprocs)
+TOFU = 2*nprocs + iam
 
-fname='sks-'//TRIM(ciam)//'-P-'//TRIM(cnprocs)//'.txt'
-OPEN(UNIT=TOFU, FILE=fname, STATUS="REPLACE", ACTION="WRITE",&
-&FORM="FORMATTED",POSITION="APPEND", IOSTAT=istat)
+fname = 'sks-' // TRIM(ciam) // '-P-' // TRIM(cnprocs) // '.txt'
+OPEN(UNIT=TOFU, FILE=fname, STATUS="REPLACE", ACTION="WRITE",                  &
+     FORM="FORMATTED", POSITION="APPEND", IOSTAT=istat)
 
 WRITE(TOFU,*)'SKSDBG:', SKSDBG; CALL FLUSH(TOFU)
 WRITE(TOFU,*)'KPDBG:', KPDBG; CALL FLUSH(TOFU)
@@ -146,67 +148,77 @@ INTEGER :: nBuffSize ! MRC Needed to compile with Gfortran 10.
 !INTEGER, PARAMETER :: localprec = SELECTED_INT_KIND(24)
 !INTEGER (localprec) :: nBuffSize
 
-IF(INITREMAPDONE .OR. .NOT.PARSOLVER) RETURN
-
-linblksize=(mpol_in+1)*(2*ntor_in+1)
-M=ndims*linblksize
-N=blkrownum
-
-CALL ASSERT(M.NE.0, N.NE.0,'M, N = 0 IN initRemap')
-
-nranks=numprocs
-rank=myrank
-nrecd=0;
-
-IF(rank.GT.0) THEN 
-  leftproc=rank-1
-ELSE
-  leftproc=MPI_PROC_NULL
+IF(INITREMAPDONE .OR. .NOT.PARSOLVER) THEN
+  RETURN
 END IF
 
-IF(rank.LT.nranks-1) THEN
-  rightproc=rank+1
+linblksize = (mpol_in + 1)*(2*ntor_in + 1)
+M = ndims*linblksize
+N = blkrownum
+
+CALL ASSERT(M .NE. 0, N .NE. 0, 'M, N = 0 IN initRemap')
+
+nranks = numprocs
+rank = myrank
+nrecd = 0
+
+IF(rank.GT.0) THEN 
+  leftproc = rank - 1
 ELSE
-  rightproc=MPI_PROC_NULL
+  leftproc = MPI_PROC_NULL
+END IF
+
+IF(rank .LT. nranks - 1) THEN
+  rightproc = rank + 1
+ELSE
+  rightproc = MPI_PROC_NULL
 END IF
 
 ! To account for activeranks=P>N
-activeranks=nranks
-IF (activeranks.GT.N) activeranks=N
+activeranks = nranks
+IF (activeranks.GT.N) THEN
+  activeranks=N
+END IF
 
-length=0; PACKSIZE=0
-CALL MPI_Pack_size(2,MPI_INTEGER,SIESTA_COMM,length,MPI_ERR)
-PACKSIZE=PACKSIZE+length
-CALL MPI_Pack_size(M,MPI_REAL8,SIESTA_COMM,length,MPI_ERR)
-PACKSIZE=PACKSIZE+length
+length = 0
+PACKSIZE = 0
+CALL MPI_Pack_size(2, MPI_INTEGER, SIESTA_COMM, length, MPI_ERR)
+PACKSIZE = PACKSIZE + length
+CALL MPI_Pack_size(M, MPI_REAL8, SIESTA_COMM, length, MPI_ERR)
+PACKSIZE = PACKSIZE + length
 
 !Each PACKSIZE packet has MPI_BSEND_OVERHEAD
 IF (BUFFERED) THEN
-  tmpint=PACKSIZE+MPI_BSEND_OVERHEAD
-  nBuffsize=tmpint
-  nBuffsize=nBuffsize*4
-  nBuffsize=nBuffsize*M
-  nBuffsize=nBuffsize*N
-  nBuffsize=nBuffsize/MAX(nranks,1)
-  IF (nBuffsize.LE.0) THEN
-    CALL MPI_Barrier(SIESTA_COMM,MPI_ERR)
-    IF (rank.EQ.0) THEN
-      WRITE(7000+rank,*) '>>> N                  : ', N; CALL FLUSH(7000+rank)
-      WRITE(7000+rank,*) '>>> M                  : ', M; CALL FLUSH(7000+rank)
-      WRITE(7000+rank,*) '>>> PACKSIZE           : ', PACKSIZE; CALL FLUSH(7000+rank)
-      WRITE(7000+rank,*) '>>> MPI_BSEND_OVERHEAD : ', MPI_BSEND_OVERHEAD; CALL FLUSH(7000+rank)
-      WRITE(7000+rank,*) '>>> nBuffsize          : ', nBuffsize; CALL FLUSH(7000+rank)
+  tmpint = PACKSIZE + MPI_BSEND_OVERHEAD
+  nBuffsize = tmpint
+  nBuffsize = nBuffsize*4
+  nBuffsize = nBuffsize*M
+  nBuffsize = nBuffsize*N
+  nBuffsize = nBuffsize/MAX(nranks,1)
+  IF (nBuffsize .LE. 0) THEN
+    CALL MPI_Barrier(SIESTA_COMM, MPI_ERR)
+    IF (rank .EQ. 0) THEN
+      WRITE(7000+rank,*) '>>> N                  : ', N
+      WRITE(7000+rank,*) '>>> M                  : ', M
+      WRITE(7000+rank,*) '>>> PACKSIZE           : ', PACKSIZE
+      WRITE(7000+rank,*) '>>> MPI_BSEND_OVERHEAD : ', MPI_BSEND_OVERHEAD
+      WRITE(7000+rank,*) '>>> nBuffsize          : ', nBuffsize
+      CALL FLUSH(7000+rank)
     END IF
-    CALL ASSERT(nBuffsize.GT.0,'initRemap nBuffsize')
+    CALL ASSERT(nBuffsize .GT. 0, 'initRemap nBuffsize')
   END IF
 
   ALLOCATE(remapBuffer(nBuffsize), stat=i)
-  CALL ASSERT(i.eq.0,'MPI remapBuffer allocation failed in initRemap')
+  CALL ASSERT(i .eq. 0, 'MPI remapBuffer allocation failed in initRemap')
   CALL MPI_BUFFER_ATTACH(remapBuffer, nBuffsize, MPI_ERR)
 END IF
 
-IF (.NOT.ALLOCATED(bcyclicStartBlockProc)) ALLOCATE (bcyclicStartBlockProc(nranks))
-IF (.NOT.ALLOCATED(bcyclicEndBlockProc)) ALLOCATE (bcyclicEndBlockProc(nranks))
+IF (.NOT.ALLOCATED(bcyclicStartBlockProc)) THEN
+  ALLOCATE (bcyclicStartBlockProc(nranks))
+END IF
+IF (.NOT.ALLOCATED(bcyclicEndBlockProc)) THEN
+  ALLOCATE (bcyclicEndBlockProc(nranks))
+END IF
 INITREMAPDONE=.TRUE.
 
 CALL bcyclicMapping
@@ -221,9 +233,15 @@ END SUBROUTINE initRemap
 !------------------------------------------------
 SUBROUTINE finalizeRemap
 
-IF(ALLOCATED(bcyclicStartBlockProc)) DEALLOCATE(bcyclicStartBlockProc)
-IF(ALLOCATED(bcyclicEndBlockProc)) DEALLOCATE(bcyclicEndBlockProc)
-IF(ALLOCATED(remapBuffer)) DEALLOCATE(remapBuffer)
+IF (ALLOCATED(bcyclicStartBlockProc)) THEN
+  DEALLOCATE(bcyclicStartBlockProc)
+END IF
+IF (ALLOCATED(bcyclicEndBlockProc)) THEN
+  DEALLOCATE(bcyclicEndBlockProc)
+END IF
+IF (ALLOCATED(remapBuffer)) THEN
+  DEALLOCATE(remapBuffer)
+END IF
 
 END SUBROUTINE finalizeRemap
 !------------------------------------------------
@@ -242,69 +260,77 @@ INTEGER :: numL, numS
 INTEGER :: r, c
 LOGICAL :: lnum, lnumg=.TRUE.
 
-CALL ASSERT(INITREMAPDONE,                                              &
-'Calling bcyclicMapping routine without calling initRemap')
+CALL ASSERT(INITREMAPDONE,                                                     &
+            'Calling bcyclicMapping routine without calling initRemap')
 
-IF (MAPPINGDONE) RETURN
+IF (MAPPINGDONE) THEN
+  RETURN
+END IF
 
-lload=CEILING(REAL(N)/activeranks)
-sload=FLOOR(REAL(N)/activeranks)
+lload = CEILING(REAL(N)/activeranks)
+sload = FLOOR(REAL(N)/activeranks)
 
-IF (lload.EQ.sload) THEN
-  myload=lload
+IF (lload .EQ. sload) THEN
+  myload = lload
 ELSE
-  IF (rank.LT.MOD(N,activeranks)) THEN
-    myload=lload
+  IF (rank .LT. MOD(N, activeranks)) THEN
+    myload = lload
   ELSE
-    myload=sload
+    myload = sload
   END IF
 END IF
 
-IF (sload.EQ.lload) THEN
-  numS=0
-  numL=rank
+IF (sload .EQ. lload) THEN
+  numS = 0
+  numL = rank
 ELSE
-  IF (myload.EQ.lload) THEN
-    numL=rank
-    numS=0
+  IF (myload .EQ. lload) THEN
+    numL = rank
+    numS = 0
   ELSE
-    numL=MOD(N,activeranks)
-    numS=rank-numL
+    numL = MOD(N, activeranks)
+    numS = rank - numL
   END IF
 END IF
 
-IF (rank.LT.activeranks) THEN !active ranks
-  startblock=numL*lload+numS*sload
-  endblock=startblock+myload-1
+IF (rank .LT. activeranks) THEN !active ranks
+  startblock = numL*lload + numS*sload
+  endblock = startblock + myload - 1
 ELSE                          !idle ranks
-  startblock=-2
-  endblock=-3
+  startblock = -2
+  endblock = -3
 END IF
 
 ! Fortranized indices
-startblock=startblock+1
-endblock=endblock+1
+startblock = startblock + 1
+endblock = endblock + 1
 
-CALL MPI_Allgather(startblock,1,MPI_INTEGER,bcyclicStartBlockProc,&
-&1,MPI_INTEGER,SIESTA_COMM,MPI_ERR)
+CALL MPI_Allgather(startblock, 1, MPI_INTEGER, bcyclicStartBlockProc,          &
+                   1, MPI_INTEGER, SIESTA_COMM, MPI_ERR)
 
-CALL MPI_Allgather(endblock,1,MPI_INTEGER,bcyclicEndBlockProc,&
-&1,MPI_INTEGER,SIESTA_COMM,MPI_ERR)
+CALL MPI_Allgather(endblock, 1, MPI_INTEGER, bcyclicEndBlockProc,              &
+                   1, MPI_INTEGER, SIESTA_COMM, MPI_ERR)
 
-startglobrow=bcyclicStartBlockProc(rank+1)
-endglobrow=bcyclicEndBlockProc(rank+1)
+startglobrow = bcyclicStartBlockProc(rank + 1)
+endglobrow = bcyclicEndBlockProc(rank + 1)
 
 FIRSTPARTITION_GE_2=.FALSE.
-IF((bcyclicEndBlockProc(1)-bcyclicStartBlockProc(1)+1).GE.2) FIRSTPARTITION_GE_2=.TRUE.
+IF ((bcyclicEndBlockProc(1) -                                                  &
+     bcyclicStartBlockProc(1) + 1) .GE. 2) THEN
+  FIRSTPARTITION_GE_2=.TRUE.
+END IF
 
 LASTPARTITION_GE_2=.FALSE.
-IF((bcyclicEndBlockProc(activeranks)-bcyclicStartBlockProc(activeranks)+1).GE.2) LASTPARTITION_GE_2=.TRUE.
+IF ((bcyclicEndBlockProc(activeranks) -                                        &
+     bcyclicStartBlockProc(activeranks) + 1) .GE. 2) THEN
+  LASTPARTITION_GE_2=.TRUE.
+END IF
 
-numBlocks=bcyclicEndBlockProc(rank+1)-bcyclicStartBlockProc(rank+1)+1
+numBlocks = bcyclicEndBlockProc(rank + 1) - bcyclicStartBlockProc(rank + 1) + 1
 
 !This may only occur on SOME processors, not all, so send to all
 lnum = numBlocks.GE.2
-CALL MPI_REDUCE(lnum, lnumg, 1, MPI_LOGICAL, MPI_LAND, 0, SIESTA_COMM,  &
+CALL MPI_REDUCE(lnum, lnumg, 1, MPI_LOGICAL, MPI_LAND, 0, SIESTA_COMM,         &
                 MPI_ERR)
 
 CALL ASSERT(lnumg,'NS/nranks < 2...use smaller number of processors')
@@ -323,18 +349,23 @@ INTEGER :: i
 
 CALL assert(MAPPINGDONE, 'computeAllGatherParameters')
 
-IF(.NOT.ALLOCATED(rcounts)) ALLOCATE(rcounts(activeranks), rcountsNS(activeranks))
-IF(.NOT.ALLOCATED(disp)) ALLOCATE(disp(activeranks),dispNS(activeranks))
+IF (.NOT.ALLOCATED(rcounts)) THEN
+  ALLOCATE(rcounts(activeranks), rcountsNS(activeranks))
+END IF
+IF (.NOT.ALLOCATED(disp)) THEN
+  ALLOCATE(disp(activeranks), dispNS(activeranks))
+END IF
 
-DO i=1,activeranks
-  rcountsNS(i)=(bcyclicEndBlockProc(i)-bcyclicStartBlockProc(i)+1)
-  rcounts(i)  =(bcyclicEndBlockProc(i)-bcyclicStartBlockProc(i)+1)*M
+DO i = 1, activeranks
+  rcountsNS(i) = (bcyclicEndBlockProc(i) - bcyclicStartBlockProc(i) + 1)
+  rcounts(i)   = (bcyclicEndBlockProc(i) - bcyclicStartBlockProc(i) + 1)*M
 END DO
 
-disp(1)=0; dispNS(1)=0
-DO i=2,activeranks
-  dispNS(i)=dispNS(i-1)+rcountsNS(i-1)
-  disp(i)=disp(i-1)+rcounts(i-1)
+disp(1) = 0
+dispNS(1) = 0
+DO i = 2, activeranks
+  dispNS(i) = dispNS(i - 1) + rcountsNS(i - 1)
+  disp(i) = disp(i - 1) + rcounts(i - 1)
 END DO
 
 END SUBROUTINE computeAllGatherParameters
@@ -354,45 +385,27 @@ INTEGER :: p
 CALL assert(MAPPINGDONE, 'search')
 
 ! To account for P>N
-activeranks=activeranks
-IF (activeranks.GT.N) activeranks=N
+activeranks = activeranks
+IF (activeranks.GT.N) THEN
+  activeranks = N
+END IF
 
 ! Dumb search algorithm
-FOUND=.FALSE.
-DO p=1,activeranks
-  IF ((bcyclicStartBlockProc(p).LE.query).AND.(query.LE.bcyclicEndBlockProc(p))) THEN
-    FOUND=.TRUE.
-    location=p
+FOUND = .FALSE.
+DO p = 1, activeranks
+  IF ((bcyclicStartBlockProc(p) .LE. query) .AND.                              &
+      (query.LE.bcyclicEndBlockProc(p))) THEN
+    FOUND = .TRUE.
+    location = p
     EXIT
   END IF
 END DO
 
-END SUBROUTINE search 
+END SUBROUTINE search
 !------------------------------------------------
 
 !------------------------------------------------
-SUBROUTINE SetBlockTriDataStruct(it, br, ic, coldata)
-
-REAL(dp), DIMENSION(M), INTENT(IN) :: coldata
-INTEGER, INTENT(IN) :: br, ic, it
-
-IF (it.EQ.UPPER) THEN          !UPPER DIAGONAL
-  CALL SetBlockRowCol(br,ic,coldata,UPPER)
-ELSE IF (it.EQ.DIAG) THEN      !MAIN DIAGONAL
-  CALL SetBlockRowCol(br,ic,coldata,DIAG)
-ELSE IF (it.EQ.LOWER) THEN     !LOWER DIAGONAL
-  CALL SetBlockRowCol(br,ic,coldata,LOWER)
-ELSE IF (it.EQ.SAVEDIAG) THEN  !SAVED DIAGONAL
-  CALL StoreDiagonal(br,ic,coldata)
-ELSE
-  WRITE(*,*)'Something wrong in ', rank, siesta_MPI_Status(MPI_TAG),br,ic,it
-  CALL ASSERT(.FALSE., 'IT wrong SetBlockTriDataStruct:')
-END IF
-END SUBROUTINE SetBlockTriDataStruct
-!------------------------------------------------
-
-!------------------------------------------------
-SUBROUTINE send(columnData,blockRowNum,blockRowType,columnNum, procNum)
+SUBROUTINE send(columnData, blockRowNum, blockRowType, columnNum, procNum)
 
 REAL(dp), DIMENSION(1:M), INTENT(IN) :: columnData
 INTEGER, INTENT(IN) :: blockRowNum, blockRowType, columnNum
@@ -403,30 +416,35 @@ INTEGER :: positn
 LOGICAL :: FOUND
 
 positn=0
-CALL MPI_Pack(blockRowNum,1,MPI_INTEGER,sendBuf,PACKSIZE,positn,SIESTA_COMM,MPI_ERR)
-CALL MPI_Pack(columnNum,1,MPI_INTEGER,sendBuf,PACKSIZE,positn,SIESTA_COMM,MPI_ERR)
-CALL MPI_Pack(columnData,M,MPI_REAL8,sendBuf,PACKSIZE,positn,SIESTA_COMM,MPI_ERR)
+CALL MPI_Pack(blockRowNum, 1, MPI_INTEGER, sendBuf, PACKSIZE, positn,          &
+              SIESTA_COMM, MPI_ERR)
+CALL MPI_Pack(columnNum, 1, MPI_INTEGER, sendBuf, PACKSIZE, positn,            &
+              SIESTA_COMM, MPI_ERR)
+CALL MPI_Pack(columnData, M, MPI_REAL8, sendBuf, PACKSIZE, positn,             &
+              SIESTA_COMM, MPI_ERR)
 
 FOUND=.FALSE.
 CALL search(blockRowNum,FOUND,procNum)
 IF (FOUND) THEN
   IF(procNum-1.EQ.rank) THEN
-    IF (blockRowType.EQ.UPPER) THEN
-      CALL SetBlockTriDataStruct(UPPER,blockRowNum,columnNum,columnData)
-    ELSE IF (blockRowType.EQ.SAVEDIAG) THEN
-      CALL SetBlockTriDataStruct(SAVEDIAG,blockRowNum,columnNum,columnData)
-    ELSE IF (blockRowType.EQ.DIAG) THEN
-      CALL SetBlockTriDataStruct(DIAG,blockRowNum,columnNum,columnData)
-    ELSE IF (blockRowType.EQ.LOWER) THEN
-      CALL SetBlockTriDataStruct(LOWER,blockRowNum,columnNum,columnData)
+    IF (blockRowType      .EQ. UPPER) THEN
+      CALL SetMatrixRowColU(blockRowNum, columnData, columnNum)
+    ELSE IF (blockRowType .EQ. SAVEDIAG) THEN
+      CALL StoreDiagonal(blockRowNum, columnNum, columnData)
+    ELSE IF (blockRowType .EQ. DIAG) THEN
+      CALL SetMatrixRowColD(blockRowNum, columnData, columnNum)
+    ELSE IF (blockRowType .EQ. LOWER) THEN
+      CALL SetMatrixRowColL(blockRowNum, columnData, columnNum)
     ELSE
       CALL ASSERT(.FALSE.,'send error, blockRowType:')
     END IF
   ELSE
     IF (BUFFERED) THEN     
-      CALL MPI_BSend(sendbuf,positn,MPI_PACKED,procNum-1,blockRowType,SIESTA_COMM,MPI_ERR)
+      CALL MPI_BSend(sendbuf, positn, MPI_PACKED, procNum - 1, blockRowType,   &
+                     SIESTA_COMM, MPI_ERR)
     ELSE
-      CALL MPI_Send(sendbuf,positn,MPI_PACKED,procNum-1,blockRowType,SIESTA_COMM,MPI_ERR)
+      CALL MPI_Send(sendbuf, positn, MPI_PACKED, procNum - 1, blockRowType,    &
+                    SIESTA_COMM, MPI_ERR)
     END IF
   END IF
 ELSE 
@@ -447,10 +465,13 @@ INTEGER :: br, ic, it
 INTEGER :: positn
 
 FLAG=.TRUE.
-IF(IPROBEFLAG) CALL MPI_Iprobe (MPI_ANY_SOURCE,MPI_ANY_TAG,SIESTA_COMM,FLAG,siesta_MPI_Status,MPI_ERR)
+IF (IPROBEFLAG) THEN
+  CALL MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, SIESTA_COMM, FLAG,              &
+                  siesta_MPI_Status, MPI_ERR)
+END IF
 IF (FLAG) THEN
-  CALL MPI_Recv(recvbuf,PACKSIZE,MPI_PACKED,MPI_ANY_SOURCE,&
-  &MPI_ANY_TAG,SIESTA_COMM,siesta_MPI_Status,MPI_ERR)
+  CALL MPI_Recv(recvbuf, PACKSIZE, MPI_PACKED, MPI_ANY_SOURCE,                 &
+                MPI_ANY_TAG, SIESTA_COMM, siesta_MPI_Status, MPI_ERR)
   nrecd=nrecd+1
   
   it=siesta_MPI_Status(MPI_TAG)
@@ -458,24 +479,27 @@ IF (FLAG) THEN
     WRITE(TOFU,*) 'MPI_TAG:',it; FLUSH(TOFU)
     CALL ASSERT(.FALSE.,'receive 1 error')
   END IF
-  positn=0
-  CALL MPI_Unpack(recvbuf,PACKSIZE,positn,br,1,MPI_INTEGER,SIESTA_COMM,MPI_ERR)
-  CALL MPI_Unpack(recvbuf,PACKSIZE,positn,ic,1,MPI_INTEGER,SIESTA_COMM,MPI_ERR)
-  CALL MPI_Unpack(recvbuf,PACKSIZE,positn,coldata,M,MPI_REAL8,SIESTA_COMM,MPI_ERR)
-  localbrow=br-bcyclicStartBlockProc(rank+1)+1
+  positn = 0
+  CALL MPI_Unpack(recvbuf, PACKSIZE, positn, br, 1, MPI_INTEGER,               &
+                  SIESTA_COMM, MPI_ERR)
+  CALL MPI_Unpack(recvbuf, PACKSIZE, positn, ic, 1, MPI_INTEGER,               &
+                  SIESTA_COMM, MPI_ERR)
+  CALL MPI_Unpack(recvbuf, PACKSIZE, positn, coldata, M, MPI_REAL8,            &
+                  SIESTA_COMM, MPI_ERR)
+  localbrow = br - bcyclicStartBlockProc(rank + 1) + 1
 
-  IF (localbrow.LT.1.OR.localbrow.GT.numBlocks) THEN 
+  IF (localbrow .LT. 1 .OR. localbrow .GT. numBlocks) THEN
     WRITE(TOFU,*) 'localbrow:',localbrow; FLUSH(TOFU)
     CALL ASSERT(.FALSE.,'receive 2 error')
   END IF
 
-  IF (it.EQ.1) THEN      !UPPER DIAGONAL
-    CALL SetBlockRowCol(br,ic,coldata,1)
-  ELSE IF (it.EQ.2) THEN !MAIN DIAGONAL
-    CALL SetBlockRowCol(br,ic,coldata,2)
-  ELSE IF (it.EQ.3) THEN !LOWER DIAGONAL
-    CALL SetBlockRowCol(br,ic,coldata,3)
-  ELSE IF (it.EQ.4) THEN !SAVED DIAGONAL
+  IF (it      .EQ. UPPER) THEN      !UPPER DIAGONAL
+    CALL SetMatrixRowColU(br, coldata, ic)
+  ELSE IF (it .EQ. DIAG) THEN !MAIN DIAGONAL
+    CALL SetMatrixRowColD(br, coldata, ic)
+  ELSE IF (it .EQ. LOWER) THEN !LOWER DIAGONAL
+    CALL SetMatrixRowColL(br, coldata, ic)
+  ELSE IF (it .EQ. SAVEDIAG) THEN !SAVED DIAGONAL
     CALL StoreDiagonal(br,ic,coldata)
   ELSE
     WRITE(*,*)'Something wrong in ', rank,siesta_MPI_Status(MPI_TAG),br,ic,it
@@ -498,12 +522,13 @@ REAL(dp), DIMENSION(N,M), INTENT(OUT)  :: outvec
 INTEGER :: i, j, p
 INTEGER :: numBlocks, cnt, indx, offset 
 
-DO p=1, activeranks
-  numBlocks=bcyclicEndBlockProc(p)-bcyclicStartBlockProc(p)+1
-  DO i=1,numBlocks
-    offset=(bcyclicStartBlockProc(p)-1)*M+i
-    DO j=1,M
-      outvec(bcyclicStartBlockProc(p)+i-1,j)=invec(offset+(j-1)*numBlocks)
+DO p = 1, activeranks
+  numBlocks = bcyclicEndBlockProc(p) - bcyclicStartBlockProc(p) + 1
+  DO i = 1, numBlocks
+    offset = (bcyclicStartBlockProc(p) - 1)*M + i
+    DO j = 1, M
+      outvec(bcyclicStartBlockProc(p) + i - 1, j) = invec(offset +             &
+                                                          (j - 1)*numBlocks)
     END DO
   END DO
 END DO  
@@ -512,31 +537,15 @@ END SUBROUTINE GetFullSolution
 !------------------------------------------------
 
 !------------------------------------------------
-SUBROUTINE SetBlockRowCol( globrow, colnum, buf, opt)
-  INTEGER :: globrow 
-  REAL(dp), INTENT(IN), DIMENSION(M) :: buf
-  INTEGER :: colnum, opt
-  IF (opt.EQ.1) THEN 
-    CALL SetMatrixRowColU( globrow, buf, colnum )
-  ELSE IF (opt.EQ.2) THEN 
-    CALL SetMatrixRowColD( globrow, buf, colnum )
-  ELSE IF (opt.EQ.3) THEN 
-    CALL SetMatrixRowColL( globrow, buf, colnum )
-  ELSE 
-    WRITE(*,*) 'Error in diagonal type option'
-  END IF
-END SUBROUTINE SetBlockRowCol
-!------------------------------------------------
-
-!-------------------------------------------------------------------------------
 SUBROUTINE CheckPoint(ckpt, infname)
 
 INTEGER, INTENT(IN) :: ckpt
 CHARACTER(3) :: infname
       
 CALL MPI_Barrier(SIESTA_COMM, MPI_ERR)
-WRITE(90000+rank,*) 'CheckPoint: Location  ',infname, ' @ pt',ckpt,'in rank', rank
-CALL FLUSH(90000+rank)
+WRITE(90000 + rank,*) 'CheckPoint: Location  ', infname,                       &
+                      ' @ pt', ckpt, 'in rank', rank
+CALL FLUSH(90000 + rank)
 
 END SUBROUTINE CheckPoint
 !-------------------------------------------------------------------------------
@@ -549,12 +558,14 @@ CHARACTER(len=lfname), INTENT(IN) :: ofname
 CHARACTER(len=ltagname), INTENT(IN) :: tagname
 DOUBLE PRECISION, INTENT(IN) :: usedtime
 
-IF (spass.EQ.-1) THEN
-  IF(SKSDBG) WRITE(TOFU,*) ofname," : ", tagname," : ", usedtime
-  IF(SKSDBG) FLUSH(TOFU)
-ELSE
-  IF(SKSDBG) WRITE(TOFU,*) ofname," : ", tagname, " : ",usedtime, spass
-  IF(SKSDBG) FLUSH(TOFU)
+IF (SKSDBG) THEN
+  IF (spass.EQ.-1) THEN
+    WRITE(TOFU,*) ofname," : ", tagname," : ", usedtime
+    FLUSH(TOFU)
+  ELSE
+    WRITE(TOFU,*) ofname," : ", tagname, " : ",usedtime, spass
+    FLUSH(TOFU)
+  END IF
 END IF
 
 END SUBROUTINE WriteTime
@@ -564,18 +575,23 @@ END SUBROUTINE WriteTime
 SUBROUTINE SetUpTOMNSPAllGather()
 INTEGER :: i
 
-SetUpTOMNSPAllGatherDONE=.FALSE.
+SetUpTOMNSPAllGatherDONE = .FALSE.
 
-IF (.NOT.ALLOCATED(mnspcounts)) ALLOCATE (mnspcounts(nranks))
-IF (.NOT.ALLOCATED(mnspdisps)) ALLOCATE (mnspdisps(nranks))
+IF (.NOT.ALLOCATED(mnspcounts)) THEN
+   ALLOCATE (mnspcounts(nranks))
+END IF
+IF (.NOT.ALLOCATED(mnspdisps)) THEN
+   ALLOCATE (mnspdisps(nranks))
+END IF
 
-DO i=1,nranks
-  mnspcounts(i)=(bcyclicEndBlockProc(i)-bcyclicStartBlockProc(i)+1)*linblksize
+DO i = 1, nranks
+  mnspcounts(i) = (bcyclicEndBlockProc(i) - bcyclicStartBlockProc(i) + 1)      &
+                * linblksize
 END DO
 
 mnspdisps(1)=0
-DO i=2,nranks
-  mnspdisps(i)=mnspdisps(i-1)+mnspcounts(i-1)
+DO i = 2,nranks
+  mnspdisps(i) = mnspdisps(i - 1) + mnspcounts(i - 1)
 END DO
 
 SetUpTOMNSPAllGatherDONE=.TRUE.
