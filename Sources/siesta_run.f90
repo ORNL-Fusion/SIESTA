@@ -412,8 +412,10 @@
 
 !  If the l_vessel is true try to read a vessel file and extend the grid.
 !  Otherwise proceed with fixed boundary equilibrium.
-      IF (l_vessel .and. read_vessel_file() .eq. 0) THEN
-         CALL grid_extender(wout_file, 'quad', istat)
+      IF (l_vessel) THEN
+         IF (read_vessel_file() .eq. 0) THEN
+            CALL grid_extender(wout_file, 'quad', istat)
+         END IF
       ELSE
          l_vessel = .false.
       END IF
