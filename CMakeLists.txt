@@ -28,4 +28,7 @@ add_executable (xsiesta_test)
 target_link_libraries (xsiesta_test PUBLIC stell)
 target_compile_features (xsiesta_test PRIVATE cxx_std_11)
 
+add_executable (xiesta_unit_tests)
+target_link_libraries (xiesta_unit_tests PUBLIC siesta)
+
 add_subdirectory (Testing)
