@@ -270,25 +270,21 @@
       jbsupsmnsh(:,:,1) = 0
       CALL interpit(tempmn_r, jbsupsmnsh, ns, nsin, mpol, mpolin,              &
      &              ntor, ntorin, nfp, nfp_i, .true.)
-      jbsupsmnsh(m1,-nmin:nmin,1) = jbsupsmnsh(m1,-nmin:nmin,2)
 
       CALL cdf_read(ncid, vn_jbsupuc, tempmn_r)
       jbsupumnch(:,:,1) = 0
       CALL interpit(tempmn_r, jbsupumnch, ns, nsin, mpol, mpolin,              &
      &              ntor, ntorin, nfp, nfp_i, .true.)
-      jbsupumnch(m1,-nmin:nmin,1) = jbsupumnch(m1,-nmin:nmin,2)
 
       CALL cdf_read(ncid, vn_jbsupvc, tempmn_r)
       jbsupvmnch(:,:,1) = 0
       CALL interpit(tempmn_r, jbsupvmnch, ns, nsin, mpol, mpolin,              &
      &              ntor, ntorin, nfp, nfp_i, .true.)
-      jbsupvmnch(m0,-nmin:nmin,1) = jbsupvmnch(m0,-nmin:nmin,2)
 
       CALL cdf_read(ncid, vn_jpresc,  tempmn_r)
       jpmnch(:,:,1) = 0
       CALL interpit(tempmn_r, jpmnch,     ns, nsin, mpol, mpolin,              &
      &              ntor, ntorin, nfp, nfp_i, .true.)
-      jpmnch(m0,-nmin:nmin,1) = jpmnch(m0,-nmin:nmin,2)
 
       CALL cdf_read(ncid, vn_rmnc, tempmn_r)
       CALL interpit(tempmn_r, rmnc, ns, nsin, mpol, mpolin,                    &
@@ -303,22 +299,18 @@
          CALL cdf_read(ncid, vn_jbsupsc, tempmn_r)
          CALL interpit(tempmn_r, jbsupsmnch, ns, nsin, mpol, mpolin,           &
      &                 ntor, ntorin, nfp, nfp_i, .true.)
-         jbsupsmnch(m1,-nmin:nmin,1) = jbsupsmnch(m1,-nmin:nmin,2)
 
          CALL cdf_read(ncid, vn_jbsupus, tempmn_r)
          CALL interpit(tempmn_r, jbsupumnsh, ns, nsin, mpol, mpolin,           &
      &                 ntor, ntorin, nfp, nfp_i, .true.)
-         jbsupumnsh(m1,-nmin:nmin,1) = jbsupumnsh(m1,-nmin:nmin,2)
 
          CALL cdf_read(ncid, vn_jbsupvs, tempmn_r)
          CALL interpit(tempmn_r, jbsupvmnsh, ns, nsin, mpol, mpolin,           &
      &                 ntor, ntorin, nfp, nfp_i, .true.)
-         jbsupvmnsh(m0,-nmin:nmin,1) = jbsupvmnsh(m0,-nmin:nmin,2)
 
          CALL cdf_read(ncid, vn_jpress,  tempmn_r)
          CALL interpit(tempmn_r, jpmnsh,     ns, nsin, mpol, mpolin,           &
      &                 ntor, ntorin, nfp, nfp_i, .true.)
-         jpmnsh(m0,-nmin:nmin,1) = jpmnsh(m0,-nmin:nmin,2)
 
          CALL cdf_read(ncid, vn_rmns, tempmn_r)
          CALL interpit(tempmn_r, rmns, ns, nsin, mpol, mpolin,                 &
@@ -398,6 +390,8 @@
       USE shared_data, ONLY: r1_i, z1_i
       USE utilities, ONLY: curl_htof
       USE stel_constants, ONLY: one
+      USE vmec_info, ONLY: rmnc => rmnc_i, zmns => zmns_i,                     &
+     &                     rmns => rmns_i, zmnc => zmnc_i
 
       IMPLICIT NONE
 
@@ -530,10 +524,10 @@
       CALL cdf_write(ncid, vn_chipf, chipf)
       CALL cdf_write(ncid, vn_phipf, phipf)
 
-      CALL fourier_context%tomnsp(r1_i, tempmn_w, f_cos)
+      tempmn_w = rmnc
       CALL restart_denormalize(tempmn_w, one)
       CALL cdf_write(ncid, vn_rmnc, tempmn_w)
-      CALL fourier_context%tomnsp(z1_i, tempmn_w, f_sin)
+      tempmn_w = zmns
       CALL restart_denormalize(tempmn_w, one)
       CALL cdf_write(ncid, vn_zmns, tempmn_w)
 
@@ -543,10 +537,10 @@
          CALL cdf_write(ncid, vn_jbsupvs, jbsupvmnsh)
          CALL cdf_write(ncid, vn_jpress,  jpmnsh)
 
-         CALL fourier_context%tomnsp(r1_i, tempmn_w, f_sin)
+         tempmn_w = rmns
          CALL restart_denormalize(tempmn_w, one)
          CALL cdf_write(ncid, vn_rmns, tempmn_w)
-         CALL fourier_context%tomnsp(z1_i, tempmn_w, f_cos)
+         tempmn_w = zmnc
          CALL restart_denormalize(tempmn_w, one)
          CALL cdf_write(ncid, vn_zmnc, tempmn_w)
       END IF
@@ -644,7 +638,7 @@
       ALLOCATE(bsubuijh(ntheta,nzeta,ns))
       ALLOCATE(bsubvijh(ntheta,nzeta,ns))
 
-      CALL tolowerh(bsupsijh, bsupuijh, bsupvijh,                           &
+      CALL tolowerh(bsupsijh, bsupuijh, bsupvijh,                              &
                     bsubsijh, bsubuijh, bsubvijh, 1, ns)
 
 !  Need these to compute the currents later.
