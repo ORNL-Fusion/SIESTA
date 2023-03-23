@@ -139,6 +139,8 @@
       LOGICAL :: l_VMEC_Uniform
 !>  If extended grid is to be used using an available vessel file
       LOGICAL :: l_vessel = .FALSE.
+!>  Recompute lambda on the SIESTA grid.
+      LOGICAL :: l_lambda = .TRUE.
 
 !  Algrothim Control Variables}
 !>  Maximum number of iterations after diagonal prec.
@@ -200,7 +202,7 @@
 !  Control flags
         ladd_pert, lresistive, lrestart, l_tracing, lcolscale,                 &
         l_silo_output, l_silo_output, l_silo3D, l_output_alliter,              &
-        l_VMEC_Uniform, lasym, lrecon, l_vessel,                               &
+        l_VMEC_Uniform, lasym, lrecon, l_vessel, l_lambda,                     &
 !  Algrothim Control Variables
         niter, ftol, mupar, levmarq_param, eta_factor, nprecon,                &
         ngmres_type, iortho,                                                   &
