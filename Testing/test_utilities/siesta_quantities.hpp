@@ -205,7 +205,7 @@ public:
 
         siesta_quantity<GIRD_CLASS> quantity;
         for (size_t m = 0, em = mpol; m <= em; m++) {
-            for (ssize_t n = -ntor, en = ntor; n <= en; n++) {
+            for (long n = -ntor, en = ntor; n <= en; n++) {
                 const size_t ni = n + ntor;
 
                 std::vector<double> temp(nrad);
@@ -272,7 +272,7 @@ public:
 
         siesta_quantity<GIRD_CLASS> quantity;
         for (size_t m = 0, em = mpol; m <= em; m++) {
-            for (ssize_t n = -ntor, en = ntor; n <= en; n++) {
+            for (long n = -ntor, en = ntor; n <= en; n++) {
                 const size_t ni = n + ntor;
 
                 std::vector<double> temp(nrad);
@@ -346,7 +346,7 @@ public:
         for (size_t m = 0, em = siesta.mpol; m <= em; m++) {
             siesta_quantity_1d<full_grid> full_slice;
 
-            for (ssize_t n = - siesta.ntor, en = siesta.ntor; n <= en; n++) {
+            for (long n = - siesta.ntor, en = siesta.ntor; n <= en; n++) {
                 const size_t ni = n + siesta.ntor;
                 full_slice.push_back(siesta_grid<full_grid> (siesta.quantity[m][ni].grid.get_prime(static_cast<double> (m))));
             }

@@ -146,6 +146,11 @@
 !>  Name for the restart file fsubvmnc.
       CHARACTER (len=*), PARAMETER :: vn_fsubvmnc = 'fsubvmncf(m,n,r)'
 
+!>  Name for the restart file lmns.
+      CHARACTER (len=*), PARAMETER :: vn_lmns = 'lmns(m,n,r)'
+!>  Name for the restart file lmnc.
+      CHARACTER (len=*), PARAMETER :: vn_lmnc = 'lmnc(m,n,r)'
+
 !>  Name for the restart file p_factor.
       CHARACTER (len=*), PARAMETER :: vn_p_factor = 'p_factor'
 !>  Name for the restart file b_factor.
@@ -391,7 +396,8 @@
       USE utilities, ONLY: curl_htof
       USE stel_constants, ONLY: one
       USE vmec_info, ONLY: rmnc => rmnc_i, zmns => zmns_i,                     &
-     &                     rmns => rmns_i, zmnc => zmnc_i
+     &                     rmns => rmns_i, zmnc => zmnc_i,                     &
+     &                     lmns => lmns_i, lmnc => lmnc_i
 
       IMPLICIT NONE
 
@@ -474,6 +480,7 @@
       CALL cdf_define(ncid, vn_fsubsmnc,  jbsupsmnsh, dimname=restart_dims)
       CALL cdf_define(ncid, vn_fsubumns,  jbsupumnch, dimname=restart_dims)
       CALL cdf_define(ncid, vn_fsubvmns,  jbsupvmnch, dimname=restart_dims)
+      CALL cdf_define(ncid, vn_lmns,      lmns,       dimname=restart_dims)
       CALL cdf_define(ncid, vn_pmnc,      jpmnch,     dimname=restart_dims)
       CALL cdf_define(ncid, vn_b_factor,  b_factor)
       CALL cdf_define(ncid, vn_p_factor,  p_factor)
@@ -491,12 +498,12 @@
          CALL cdf_define(ncid, vn_rmns, tempmn_w, dimname=restart_dims)
          CALL cdf_define(ncid, vn_zmnc, tempmn_w, dimname=restart_dims)
 
-         CALL cdf_define(ncid, vn_bsupsmnc, jbsupsmnch, dimname=restart_dims)
-         CALL cdf_define(ncid, vn_bsupumns, jbsupumnsh, dimname=restart_dims)
-         CALL cdf_define(ncid, vn_bsupvmns, jbsupvmnsh, dimname=restart_dims)
-         CALL cdf_define(ncid, vn_bsubsmnc, jbsupsmnch, dimname=restart_dims)
-         CALL cdf_define(ncid, vn_bsubumns, jbsupumnsh, dimname=restart_dims)
-         CALL cdf_define(ncid, vn_bsubvmns, jbsupvmnsh, dimname=restart_dims)
+         CALL cdf_define(ncid, vn_bsupsmnc,  jbsupsmnch, dimname=restart_dims)
+         CALL cdf_define(ncid, vn_bsupumns,  jbsupumnsh, dimname=restart_dims)
+         CALL cdf_define(ncid, vn_bsupvmns,  jbsupvmnsh, dimname=restart_dims)
+         CALL cdf_define(ncid, vn_bsubsmnc,  jbsupsmnch, dimname=restart_dims)
+         CALL cdf_define(ncid, vn_bsubumns,  jbsupumnsh, dimname=restart_dims)
+         CALL cdf_define(ncid, vn_bsubvmns,  jbsupvmnsh, dimname=restart_dims)
          CALL cdf_define(ncid, vn_jksupsmnc, jbsupsmnch, dimname=restart_dims)
          CALL cdf_define(ncid, vn_jksupumns, jbsupumnsh, dimname=restart_dims)
          CALL cdf_define(ncid, vn_jksupvmns, jbsupvmnsh, dimname=restart_dims)
@@ -506,6 +513,7 @@
          CALL cdf_define(ncid, vn_fsubsmns,  jbsupsmnsh, dimname=restart_dims)
          CALL cdf_define(ncid, vn_fsubumnc,  jbsupumnch, dimname=restart_dims)
          CALL cdf_define(ncid, vn_fsubvmnc,  jbsupvmnch, dimname=restart_dims)
+         CALL cdf_define(ncid, vn_lmnc,      lmnc,       dimname=restart_dims)
          CALL cdf_define(ncid, vn_pmns, jpmnsh, dimname=restart_dims)
       END IF
 
@@ -629,6 +637,10 @@
       CALL restart_denormalize(tempmn_w, 1.0_dp)
       CALL cdf_write(ncid, vn_fsupvmns, tempmn_w)
 
+      tempmn_w = lmns
+      CALL restart_denormalize(tempmn_w, 1.0_dp)
+      CALL cdf_write(ncid, vn_lmns, tempmn_w)
+
 !  Remove the orthonorm and p_factor so this quantity can be directly summed.
       CALL fourier_context%tomnsp(pijh, tempmn_w, f_cos)
       CALL restart_denormalize(tempmn_w, p_factor*mu0)
@@ -717,6 +729,10 @@
          tempmn_w = fsupvmncf
          CALL restart_denormalize(tempmn_w, 1.0_dp)
          CALL cdf_write(ncid, vn_fsupvmnc, tempmn_w)
+
+         tempmn_w = lmnc
+         CALL restart_denormalize(tempmn_w, 1.0_dp)
+         CALL cdf_write(ncid, vn_lmnc, tempmn_w)
 
 !  Remove the orthonorm and p_factor so this quantity can be directly summed.
          CALL fourier_context%tomnsp(pijh, tempmn_w, f_sin)

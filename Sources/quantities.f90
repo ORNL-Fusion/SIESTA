@@ -19,7 +19,7 @@
       USE shared_data, ONLY: lasym, lverbose
       USE nscalingtools, ONLY: startglobrow, endglobrow, PARSOLVER, MPI_ERR
       USE utilities, ONLY: to_half_mesh, to_full_mesh
-      USE siesta_namelist, ONLY: l_vessel
+      USE siesta_namelist, ONLY: l_vessel, l_lambda
 
       IMPLICIT NONE
 
@@ -396,7 +396,7 @@
         phiph(1) = 0
         chiph(1) = 0
 
-        IF (.not.l_vessel) THEN
+        IF (.not.l_vessel .and. l_lambda) THEN
           CALL ReCompute_Lambda(lmns_i, lmnc_i, jacobh,                        &
                                 fourier_context%orthonorm, phiph, chiph,       &
                                 nsmin, nsmax)
@@ -746,7 +746,7 @@
          CALL solver(amat, brhs, mnmax*n2, 1, info)
          CALL ASSERT(info.EQ.0,'INFO != 0 IN RECOMPUTE_LAMBDA')
 
-!  The we really solved for phip*lambda so divide of that component.
+!  The we really solved for phip*lambda so divide off that component.
          lmns(:,js) = brhs(:,1)/(orthonorm*phiph(js))
          IF (lasym) THEN
             lmnc(:,js) = brhs(:,2)/(orthonorm*phiph(js))

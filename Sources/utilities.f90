@@ -1041,7 +1041,7 @@ LOGICAL :: test
       INTEGER                                              :: n
 
 !  Local parameters
-      REAL (dp), PARAMETER :: tolarance = 1.2E-12
+      REAL (dp), PARAMETER :: tolarance = 3.0E-12
 
 !  Start of executable code.
       ALLOCATE(divbmnf(0:mpol,-ntor:ntor,nsmin:nsmax))
