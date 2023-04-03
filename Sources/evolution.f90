@@ -642,7 +642,6 @@
                IF (.not.lverbose .and. iprint .eq. 6) THEN
                   CYCLE
                END IF
-               WRITE (iprint,1007) siesta_curtor, vmec_curtor
             END DO
          END IF
 
@@ -650,6 +649,7 @@
             IF ((.not.lverbose .and. iprint .eq. 6) .or. iam .ne. 0) THEN
                CYCLE
             END IF
+            WRITE (iprint,1007) siesta_curtor, vmec_curtor
             IF (niter .EQ. 1) THEN
                IF (lresistive) THEN
                   str_resistive = "RESISTIVE RUN "

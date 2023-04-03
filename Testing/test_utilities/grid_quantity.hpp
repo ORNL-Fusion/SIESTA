@@ -325,7 +325,7 @@ public:
         double temp = 0.0;
 
         for (size_t m = 0, em = mpol; m <= em; m++) {
-            for (ssize_t n = -ntor, en = ntor; n <= en; n++) {
+            for (long n = -ntor, en = ntor; n <= en; n++) {
                 const size_t ni = n + ntor;
                 temp += quantity[m][ni].get(s)*func.f(m*u + n*nfp*v);
             }
@@ -350,7 +350,7 @@ public:
         double temp = 0.0;
 
         for (size_t m = 0, em = mpol; m <= em; m++) {
-            for (ssize_t n = -ntor, en = ntor; n <= en; n++) {
+            for (long n = -ntor, en = ntor; n <= en; n++) {
                 const size_t ni = n + ntor;
                 temp += m*quantity[m][ni].get(s)*func.df(m*u + n*nfp*v);
             }
@@ -375,7 +375,7 @@ public:
         double temp = 0.0;
 
         for (size_t m = 0, em = mpol; m <= em; m++) {
-            for (ssize_t n = -ntor, en = ntor; n <= en; n++) {
+            for (long n = -ntor, en = ntor; n <= en; n++) {
                 const size_t ni = n + ntor;
                 temp += n*nfp*quantity[m][ni].get(s)*func.df(m*u + n*nfp*v);
             }
