@@ -18,6 +18,8 @@ target_link_libraries (xsiesta PUBLIC siesta)
 
 add_subdirectory (Sources)
 
+install (TARGETS xsiesta)
+
 ################################################################################
 #  Testing                                                                     #
 ################################################################################
