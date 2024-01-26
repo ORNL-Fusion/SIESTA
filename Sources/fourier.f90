@@ -113,6 +113,8 @@
          REAL (dp), DIMENSION(:,:), POINTER :: workin1 => null()
 !>  Working buffer for second in terms.
          REAL (dp), DIMENSION(:,:), POINTER :: workin2 => null()
+!>  Toroidal mode numbers.
+         INTEGER, DIMENSION(:), POINTER     :: tor_modes => null()
       CONTAINS
          PROCEDURE, PASS :: toijsp_2d => fourier_toijsp_2d
          PROCEDURE, PASS :: toijsp_3d => fourier_toijsp_3d
@@ -128,6 +130,7 @@
                                       tomnsp_2d_v, tomnsp_3d_pest,             &
                                       tomnsp_2d_pest, tomnsp_2d_u_pest
          PROCEDURE       :: get_origin => fourier_get_origin
+         PROCEDURE       :: get_index => fourier_get_index
          FINAL           :: fourier_destruct
       END TYPE
 
@@ -177,35 +180,38 @@
 !>    theta_j = j*pi/M,         j = 0,...,M   Where M = mpol - 1
 !>    zeta_k  = k*2*pi/(2N + 1) k = 0,...,2N  Where N = ntor.
 !>
-!>  @param[in] mpol   Number of poloidal modes.
-!>  @param[in] ntor   Number of toroidal modes.
-!>  @param[in] ntheta Number of poloidal real grid points.
-!>  @param[in] nzeta  Number of toroidal real grid points.
-!>  @param[in] nfp    Number of field periods.
-!>  @param[in] sym    Symmetry flag.
+!>  @param[in] mpol      Number of poloidal modes.
+!>  @param[in] ntor      Number of toroidal modes.
+!>  @param[in] ntheta    Number of poloidal real grid points.
+!>  @param[in] nzeta     Number of toroidal real grid points.
+!>  @param[in] nfp       Number of field periods.
+!>  @param[in] sym       Symmetry flag.
+!>  @param[in] tor_modes Toroidal mode numbers.
 !-------------------------------------------------------------------------------
-      FUNCTION fourier_construct(mpol, ntor, ntheta, nzeta, nfp, sym)
+      FUNCTION fourier_construct(mpol, ntor, ntheta, nzeta, nfp, sym,          &
+     &                           tor_modes)
 
       IMPLICIT NONE
 
 !  Declare Arguments
-      CLASS (fourier_class), POINTER :: fourier_construct
-      INTEGER, INTENT(in)            :: mpol
-      INTEGER, INTENT(in)            :: ntor
-      INTEGER, INTENT(in)            :: ntheta
-      INTEGER, INTENT(in)            :: nzeta
-      INTEGER, INTENT(in)            :: nfp
-      LOGICAL, INTENT(in)            :: sym
+      CLASS (fourier_class), POINTER             :: fourier_construct
+      INTEGER, INTENT(in)                        :: mpol
+      INTEGER, INTENT(in)                        :: ntor
+      INTEGER, INTENT(in)                        :: ntheta
+      INTEGER, INTENT(in)                        :: nzeta
+      INTEGER, INTENT(in)                        :: nfp
+      LOGICAL, INTENT(in)                        :: sym
+      INTEGER, DIMENSION(-ntor:ntor), INTENT(in) :: tor_modes
 
 !  Local Variables
-      REAL (dp)                      :: pi_norm
-      INTEGER                        :: i
-      INTEGER                        :: j
-      REAL (dp)                      :: arg
-      REAL (dp)                      :: dnorm
+      REAL (dp)                                  :: pi_norm
+      INTEGER                                    :: i
+      INTEGER                                    :: j
+      REAL (dp)                                  :: arg
+      REAL (dp)                                  :: dnorm
 
 !  Local Parameters
-      REAL (dp), PARAMETER           :: nfactor = 1.41421356237310_dp
+      REAL (dp), PARAMETER                       :: nfactor = 1.41421356237310_dp
 
 !  Start of executable code.
       ALLOCATE(fourier_construct)
@@ -261,15 +267,15 @@
          DO i = 1, nzeta
             arg = (twopi*(i - 1))/nzeta
 
-            fourier_construct%cosnv(i,j) = COS(j*arg)
-            fourier_construct%sinnv(i,j) = SIN(j*arg)
+            fourier_construct%cosnv(i,j) = COS(tor_modes(j)*arg)
+            fourier_construct%sinnv(i,j) = SIN(tor_modes(j)*arg)
 
             CALL fourier_round_trig(fourier_construct%cosnv(i,j),              &
      &                              fourier_construct%sinnv(i,j))
          END DO
 
-         fourier_construct%cosnvn(:,j) = j*nfp*fourier_construct%cosnv(:,j)
-         fourier_construct%sinnvn(:,j) = j*nfp*fourier_construct%sinnv(:,j)
+         fourier_construct%cosnvn(:,j) = tor_modes(j)*nfp*fourier_construct%cosnv(:,j)
+         fourier_construct%sinnvn(:,j) = tor_modes(j)*nfp*fourier_construct%sinnv(:,j)
       END DO
 
 !  Compute orthonorm factor for cos(mu + nv), sin(mu + nv) basis
@@ -291,6 +297,9 @@
       ALLOCATE(fourier_construct%workmj2(0:mpol,nzeta))
       ALLOCATE(fourier_construct%workin1(ntheta,-ntor:ntor))
       ALLOCATE(fourier_construct%workin2(ntheta,-ntor:ntor))
+      ALLOCATE(fourier_construct%tor_modes(-ntor:ntor))
+      
+      fourier_construct%tor_modes(-ntor:ntor) = tor_modes(-ntor:ntor)
 
       END FUNCTION
 
@@ -385,6 +394,11 @@
       IF (ASSOCIATED(this%workin2)) THEN
          DEALLOCATE(this%workin2)
          this%workin2 => null()
+      END IF
+
+      IF (ASSOCIATED(this%tor_modes)) THEN
+         DEALLOCATE(this%tor_modes)
+         this%tor_modes => null()
       END IF
 
       END SUBROUTINE
@@ -1046,6 +1060,38 @@
 
       END SUBROUTINE
 
+!-------------------------------------------------------------------------------
+!>  @brief The the index position of the toroidal mode if it exists.
+!>
+!>  @param[inout] this A @ref fourier_class instance.
+!>  @param[inout] n    Toroidal mode number to check the index on exit.
+!>  @returns True if the mode number was found.
+!-------------------------------------------------------------------------------
+      FUNCTION fourier_get_index(this, n)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      LOGICAL                              :: fourier_get_index
+      CLASS (fourier_class), INTENT(inout) :: this
+      INTEGER, INTENT(inout)               :: n
+
+!  Local variables
+      INTEGER                              :: i
+
+!  Start of executable code
+      fourier_get_index = .false.
+
+      DO i = 0, SIGN(UBOUND(this%tor_modes, 1), n)
+         IF (this%tor_modes(i) .eq. n) THEN
+            n = this%tor_modes(i)
+            fourier_get_index = .true.
+            EXIT
+         END IF
+      END DO
+
+      END FUNCTION
+
 !*******************************************************************************
 !  UNIT TESTS
 !*******************************************************************************
@@ -1070,6 +1116,7 @@
       REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: testmn
       REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: result
       CLASS (fourier_class), POINTER        :: four => null()
+      INTEGER, ALLOCATABLE, DIMENSION(:)    :: tor_modes
 
 !  Local PARAMETERS
       INTEGER, PARAMETER                    :: pol = 10
@@ -1082,9 +1129,15 @@
       ALLOCATE(testij(theta,zeta))
       ALLOCATE(testmn(0:pol,-tor:tor))
       ALLOCATE(result(0:pol,-tor:tor))
+      ALLOCATE(tor_modes(-tor:tor))
 
-      four => fourier_class(pol, tor, theta, zeta, nfp, .false.)
+      DO n = -tor, tor
+         tor_modes(n) = n
+      END DO
+
+      four => fourier_class(pol, tor, theta, zeta, nfp, .false., tor_modes)
       test_fourier = .true.
+      DEALLOCATE(tor_modes)
 
       DO n = -tor, tor
          DO m = 0, pol
