@@ -1082,9 +1082,10 @@
 !  Start of executable code
       fourier_get_index = .false.
 
-      DO i = 0, SIGN(UBOUND(this%tor_modes, 1), n)
+      DO i = 0, SIGN(UBOUND(this%tor_modes, 1), n), SIGN(1, n)
          IF (this%tor_modes(i) .eq. n) THEN
             n = this%tor_modes(i)
+            
             fourier_get_index = .true.
             EXIT
          END IF

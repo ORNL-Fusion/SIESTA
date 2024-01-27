@@ -281,8 +281,10 @@
       mupar0         = mupar
 
       IF (TRIM(ntor_type) .eq. 'dense') THEN
-         DO i = -ntorin, ntorin
+         ntor_modes(0) = 0
+         DO i = 1, ntorin
             ntor_modes(i) = i
+            ntor_modes(-i) = -i
          END DO
       END IF
 
