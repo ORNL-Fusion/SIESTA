@@ -625,7 +625,7 @@
       IF (iam .eq. 0 .and. lverbose .and. parity .eq. f_cos) THEN
          m = INT(MAXVAL(xm_vmec))
          n = INT(MAXVAL(ABS(xn_vmec)))/nfp
-         IF (m .gt. mpol .or. n .gt. ntor) THEN
+         IF (m .gt. mpol .or. .not.fourier_context%get_index(n)) THEN
             WRITE(*,1000) m, n
          END IF
          CALL assert_eq(0, MOD(nfp_vmec, nfp), 'nfpin should be an even ' //   &

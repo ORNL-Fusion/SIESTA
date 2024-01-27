@@ -120,18 +120,20 @@
 !>  The real space grid is determined from the number of toroidal and poloidal
 !>  modes.
 !>
-!>  @param[in] mpol_in Number of SIESTA poloidal modes.
-!>  @param[in] ntor_in Number of SIESTA toroidal modes.
+!>  @param[in] mpol_in   Number of SIESTA poloidal modes.
+!>  @param[in] ntor_in   Number of SIESTA toroidal modes.
+!>  @param[in] tor_modes Toroidal mode numbers.
 !-------------------------------------------------------------------------------
-      SUBROUTINE set_grid_sizes(mpol_in, ntor_in)
+      SUBROUTINE set_grid_sizes(mpol_in, ntor_in, tor_modes)
       USE island_params
       USE shared_data, ONLY: mblk_size, ndims, lasym
 
       IMPLICIT NONE
 
 !  Declare Arguments
-      INTEGER, INTENT(IN) :: mpol_in
-      INTEGER, INTENT(IN) :: ntor_in
+      INTEGER, INTENT(IN)                              :: mpol_in
+      INTEGER, INTENT(IN)                              :: ntor_in
+      INTEGER, DIMENSION(-ntor_in:ntor_in), INTENT(in) :: tor_modes
 
 !  Start of executable code
       ndims = 3
@@ -145,7 +147,7 @@
 !  Set number of points == number of modes for now! (May want mid-points for
 !  flux conservation)
       nu_i = mpol_i + 2
-      nv_i = 2*ntor_i + 2
+      nv_i = 2*tor_modes(ntor_i) + 2
 
 !USE 3/2 (ORSZAG) RULE FOR ANTI-ALIASING OF EVOLUTION EQNS
 !Suppresses RADIAL grid separation in pressure
