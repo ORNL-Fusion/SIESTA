@@ -94,25 +94,6 @@ INTEGER                 :: s,m,n
                     f_cos, nsmin, nsmax)
       END IF
 
-!      DO m = 0, mpol
-!         DO n = -ntor, ntor
-!            divbmnsf(m,n,nl:nh) =   ohs*(jbsupsmnsh(m,n,nl+1:nh+1) -           &
-!                                         jbsupsmnsh(m,n,nl:nh))                &
-!                                -     m*(jbsupumnch(m,n,nl+1:nh+1) +           &
-!                                         jbsupumnch(m,n,nl:nh))*0.5            &
-!                                - n*nfp*(jbsupvmnch(m,n,nl+1:nh+1) +           &
-!                                         jbsupvmnch(m,n,nl:nh))*0.5
-!            IF (lasym) THEN
-!               divbmncf(m,n,nl:nh) =   ohs*(jbsupsmnch(m,n,nl+1:nh+1) -        &
-!                                            jbsupsmnch(m,n,nl:nh))             &
-!                                   -     m*(jbsupumnsh(m,n,nl+1:nh+1) +        &
-!                                            jbsupumnsh(m,n,nl:nh))*0.5         &
-!                                   + n*nfp*(jbsupvmnsh(m,n,nl+1:nh+1) +        &
-!                                            jbsupvmnsh(m,n,nl:nh))*0.5
-!            END IF
-!         END DO
-!      END DO
-
       tnorm = hs_i*SUM(jbsupumnch(:,:,nsmin:nsmax)**2                          &
             +          jbsupvmnch(:,:,nsmin:nsmax)**2                          &
             +          jbsupsmnsh(:,:,nsmin:nsmax)**2)
@@ -144,7 +125,7 @@ INTEGER                 :: s,m,n
 !>  @param[in] ns_max Upper radial index.
 !-------------------------------------------------------------------------------
       FUNCTION divdb(ns_min, ns_max)
-      USE island_params, ONLY: ohs=>ohs_i
+      USE island_params, ONLY: ohs=>ohs_i, fourier_context
       USE hessian, ONLY: gather_array
 
 !  Declare Arguments
@@ -156,6 +137,7 @@ INTEGER                 :: s,m,n
       INTEGER                 :: istat
       INTEGER                 :: m
       INTEGER                 :: n
+      INTEGER                 :: n_mode
       INTEGER                 :: nl
       INTEGER                 :: nh
       REAL (dp)               :: tnorm
@@ -184,21 +166,22 @@ INTEGER                 :: s,m,n
       divbmnsf = 0
       divbmncf = 0
 
-      DO m = 0, mpol
-         DO n = -ntor, ntor
-            divbmnsf(m,n,nl:nh) =    -m*(djbsupumnch(m,n,nl+1:nh+1) +          &
-                                         djbsupumnch(m,n,nl:nh))*0.5           &
-                                - n*nfp*(djbsupvmnch(m,n,nl+1:nh+1) +          &
-                                         djbsupvmnch(m,n,nl:nh))*0.5           &
-                                +   ohs*(djbsupsmnsh(m,n,nl+1:nh+1) -          &
-                                         djbsupsmnsh(m,n,nl:nh))
+      DO n = -ntor, ntor
+         n_mode = fourier_context%tor_modes(n)*nfp
+         DO m = 0, mpol
+            divbmnsf(m,n,nl:nh) =     -m*(djbsupumnch(m,n,nl+1:nh+1) +         &
+     &                                    djbsupumnch(m,n,nl:nh))*0.5          &
+     &                          - n_mode*(djbsupvmnch(m,n,nl+1:nh+1) +         &
+     &                                    djbsupvmnch(m,n,nl:nh))*0.5          &
+     &                          +   ohs*(djbsupsmnsh(m,n,nl+1:nh+1) -          &
+     &                                   djbsupsmnsh(m,n,nl:nh))
             IF (lasym) THEN
-               divbmncf(m,n,nl:nh) =     m*(djbsupumnsh(m,n,nl+1:nh+1) +       &
-                                            djbsupumnsh(m,n,nl:nh))*0.5        &
-                                   + n*nfp*(djbsupvmnsh(m,n,nl+1:nh+1) +       &
-                                            djbsupvmnsh(m,n,nl:nh))*0.5        &
-                                   +   ohs*(djbsupsmnch(m,n,nl+1:nh+1) -       &
-                                            djbsupsmnch(m,n,nl:nh))
+               divbmncf(m,n,nl:nh) =      m*(djbsupumnsh(m,n,nl+1:nh+1) +      &
+     &                                       djbsupumnsh(m,n,nl:nh))*0.5       &
+     &                             + n_mode*(djbsupvmnsh(m,n,nl+1:nh+1) +      &
+     &                                       djbsupvmnsh(m,n,nl:nh))*0.5       &
+     &                             +    ohs*(djbsupsmnch(m,n,nl+1:nh+1) -      &
+     &                                       djbsupsmnch(m,n,nl:nh))
             END IF
          END DO
       END DO
@@ -428,7 +411,6 @@ INTEGER                 :: s,m,n
       DO n = -ntor, ntor
          DO m = 0, mpol
             m_array(m,n) = m
-            n_array(m,n) = n
          END DO
       END DO
 
@@ -437,7 +419,8 @@ INTEGER                 :: s,m,n
       WRITE (p_format,1000) mnmax
       WRITE (iunit,p_format) '      ','   ','MPOL--->', m_array
       WRITE (p_format,1000) mnmax
-      WRITE (iunit,p_format) 'RADIUS','RMS','NTOR--->', n_array
+      WRITE (iunit,p_format) 'RADIUS','RMS','NTOR--->',                        &
+     &                       fourier_context%tor_modes
 
       WRITE (p_format,1002) mnmax
       DO js = 2, ns

@@ -92,7 +92,7 @@
       USE siesta_error
       USE diagnostics_mod, ONLY: toroidal_flux0
       USE blocktridiagonalsolver_s, ONLY: Initialize, GetRanks
-      USE siesta_namelist, ONLY: mpolin, ntorin, ntor_modes
+      USE siesta_namelist, ONLY: mpolin, ntorin, nfpin, ntor_modes
       USE metrics, ONLY: set_grid_sizes
 
       IMPLICIT NONE
@@ -185,7 +185,7 @@
       siesta_run_construct%time_on = ton
 
       nprecon = init_data(namelist_file)
-      CALL set_grid_sizes(mpolin, ntorin, ntor_modes)
+      CALL set_grid_sizes(mpolin, ntorin, nfpin, ntor_modes(-ntorin:ntorin))
 
       CALL second0(toff)
 

@@ -1084,8 +1084,7 @@
 
       DO i = 0, SIGN(UBOUND(this%tor_modes, 1), n), SIGN(1, n)
          IF (this%tor_modes(i) .eq. n) THEN
-            n = this%tor_modes(i)
-            
+            n = i
             fourier_get_index = .true.
             EXIT
          END IF
@@ -1138,7 +1137,6 @@
 
       four => fourier_class(pol, tor, theta, zeta, nfp, .false., tor_modes)
       test_fourier = .true.
-      DEALLOCATE(tor_modes)
 
       DO n = -tor, tor
          DO m = 0, pol
@@ -1153,7 +1151,7 @@
             CALL four%tomnsp(testij, result, f_cos)
             test_fourier = test_fourier .and.                                  &
                            check(testmn, result, pol, tor,                     &
-                                 'cosine_parity_test')
+     &                           tor_modes, 'cosine_parity_test')
 
 !  Test sine parity transform.
             IF (m .eq. m0 .and. n .eq. n0) THEN
@@ -1165,7 +1163,7 @@
             CALL four%tomnsp(testij, result, f_sin)
             test_fourier = test_fourier .and.                                  &
                            check(testmn, result, pol, tor,                     &
-                                 'sine_parity_test')
+     &                           tor_modes, 'sine_parity_test')
 
 !  Test u derivatives of cosine parity.
             testmn = 0
@@ -1175,7 +1173,7 @@
             testmn(m,n) = -m
             test_fourier = test_fourier .and.                                  &
                            check(testmn, result, pol, tor,                     &
-                                 'du_cosine_parity_test')
+     &                           tor_modes, 'du_cosine_parity_test')
 
 !  Test v derivatives of cosine parity.
             testmn = 0
@@ -1185,7 +1183,7 @@
             testmn(m,n) = -n*nfp
             test_fourier = test_fourier .and.                                  &
                            check(testmn, result, pol, tor,                     &
-                                 'dv_cosine_parity_test')
+     &                           tor_modes, 'dv_cosine_parity_test')
 
 !  Test u derivatives of sine parity.
             testmn = 0
@@ -1195,7 +1193,7 @@
             testmn(m,n) = m
             test_fourier = test_fourier .and.                                  &
                            check(testmn, result, pol, tor,                     &
-                                 'du_sine_parity_test')
+     &                           tor_modes, 'du_sine_parity_test')
 
 !  Test v derivatives of sine parity.
             testmn = 0
@@ -1204,8 +1202,8 @@
             CALL four%tomnsp(testij, result, f_cos)
             testmn(m,n) = n*nfp
             test_fourier = test_fourier .and.                                  &
-                           check(testmn, result, pol, tor,                     &
-                                 'dv_sine_parity_test')
+     &                     check(testmn, result, pol, tor,                     &
+     &                           tor_modes, 'dv_sine_parity_test')
          END DO
       END DO
 
@@ -1214,6 +1212,8 @@
       DEALLOCATE(testij)
       DEALLOCATE(testmn)
       DEALLOCATE(result)
+
+      DEALLOCATE(tor_modes)
 
       END FUNCTION
 
@@ -1258,27 +1258,32 @@
 !-------------------------------------------------------------------------------
 !>  @brief Check all test values.
 !>
-!>  @param[in] expected Expected value for the test.
-!>  @param[in] received Recieved value for the test.
-!>  @param[in] name     Name of the test.
+!>  @param[in] expected  Expected value for the test.
+!>  @param[in] received  Recieved value for the test.
+!>  @param[in] mpol      Number of poloidal modes.
+!>  @param[in] ntor      Number of toroidal modes.
+!>  @param[in] tor_modes Toroidal modes.
+!>  @param[in] name      Name of the test.
 !-------------------------------------------------------------------------------
-      FUNCTION check_all(expected, received, mpol, ntor, name)
+      FUNCTION check_all(expected, received, mpol, ntor, tor_modes, name)
 
       IMPLICIT NONE
 
 !  Declare Arguments
-      LOGICAL                                  :: check_all
-      REAL (rprec), DIMENSION(:,:), INTENT(in) :: expected
-      REAL (rprec), DIMENSION(:,:), INTENT(in) :: received
-      INTEGER, INTENT(in)                      :: mpol
-      INTEGER, INTENT(in)                      :: ntor
-      CHARACTER (len=*), INTENT(in)            :: name
+      LOGICAL                                    :: check_all
+      REAL (rprec), DIMENSION(:,:), INTENT(in)   :: expected
+      REAL (rprec), DIMENSION(:,:), INTENT(in)   :: received
+      INTEGER, INTENT(in)                        :: mpol
+      INTEGER, INTENT(in)                        :: ntor
+      INTEGER, DIMENSION(-ntor:ntor), INTENT(in) :: tor_modes
+      CHARACTER (len=*), INTENT(in)              :: name
 
 !  Local Variables
-      INTEGER                                  :: m
-      INTEGER                                  :: n
-      INTEGER                                  :: moff
-      INTEGER                                  :: noff
+      INTEGER                                    :: m
+      INTEGER                                    :: n
+      INTEGER                                    :: n_mode
+      INTEGER                                    :: moff
+      INTEGER                                    :: noff
 
 !  Start of executable code.
       moff = LBOUND(expected, 1)
@@ -1286,11 +1291,12 @@
 
       check_all = .true.
 
-      DO m = 0, mpol
-         DO n = -ntor, ntor
+      
+      DO n = -ntor, ntor
+         DO m = 0, mpol
             check_all = check_all .and. check(expected(m + moff, n + noff),    &
                                               received(m + moff, n + noff),    &
-                                              m, n, name)
+                                              m, tor_modes(n), name)
          END DO
       END DO
 

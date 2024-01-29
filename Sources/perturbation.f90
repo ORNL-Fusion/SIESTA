@@ -184,6 +184,7 @@
       INTEGER                                 :: iprint
       INTEGER                                 :: mres0
       INTEGER                                 :: nres0
+      INTEGER                                 :: n
       INTEGER                                 :: isign1
       INTEGER                                 :: icount
       INTEGER                                 :: irscale
@@ -283,13 +284,15 @@
          END IF
 
 !  Scan in radius to determine primary resonance.
-         DO nres0 = -ntor, ntor
+         DO n = -ntor, ntor
 !  Avoid 0/0 chip/phip at origin
             jstart = 3
 
+            nres0 = fourier_context%tor_modes(n)
+
 !  Look for multiple resonances
             DO WHILE (jstart .lt. ns - 1)
-         
+
                IF (.not.FindResonance(mres0, nres0, rad, jstart)) THEN
                   EXIT
                END IF
@@ -305,8 +308,9 @@
 !  vanish at endpoints s=0,1
  
                   DO irscale = 1, irad_scale
-                     CALL GetResPert(irscale, isign1, mres0, nres0, rad,       &
-                                     HelPert0, HelPert0A, chip0, phip0, p_width)
+                     CALL GetResPert(irscale, isign1, mres0, n, rad,           &
+                                     HelPert0, HelPert0A, chip0, phip0,        &
+                                     p_width)
                      xc = 0
 !  FIXME: Why call this again with the same inputs?
                      wmhd = getwmhd(xc)
@@ -343,7 +347,7 @@
                   CALL FLUSH(unit_out)
                END IF
          
-               CALL GetResPert(irscale, isign1, mres0, nres0, rad,             &
+               CALL GetResPert(irscale, isign1, mres0, n, rad,                 &
                                HelPert0, HelPert0A, chip0, phip0, p_width)
 
                wmhd = getwmhd(xc)
@@ -503,6 +507,7 @@
 !  Local Variables
       INTEGER                                  :: js
       INTEGER                                  :: istat
+      INTEGER                                  :: n
       REAL (dp)                                :: rho
       REAL (dp)                                :: rhores
       REAL (dp), DIMENSION(:), ALLOCATABLE     :: pert_prof

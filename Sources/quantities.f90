@@ -485,6 +485,7 @@
 !  local variables
       INTEGER                                                 :: m
       INTEGER                                                 :: n
+      INTEGER                                                 :: n_mode
       INTEGER                                                 :: i
       INTEGER                                                 :: sparity
       INTEGER                                                 :: mp
@@ -501,7 +502,8 @@
 
          DO i = nsmin, nsmax
             DO n = -ntor, ntor
-               np = n*nfp*sparity
+               n_mode = fourier_context%tor_modes(n)
+               np = n_mode*nfp*sparity
                DO m = 0, mpol
                   mp = m*sparity
                   jbsupumnh(m,n,i) = phiph(i)*(-np*lmn(m,n,i))
@@ -510,9 +512,9 @@
             END DO
 
             IF (parity .eq. f_sin) THEN
-               jbsupumnh(m0,n0,i) = chiph(i)                                      &
+               jbsupumnh(m0,n0,i) = chiph(i)                                   &
                                   / fourier_context%orthonorm(m0,n0)
-               jbsupvmnh(m0,n0,i) = phiph(i)                                      &
+               jbsupvmnh(m0,n0,i) = phiph(i)                                   &
                                   / fourier_context%orthonorm(m0,n0)
             END IF
          END DO
@@ -603,8 +605,10 @@
       INTEGER                                     :: js
       INTEGER                                     :: m
       INTEGER                                     :: n
+      INTEGER                                     :: n_mode
       INTEGER                                     :: mp
       INTEGER                                     :: np
+      INTEGER                                     :: np_mode
       INTEGER                                     :: mn
       INTEGER                                     :: mnp
       INTEGER                                     :: lk
@@ -698,12 +702,15 @@
          mn = 0
 
          DO n = -ntor, ntor
+            n_mode = fourier_context%tor_modes(n)
             DO m = 0, mpol
 
 !  Right hand side terms sinmi and -cosmi parts.
                mn = mn + 1
-               btemp = (-m*    (chiph(js)*guv(:,js) + phiph(js)*gvv(:,js)) +   &
-                         n*nfp*(chiph(js)*guu(:,js) + phiph(js)*guv(:,js)))    &
+               btemp = (-m*         (chiph(js)*guv(:,js) +                     &
+     &                               phiph(js)*gvv(:,js)) +                    &
+     &                   n_mode*nfp*(chiph(js)*guu(:,js) +                     &
+     &                               phiph(js)*guv(:,js)))                     &
                      / jacobh(:,js)
 
                brhs(mn,1) = SUM(cosmni(:,mn)*btemp)
@@ -715,11 +722,14 @@
                mnp = 0
 
                DO np = -ntor, ntor
+                  np_mode = fourier_context%tor_modes(np)
                   DO mp = 0, mpol
                      mnp = mnp + 1
 !  Node the phip term is folded into the solve for lambda.
-                     atemp = (m*mp*gvv(:,js) + n*nfp*np*nfp*guu(:,js) -        &
-                              nfp*(m*np + mp*n)*guv(:,js))/jacobh(:,js)
+                     atemp = (m*mp*gvv(:,js) +                                 &
+     &                        n_mode*nfp*np_mode*nfp*guu(:,js) -               &
+     &                        nfp*(m*np_mode + mp*n_mode)*guv(:,js))           &
+     &                     / jacobh(:,js)
 
                      amat(mn,mnp) = SUM(cosmni(:,mn)*cosmnp(:,mnp)*atemp)
 	                 IF (mnp .eq. mn .and. amat(mn,mnp) .eq. zero) THEN

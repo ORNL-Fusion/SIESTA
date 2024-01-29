@@ -122,9 +122,10 @@
 !>
 !>  @param[in] mpol_in   Number of SIESTA poloidal modes.
 !>  @param[in] ntor_in   Number of SIESTA toroidal modes.
+!>  @param[in] nfp_in    Number of field periods.
 !>  @param[in] tor_modes Toroidal mode numbers.
 !-------------------------------------------------------------------------------
-      SUBROUTINE set_grid_sizes(mpol_in, ntor_in, tor_modes)
+      SUBROUTINE set_grid_sizes(mpol_in, ntor_in, nfp_in, tor_modes)
       USE island_params
       USE shared_data, ONLY: mblk_size, ndims, lasym
 
@@ -133,6 +134,7 @@
 !  Declare Arguments
       INTEGER, INTENT(IN)                              :: mpol_in
       INTEGER, INTENT(IN)                              :: ntor_in
+      INTEGER, INTENT(IN)                              :: nfp_in
       INTEGER, DIMENSION(-ntor_in:ntor_in), INTENT(in) :: tor_modes
 
 !  Start of executable code
