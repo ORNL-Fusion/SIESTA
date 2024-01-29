@@ -471,6 +471,8 @@
       CALL cdf_define(ncid, vn_nfpin, nfp)
       CALL cdf_define(ncid, vn_wout, wout_file)
 
+      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes)
+
       CALL cdf_define(ncid, vn_jbsupss, jbsupsmnsh, dimname=restart_dims)
       CALL cdf_define(ncid, vn_jbsupuc, jbsupumnch, dimname=restart_dims)
       CALL cdf_define(ncid, vn_jbsupvc, jbsupvmnch, dimname=restart_dims)
@@ -545,6 +547,8 @@
       CALL cdf_write(ncid, vn_ntorin, ntor)
       CALL cdf_write(ncid, vn_nfpin, nfp)
       CALL cdf_write(ncid, vn_wout, wout_file)
+
+      CALL cdf_write(ncid, vn_tor_modes, fourier_context%tor_modes)
 
       CALL cdf_write(ncid, vn_jbsupss, jbsupsmnsh)
       CALL cdf_write(ncid, vn_jbsupuc, jbsupumnch)
