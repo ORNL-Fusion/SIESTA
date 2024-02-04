@@ -239,9 +239,6 @@
 
       CALL alloc_quantities
 
-      fourier_context => fourier_class(mpolin, ntorin, nu_i, nv_i, nfp_i,      &
-     &                                 lasym, tor_modesin)
-
       filename = 'siesta_' // TRIM(restart_ext) // '.nc'
       CALL cdf_open(ncid, TRIM(filename), 'r', status)
       CALL assert_eq(0, status, 'Failed to read restart file: ' //             &
@@ -264,6 +261,9 @@
       ELSE
          nfp_i = nfpin
       END IF
+
+      fourier_context => fourier_class(mpolin, ntorin, nu_i, nv_i, nfp_i,      &
+     &                                 lasym, tor_modesin)
 
       nmin = MIN(ntor, ntorin)
 
@@ -414,7 +414,6 @@
                                rmajor => rmajor_i, fourier_context,            &
                                mpol=>mpol_i, ntor=>ntor_i, ns=>ns_i,           &
                                ntheta=>nu_i, nzeta=>nv_i
-      USE shared_data, ONLY: r1_i, z1_i
       USE utilities, ONLY: curl_htof
       USE stel_constants, ONLY: one
       USE vmec_info, ONLY: rmnc => rmnc_i, zmns => zmns_i,                     &

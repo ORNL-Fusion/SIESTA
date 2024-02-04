@@ -269,7 +269,7 @@
       LOGICAL, INTENT(in)                    :: lasym
 
 !  Local variables
-      INTEGER                                :: sum
+      INTEGER                                :: sum_f
       INTEGER                                :: m
       INTEGER                                :: n
       INTEGER                                :: rmode
@@ -277,22 +277,22 @@
 
 !  Start executable code.
       IF (lasym) THEN
-         sum = f_sum
+         sum_f = f_sum
          rmode = f_sin
          zmode = f_cos
       ELSE
-         sum = f_none
+         sum_f = f_none
          rmode = f_cos
          zmode = f_sin
       END IF
-      m = IOR(sum, f_du)
-      n = IOR(sum, f_dv)
+      m = IOR(sum_f, f_du)
+      n = IOR(sum_f, f_dv)
 
-      CALL fourier_context%toijsp(rmn, r1_i, sum, rmode)
+      CALL fourier_context%toijsp(rmn, r1_i, sum_f, rmode)
       CALL fourier_context%toijsp(rmn, ru_i, m,   rmode)
       CALL fourier_context%toijsp(rmn, rv_i, n,   rmode)
 
-      CALL fourier_context%toijsp(zmn, z1_i, sum, zmode)
+      CALL fourier_context%toijsp(zmn, z1_i, sum_f, zmode)
       CALL fourier_context%toijsp(zmn, zu_i, m,   zmode)
       CALL fourier_context%toijsp(zmn, zv_i, n,   zmode)
 

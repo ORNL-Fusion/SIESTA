@@ -585,8 +585,6 @@
 !-------------------------------------------------------------------------------
       SUBROUTINE ReCompute_Lambda(lmns, lmnc, jacobh, orthonorm,               &
                                   phiph, chiph, nsmin, nsmax)
-      USE island_params, ns=>ns_i, nuv=>nuv_i, mnmax=>mnmax_i,                 &
-                         nfp => nfp_i, ntheta => nu_i, nzeta => nv_i
       USE metrics, ONLY: guu, guv, gvv
 
       IMPLICIT NONE
