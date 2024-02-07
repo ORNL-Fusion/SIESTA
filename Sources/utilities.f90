@@ -10,7 +10,7 @@
       MODULE utilities
       USE stel_kinds
       USE island_params, ONLY: ohs=>ohs_i, ns=>ns_i, mpol=>mpol_i,             &
-                               ntor=>ntor_i, nfp=>nfp_i
+                               ntor=>ntor_i, nfp=>nfp_i, fourier_context
       USE v3_utilities, ONLY: assert, assert_eq
       USE fourier, ONLY: m0, m1, m2, n0, n1, f_sin, f_cos, f_ds, f_none,       &
                          b_ds, b_jac, b_con, f_jac
@@ -408,7 +408,7 @@ LOGICAL :: test
 !  (sqrt(g)*B^X)mn
       DO s = nmin, nsmax
          DO n = -ntor, ntor
-            np = sparity*n*nfp
+            np = sparity*fourier_context%tor_modes(n)*nfp
             DO m = 0, mpol
                mp = sparity*m
                jbsupsmnh(m,n,s) = np*asubumnh(m,n,s) - mp*asubvmnh(m,n,s)
@@ -551,12 +551,12 @@ LOGICAL :: test
       CALL assert(nmax .le. UBOUND(jksupsmnf,3), 'UBOUND wrong in curl_htof')
 
 !  (sqrt(g)*J^X)mn
-      DO m = 0, mpol
-         mp = sparity*m
-         mo = m + moff
-         DO n = -ntor, ntor
-            np = sparity*n*nfp
-            no = n + noff
+      DO n = -ntor, ntor
+         np = sparity*fourier_context%tor_modes(n)*nfp
+         no = n + noff
+         DO m = 0, mpol
+            mp = sparity*m
+            mo = m + moff
             jksupsmnf(mo,no,nsmin:nmax) = np*bsubumnf(m,n,nsmin:nmax)          &
                                         - mp*bsubvmnf(m,n,nsmin:nmax)
             jksupumnf(mo,no,nsmin:nmax) = np*bsubsmnf(m,n,nsmin:nmax)          &
@@ -901,6 +901,7 @@ LOGICAL :: test
       INTEGER                                                 :: sparity
       INTEGER                                                 :: m
       INTEGER                                                 :: n
+      INTEGER                                                 :: n_mode
       INTEGER                                                 :: s
       INTEGER                                                 :: fours
       INTEGER                                                 :: fouruv
@@ -930,10 +931,11 @@ LOGICAL :: test
 
       DO s = nsmin, nsmax
          DO n = -ntor, ntor
+            n_mode = fourier_context%tor_modes(n)*nfp
             DO m = 0, mpol
                divmnf(m,n,s) = divmnf(m,n,s)                                   &
                              - sparity*m*jbsupumnf(m,n,s)                      &
-                             - sparity*n*nfp*jbsupvmnf(m,n,s)
+                             - sparity*n_mode*jbsupvmnf(m,n,s)
             END DO
          END DO
       END DO

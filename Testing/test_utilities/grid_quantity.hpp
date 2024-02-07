@@ -291,6 +291,8 @@ public:
     const size_t mpol;
 ///  N modes.
     const size_t ntor;
+///  Toroidal modes.
+    const std::vector<int> tor_modes;
 ///  Number of field periods.
     const size_t nfp;
 ///  Mode amplitudes.
@@ -301,13 +303,18 @@ public:
 //------------------------------------------------------------------------------
 ///  @brief Siesta radial quantity.
 ///
-///  @param[in] buffer Buffer containing the radial quantity.
+///  @param[in] buffer    Buffer containing the radial quantity.
+///  @param[in] mpol      Number of poloidal modes.
+///  @param[in] ntor      Number of toroidal modes.
+///  @param[in] tor_modes Toroidal modes.
+///  @param[in] nfp       Number of field periods.
 //------------------------------------------------------------------------------
     siesta_fourier(const siesta_quantity<GRID_CLASS> &buffer,
                    const size_t mpol,
                    const size_t ntor,
+                   const std::vector<int> &tor_modes,
                    const size_t nfp) :
-    quantity(buffer), mpol(mpol), ntor(ntor), nfp(nfp) {}
+    quantity(buffer), mpol(mpol), ntor(ntor), tor_modes(tor_modes), nfp(nfp) {}
 
 //------------------------------------------------------------------------------
 ///  @brief Get a value at a radial s position.
@@ -327,7 +334,7 @@ public:
         for (size_t m = 0, em = mpol; m <= em; m++) {
             for (long n = -ntor, en = ntor; n <= en; n++) {
                 const size_t ni = n + ntor;
-                temp += quantity[m][ni].get(s)*func.f(m*u + n*nfp*v);
+                temp += quantity[m][ni].get(s)*func.f(m*u + tor_modes[ni]*(nfp*v));
             }
         }
 
@@ -352,7 +359,7 @@ public:
         for (size_t m = 0, em = mpol; m <= em; m++) {
             for (long n = -ntor, en = ntor; n <= en; n++) {
                 const size_t ni = n + ntor;
-                temp += m*quantity[m][ni].get(s)*func.df(m*u + n*nfp*v);
+                temp += m*quantity[m][ni].get(s)*func.df(m*u + tor_modes[ni]*(nfp*v));
             }
         }
 
@@ -377,7 +384,7 @@ public:
         for (size_t m = 0, em = mpol; m <= em; m++) {
             for (long n = -ntor, en = ntor; n <= en; n++) {
                 const size_t ni = n + ntor;
-                temp += n*nfp*quantity[m][ni].get(s)*func.df(m*u + n*nfp*v);
+                temp += tor_modes[ni]*(nfp*quantity[m][ni].get(s))*func.df(m*u + tor_modes[ni]*(nfp*v));
             }
         }
 

@@ -92,7 +92,7 @@
       USE siesta_error
       USE diagnostics_mod, ONLY: toroidal_flux0
       USE blocktridiagonalsolver_s, ONLY: Initialize, GetRanks
-      USE siesta_namelist, ONLY: mpolin, ntorin
+      USE siesta_namelist, ONLY: mpolin, ntorin, nfpin, ntor_modes
       USE metrics, ONLY: set_grid_sizes
 
       IMPLICIT NONE
@@ -185,7 +185,7 @@
       siesta_run_construct%time_on = ton
 
       nprecon = init_data(namelist_file)
-      CALL set_grid_sizes(mpolin, ntorin)
+      CALL set_grid_sizes(mpolin, ntorin, nfpin, ntor_modes(-ntorin:ntorin))
 
       CALL second0(toff)
 
@@ -383,7 +383,7 @@
 !-------------------------------------------------------------------------------
       SUBROUTINE siesta_run_set_vmec(this)
       USE siesta_namelist, ONLY: nsin, mpolin, ntorin, nfpin, wout_file,       &
-                                 l_vessel
+                                 l_vessel, ntor_modes
       USE metrics, ONLY: init_metric_elements, LoadGrid, sqrtg
       USE quantities, ONLY: init_quantities, init_fields
       USE island_params, ns=>ns_i, mpol=>mpol_i, ntor=>ntor_i
@@ -403,7 +403,8 @@
       INTEGER                                 :: istat
 
 !  Start of executable code
-      CALL vmec_info_set_wout(wout_file, nsin, mpolin, ntorin, nfpin)
+      CALL vmec_info_set_wout(wout_file, nsin, mpolin, ntorin, nfpin,          &
+     &                        ntor_modes(-ntorin:ntorin))
 
 !  CONSTRUCT R, Z, L REAL-SPACE ARRAYS ON SQRT(FLUX) - "POLAR" - MESH AND
 !  COMPUTE METRIC ELEMENTS AND JACOBIAN
@@ -447,7 +448,8 @@
       SUBROUTINE siesta_run_set_restart(this)
       USE restart_mod, ONLY: restart_read
       USE siesta_namelist, ONLY: lrestart, mpolin, ntorin, nsin, restart_ext,  &
-                                 wout_file, nfpin, nsin_ext, l_vessel
+     &                           wout_file, nfpin, nsin_ext, l_vessel,         &
+     &                           ntor_modes
       USE shared_data, ONLY: nprecon
       USE metrics, ONLY: init_metric_elements
       USE quantities, ONLY: init_quantities
@@ -473,7 +475,7 @@
       hs = 1.0/ohs
 
       nprecon = restart_read(restart_ext, wout_file, mpolin, ntorin, nfpin,    &
-                             ns)
+                             ns, ntor_modes(-ntorin:ntorin))
 
       CALL init_metric_elements()
       CALL init_quantities !Initializes BCYCLIC

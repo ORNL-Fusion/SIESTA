@@ -242,13 +242,15 @@
 !-------------------------------------------------------------------------------
 !>  @brief Set the vmec quantities from a wout file.
 !>
-!>  @param[in] ns_in   Number of SIESTA radial surfaces.
-!>  @param[in] mpol_in Number of SIESTA poloidal modes.
-!>  @param[in] ntor_in Number of SIESTA toroidal modes.
-!>  @param[in] nfp_in  Number of SIESTA field periods.
-!>  @param[in] wout_file Filename to load vmec quantities from.
+!>  @param[in] wout_file     Filename to load vmec quantities from.
+!>  @param[in] ns_in         Number of SIESTA radial surfaces.
+!>  @param[in] mpol_in       Number of SIESTA poloidal modes.
+!>  @param[in] ntor_in       Number of SIESTA toroidal modes.
+!>  @param[in] nfp_in        Number of SIESTA field periods.
+!>  @param[in] ntor_modes_in SIESTA Toroidal mode numbers.
 !-------------------------------------------------------------------------------
-      SUBROUTINE vmec_info_set_wout(wout_file, ns_in, mpol_in, ntor_in, nfp_in)
+      SUBROUTINE vmec_info_set_wout(wout_file, ns_in, mpol_in, ntor_in,        &
+     &                              nfp_in, ntor_modes_in)
       USE descriptor_mod, ONLY: iam
       USE v3_utilities, ONLY: assert_eq, assert
       USE island_params
@@ -259,16 +261,17 @@
       IMPLICIT NONE
 
 !  Declare Arguments
-      CHARACTER(len=*), INTENT(in) :: wout_file
-      INTEGER, INTENT(IN)          :: ns_in
-      INTEGER, INTENT(IN)          :: mpol_in
-      INTEGER, INTENT(IN)          :: ntor_in
-      INTEGER, INTENT(IN)          :: nfp_in
+      CHARACTER(len=*), INTENT(in)                     :: wout_file
+      INTEGER, INTENT(IN)                              :: ns_in
+      INTEGER, INTENT(IN)                              :: mpol_in
+      INTEGER, INTENT(IN)                              :: ntor_in
+      INTEGER, INTENT(IN)                              :: nfp_in
+      INTEGER, DIMENSION(-ntor_in:ntor_in), INTENT(in) :: ntor_modes_in
 
 !  Local variables
-      INTEGER                      :: istat
-      INTEGER                      :: js
-      REAL (dp)                    :: temp
+      INTEGER                                          :: istat
+      INTEGER                                          :: js
+      REAL (dp)                                        :: temp
 
 !  Start of executable code
 
@@ -293,7 +296,7 @@
       nsh = ns_in - 1
 
       fourier_context => fourier_class(mpol_in, ntor_in, nu_i, nv_i, nfp_i,    &
-                                       lasym)
+                                       lasym, ntor_modes_in)
 
 !  Spline r, z, and l Fourier components in s from original vmec mesh (s ~ phi,
 !  ns_vmec points) to a "polar" mesh s ~ sqrt(phi) for better axis resolution.
@@ -576,7 +579,7 @@
       SUBROUTINE vmec_info_repack(rmn, zmn, lmn, currumn, currvmn,             &
                                   rmn_spl, zmn_spl, lmn_spl,                   &
                                   currumn_spl, currvmn_spl, parity)
-      USE fourier, ONLY: m0, m1, n0, n1
+      USE fourier, ONLY: m1
       USE island_params, ONLY: mpol=>mpol_i, ntor=>ntor_i, ns=>ns_i,           &
      &                         nfp=>nfp_i, hs=>hs_i, fourier_context
       USE descriptor_mod, ONLY: iam
@@ -622,17 +625,21 @@
       IF (iam .eq. 0 .and. lverbose .and. parity .eq. f_cos) THEN
          m = INT(MAXVAL(xm_vmec))
          n = INT(MAXVAL(ABS(xn_vmec)))/nfp
-         IF (m .gt. mpol .or. n .gt. ntor) THEN
+         IF (m .gt. mpol .or. .not.fourier_context%get_index(n)) THEN
             WRITE(*,1000) m, n
          END IF
          CALL assert_eq(0, MOD(nfp_vmec, nfp), 'nfpin should be an even ' //   &
                                                'divisor of the VMEC nfp.')
       END IF
 
-!  Flip vmec n to siesta -n so trig arg is in siesta notation.
+!  Flip vmec n to siesta -n so trig arg is in siesta notation. Note that the
+!  siesta n modes do not need to match the vmec n modes.
       DO mn_mode = 1,mnmax
          m = xm_vmec(mn_mode)
          n = xn_vmec(mn_mode)/nfp
+         IF (.not.fourier_context%get_index(n)) THEN
+            CYCLE
+         END IF
          n_abs = ABS(n)
          IF (m .le. mpol .and. n_abs .le. ntor) THEN
 

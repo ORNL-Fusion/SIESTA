@@ -323,27 +323,27 @@
       DO ntype = 1, ndims
          DO n = -ntor, ntor
             DO m = 0, mpol
-            icol = icol+1
-            
-            xc(icol,js) = eps
-            CALL funct_island
-            wplus = wtotal
+               icol = icol+1
+                
+               xc(icol,js) = eps
+               CALL funct_island
+               wplus = wtotal
 
-            xc(icol,js) = -eps
-            CALL funct_island
-            wmins = wtotal
-            force = -(wplus-wmins)/(2*eps)
-            
-            CALL ASSERT(l_getwmhd,'L_GETWMHD = FALSE!')
+               xc(icol,js) = -eps
+               CALL funct_island
+               wmins = wtotal
+               force = -(wplus-wmins)/(2*eps)
+                
+               CALL ASSERT(l_getwmhd,'L_GETWMHD = FALSE!')
 
-            xc(icol,js) = 0
+               xc(icol,js) = 0
 
-            IF (lWrite) THEN
-            nt1 = ntype
-            IF (ntype .GT. 3) nt1 = ntype-3            
-            WRITE (3000+iam,100) m, n, ntype, force, force_array(nt1),  &
-                           gc1(icol,js)
-            END IF
+               IF (lWrite) THEN
+               nt1 = ntype
+               IF (ntype .GT. 3) nt1 = ntype-3
+                   WRITE (3000+iam,100) m, n, ntype, force, force_array(nt1),  &
+                          gc1(icol,js)
+               END IF
 
             END DO
          END DO

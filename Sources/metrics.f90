@@ -120,18 +120,22 @@
 !>  The real space grid is determined from the number of toroidal and poloidal
 !>  modes.
 !>
-!>  @param[in] mpol_in Number of SIESTA poloidal modes.
-!>  @param[in] ntor_in Number of SIESTA toroidal modes.
+!>  @param[in] mpol_in   Number of SIESTA poloidal modes.
+!>  @param[in] ntor_in   Number of SIESTA toroidal modes.
+!>  @param[in] nfp_in    Number of field periods.
+!>  @param[in] tor_modes Toroidal mode numbers.
 !-------------------------------------------------------------------------------
-      SUBROUTINE set_grid_sizes(mpol_in, ntor_in)
+      SUBROUTINE set_grid_sizes(mpol_in, ntor_in, nfp_in, tor_modes)
       USE island_params
       USE shared_data, ONLY: mblk_size, ndims, lasym
 
       IMPLICIT NONE
 
 !  Declare Arguments
-      INTEGER, INTENT(IN) :: mpol_in
-      INTEGER, INTENT(IN) :: ntor_in
+      INTEGER, INTENT(IN)                              :: mpol_in
+      INTEGER, INTENT(IN)                              :: ntor_in
+      INTEGER, INTENT(IN)                              :: nfp_in
+      INTEGER, DIMENSION(-ntor_in:ntor_in), INTENT(in) :: tor_modes
 
 !  Start of executable code
       ndims = 3
@@ -145,7 +149,7 @@
 !  Set number of points == number of modes for now! (May want mid-points for
 !  flux conservation)
       nu_i = mpol_i + 2
-      nv_i = 2*ntor_i + 2
+      nv_i = 2*tor_modes(ntor_i) + 2
 
 !USE 3/2 (ORSZAG) RULE FOR ANTI-ALIASING OF EVOLUTION EQNS
 !Suppresses RADIAL grid separation in pressure
@@ -265,7 +269,7 @@
       LOGICAL, INTENT(in)                    :: lasym
 
 !  Local variables
-      INTEGER                                :: sum
+      INTEGER                                :: sum_f
       INTEGER                                :: m
       INTEGER                                :: n
       INTEGER                                :: rmode
@@ -273,22 +277,22 @@
 
 !  Start executable code.
       IF (lasym) THEN
-         sum = f_sum
+         sum_f = f_sum
          rmode = f_sin
          zmode = f_cos
       ELSE
-         sum = f_none
+         sum_f = f_none
          rmode = f_cos
          zmode = f_sin
       END IF
-      m = IOR(sum, f_du)
-      n = IOR(sum, f_dv)
+      m = IOR(sum_f, f_du)
+      n = IOR(sum_f, f_dv)
 
-      CALL fourier_context%toijsp(rmn, r1_i, sum, rmode)
+      CALL fourier_context%toijsp(rmn, r1_i, sum_f, rmode)
       CALL fourier_context%toijsp(rmn, ru_i, m,   rmode)
       CALL fourier_context%toijsp(rmn, rv_i, n,   rmode)
 
-      CALL fourier_context%toijsp(zmn, z1_i, sum, zmode)
+      CALL fourier_context%toijsp(zmn, z1_i, sum_f, zmode)
       CALL fourier_context%toijsp(zmn, zu_i, m,   zmode)
       CALL fourier_context%toijsp(zmn, zv_i, n,   zmode)
 
