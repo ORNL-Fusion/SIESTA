@@ -199,6 +199,10 @@ public:
         nc_inq_varid(ncid, "ntor", &varid);
         nc_get_var(ncid, varid, &ntor);
 
+        nc_inq_varid(ncid, "tor_modes", &varid);
+        std::vector<int> tor_modes(2*ntor + 1);
+        nc_get_var(ncid, varid, tor_modes.data());
+
         int nfp;
         nc_inq_varid(ncid, "nfp", &varid);
         nc_get_var(ncid, varid, &nfp);
@@ -229,7 +233,8 @@ public:
 
         nc_close(ncid);
 
-        return siesta_fourier<GIRD_CLASS, PARITY> (quantity, mpol, ntor, nfp);
+        return siesta_fourier<GIRD_CLASS, PARITY> (quantity, mpol, ntor,
+                                                   tor_modes, nfp);
     }
 
 //------------------------------------------------------------------------------
@@ -261,6 +266,10 @@ public:
         int ntor;
         nc_inq_varid(ncid, "ntor", &varid);
         nc_get_var(ncid, varid, &ntor);
+
+        nc_inq_varid(ncid, "tor_modes", &varid);
+        std::vector<int> tor_modes(2*ntor + 1);
+        nc_get_var(ncid, varid, tor_modes.data());
 
         int nfp;
         nc_inq_varid(ncid, "nfp", &varid);
@@ -304,7 +313,8 @@ public:
 
         nc_close(ncid);
 
-        return siesta_fourier<GIRD_CLASS, PARITY> (quantity, mpol, ntor, nfp);
+        return siesta_fourier<GIRD_CLASS, PARITY> (quantity, mpol, ntor,
+                                                   tor_modes, nfp);
     }
 
 //------------------------------------------------------------------------------
@@ -330,6 +340,7 @@ public:
         return siesta_fourier<half_grid, PARITY> (half_quanity,
                                                   siesta.mpol,
                                                   siesta.ntor,
+                                                  siesta.tor_modes,
                                                   siesta.nfp);
     }
 
@@ -357,6 +368,7 @@ public:
         return siesta_fourier<full_grid, PARITY> (full_quanity,
                                                   siesta.mpol,
                                                   siesta.ntor,
+                                                  siesta.tor_modes,
                                                   siesta.nfp);
     }
 
