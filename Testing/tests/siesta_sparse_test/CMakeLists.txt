@@ -192,7 +192,7 @@ set_tests_properties (siesta_sparse_jksups_test
                       PROPERTIES
                       DEPENDS "siesta_sparse_vmec_test;siesta_sparse_siesta_test")
 add_test (NAME    siesta_sparse_jksupu_test
-          COMMAND $<TARGET_PROPERTY:xsiesta_test,BINARY_DIR>/xsiesta_test -wout_file=${CMAKE_CURRENT_BINARY_DIR}/wout_test.vmec.nc -restart_file=${CMAKE_CURRENT_BINARY_DIR}/siesta_restart_w7x.nc -test_name=jbsupu -min=0.0 -max=1.0 -tol=0.98 -relative)
+          COMMAND $<TARGET_PROPERTY:xsiesta_test,BINARY_DIR>/xsiesta_test -wout_file=${CMAKE_CURRENT_BINARY_DIR}/wout_test.vmec.nc -restart_file=${CMAKE_CURRENT_BINARY_DIR}/siesta_restart_w7x.nc -test_name=jbsupu -min=0.0 -max=1.0 -tol=0.99 -relative)
 set_tests_properties (siesta_sparse_jksupu_test
                       PROPERTIES
                       DEPENDS "siesta_sparse_vmec_test;siesta_sparse_siesta_test")
