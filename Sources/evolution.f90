@@ -393,6 +393,7 @@
       REAL (dp), DIMENSION(1), PARAMETER :: levscan = (/ 0.25_dp /)
       REAL (dp), PARAMETER               :: levmarq_min = 1.0E-10_dp
       REAL (dp), PARAMETER               :: fsq_max = 1.E-6_dp
+      REAL (dp), PARAMETER               :: ftol_min = 1.0E-20_dp
 
 !  Start of executable code.
       l_init_state = .true.
@@ -409,8 +410,9 @@
 !  Determine levenberg parameter by a linear scale on how far away from the
 !  desired force tolarance we are.
       IF (fsq_total1 .lt. fsq_max) THEN
-         f1 = (levmarq_param0 - levmarq_min)/(fsq_max - ftol)
-         f2 = (fsq_max*levmarq_min - ftol*levmarq_param0)/(fsq_max - ftol)
+         f1 = (levmarq_param0 - levmarq_min)/(fsq_max - MAX(ftol, ftol_min))
+         f2 = (fsq_max*levmarq_min - MAX(ftol, ftol_min)*levmarq_param0)       &
+     &      / (fsq_max - MAX(ftol, ftol_min))
          levmarq_param = f1*fsq_total1 + f2
 
          IF (fsq_last .le. fsq_total1) THEN

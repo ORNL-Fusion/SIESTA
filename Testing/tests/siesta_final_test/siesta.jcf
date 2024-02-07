@@ -8,8 +8,9 @@
  lasym     = F
  NITER = 1000
  NSIN      = 100
- MPOLIN    = 5 ! 12
- NTORIN    = 0 ! 8
+ MPOLIN    = 3
+ NTORIN    = 0
+ NFPIN     = 1
  FTOL      = 1.E-20,
  levmarq_param = 1.0E-1,
  MUPAR     =  0.0

@@ -449,6 +449,7 @@
       INTEGER                                               :: sparity
       INTEGER                                               :: m
       INTEGER                                               :: n
+      INTEGER                                               :: n_mode
       INTEGER                                               :: moff
       INTEGER                                               :: noff
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE              :: pmnh
@@ -510,9 +511,11 @@
                                       - m*sparity*pmnf(m,:,nsmin:nsmax)
       END DO
       DO n = -ntor, ntor
+         n_mode = fourier_context%tor_modes(n)
          noff = n + ntor + LBOUND(fsubvmnf, 2)
          fsubvmnf(:,noff,nsmin:nsmax) = fsubvmnf(:,noff,nsmin:nsmax)           &
-                                      - n*nfp*sparity*pmnf(:,n,nsmin:nsmax)
+     &                                - (n_mode*nfp*sparity *                  &
+     &                                   pmnf(:,n,nsmin:nsmax))
       END DO
 
       DEALLOCATE(pmnf, pmnf_ds, pmnh)

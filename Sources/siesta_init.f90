@@ -182,11 +182,6 @@
       END IF
       DEALLOCATE(pfilter)
 
-      CALL CheckFFT(jbsupsmnsh, jbsupumnch, jbsupvmnch, jpmnch, f_sin)
-      IF (lasym) THEN
-         CALL CheckFFT(jbsupsmnch, jbsupumnsh, jbsupvmnsh, jpmnsh, f_cos)
-      END IF
-
       IF (.not.lpar) THEN
          startglobrow = startr
          endglobrow = endr
@@ -496,100 +491,6 @@
 
       DEALLOCATE(pmnh)
 
-      END SUBROUTINE
-
-!-------------------------------------------------------------------------------
-!>  @brief
-!>
-!>  @param[in] jbsupsmnh Contravariant magnetic field in the s direction.
-!>  @param[in] jbsupumnh Contravariant magnetic field in the u direction.
-!>  @param[in] jbsupvmnh Contravariant magnetic field in the v direction.
-!>  @param[in] jpmnh     Pressure on the half grid.
-!>  @param[in] iparity   Fourier parity of the s component.
-!-------------------------------------------------------------------------------
-      SUBROUTINE CheckFFT(jbsupsmnh, jbsupumnh, jbsupvmnh, jpmnh, iparity)
-
-      IMPLICIT NONE
-
-!  Declare Arguments
-      REAL (dp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(in) :: jbsupsmnh
-      REAL (dp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(in) :: jbsupumnh
-      REAL (dp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(in) :: jbsupvmnh
-      REAL (dp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(in) :: jpmnh
-      INTEGER, INTENT(in)                                  :: iparity
-
-!  Local Variables
-      INTEGER                                              :: fours
-      INTEGER                                              :: fouruv
-      INTEGER                                              :: fcomb
-      INTEGER                                              :: sparity
-      INTEGER                                              :: m
-      INTEGER                                              :: mp
-      INTEGER                                              :: n
-      INTEGER                                              :: np
-      REAL (dp), ALLOCATABLE, DIMENSION(:,:,:)             :: FFT_TEST
-      REAL (dp), ALLOCATABLE, DIMENSION(:,:,:)             :: pmnh
-      REAL (dp), ALLOCATABLE, DIMENSION(:,:,:)             :: temp
-      REAL (dp)                                            :: rtest
-
-!  Local Parameters
-      REAL (dp), PARAMETER                                 :: rtol = 1.E-14_dp
-
-!  Start of executable code.
-#undef _TEST_INIT
-!#define _TEST_INIT
-#if defined(_TEST_INIT)
-      IF (iparity .EQ. f_sin) THEN
-         fours = f_sin
-         fouruv = f_cos
-         sparity = 1
-      ELSE
-         fours = f_cos
-         fouruv = f_sin
-         sparity = -1
-      END IF
-
-!check independent variables
-      ALLOCATE (fft_test(0:mpol,-ntor:ntor,nsmin:nsmax),                       &
-                temp(ntheta,nzeta,nsmin:nsmax),                                &
-                pmnh(0:mpol,-ntor:ntor,nsmin:nsmax), stat=m)
-      CALL assert(m.EQ.0,' Allocation failed in CheckFFT')
-      temp = bsupsijh0*jacobh(:,:,nsmin:nsmax)
-      CALL tomnsp(temp, fft_test, fours)
-      rTest = MAXVAL(ABS(fft_test - jbsupsmnh(:,:,nsmin:nsmax)))
-      CALL assert(rtest.LT.rtol, ' jbsupsmnh FFT error in siesta_init')
-      temp = bsupuijh0*jacobh(:,:,nsmin:nsmax)
-      CALL tomnsp(temp, fft_test, fouruv)
-      rTest = MAXVAL(ABS(fft_test - jbsupumnh(:,:,nsmin:nsmax)))
-      CALL assert(rTest.LT.rtol,' jbsupumnh FFT error in siesta_init')
-      temp = bsupvijh0*jacobh(:,:,nsmin:nsmax)
-      CALL tomnsp(temp, fft_test, fouruv)
-      rTest = MAXVAL(ABS(fft_test - jbsupvmnh(:,:,nsmin:nsmax)))
-      CALL assert(rTest.LT.rtol,' jbsupvmnh FFT error in siesta_init')
-      temp = pijh0*jacobh(:,:,nsmin:nsmax)
-      CALL tomnsp(temp, fft_test, fouruv)
-      rTest = MAXVAL(ABS(fft_test - jpmnh(:,:,nsmin:nsmax)))
-      CALL assert(rTest.LT.rtol,' jpmnh FFT error in siesta_init')
-            
-! check angle derivatives of pressure            
-      CALL tomnsp(pijh0, pmnh, fouruv)
-      CALL tomnsp(pijh0_du, fft_test, fouruv)
-      DO m = 0, mpol
-         mp = -sparity*m
-         CALL assert(MAXVAL(ABS(fft_test(m,:,:) - mp*pmnh(m,:,:))) .LE. rtol,   &
-                    ' pijh0_du FFT error in siesta_init')
-      END DO
-       
-      CALL tomnsp(pijh0_dv, fft_test, fouruv)
-      DO n = -ntor, ntor
-         np = -sparity*n*nfp
-         CALL assert(MAXVAL(ABS(fft_test(:,n,:) - np*pmnh(:,n,:))) .LE. rtol,   &
-                    ' pijh0_dv FFT error in siesta_init')
-      END DO
-            
-      DEALLOCATE(fft_test, pmnh, temp)
-#endif                       
-       
       END SUBROUTINE
 
 !-------------------------------------------------------------------------------

@@ -77,6 +77,16 @@
 !*******************************************************************************
 !  UTILITY SUBROUTINES
 !*******************************************************************************
+!-------------------------------------------------------------------------------
+!>  @brief Extend the siesta grid out to the vacuum vessel.
+!>
+!>  The grid can be extended using a linear extension, quadratic, or cubic
+!>  extension.
+!>
+!>  @params[in]  wout_file VMEC wout file.
+!>  @params[in]  itype     Type of extension.
+!>  @params[out] istat     Status of the extension.
+!-------------------------------------------------------------------------------
       SUBROUTINE grid_extender(wout_file, itype, istat)
       USE fourier, ONLY: f_cos, f_sin, f_none, f_sum, f_du, f_dv
       USE v3_utilities, ONLY: assert
@@ -90,33 +100,51 @@
       IMPLICIT NONE
 
 !  Declare Arguments
-      CHARACTER(*), INTENT(in) :: wout_file
-      CHARACTER(*), INTENT(in) :: itype
-      INTEGER, INTENT(out)     :: istat
+      CHARACTER(*), INTENT(in)                :: wout_file
+      CHARACTER(*), INTENT(in)                :: itype
+      INTEGER, INTENT(out)                    :: istat
 
-      CHARACTER(LEN=10)   :: chfit
-      CHARACTER(LEN=100)  :: device
+!  Local Arguments.
+      CHARACTER(LEN=10)                       :: chfit
 
-      INTEGER :: j, m, n, u, v, i, k, js, js1, nsp1
-      REAL(dp) :: rho, vol0, vol1, vols, rho1, rho2, rho3, vp1, s_ext, delv
-      REAL(dp), DIMENSION(:,:), ALLOCATABLE  :: r12, rs12, zs12, ru12, zu12
-      REAL(dp), DIMENSION(:), ALLOCATABLE  :: vp
-      REAL(dp), DIMENSION(:,:,:), ALLOCATABLE  :: tmp, tmp2
-      REAL(dp), DIMENSION(:), ALLOCATABLE  :: tmp1
+      INTEGER                                 :: j
+      INTEGER                                 :: m
+      INTEGER                                 :: n
+      INTEGER                                 :: u
+      INTEGER                                 :: v
+      INTEGER                                 :: i
+      INTEGER                                 :: k
+      INTEGER                                 :: js
+      INTEGER                                 :: js1
+      INTEGER                                 :: nsp1
+      REAL(dp)                                :: rho
+      REAL(dp)                                :: vol0
+      REAL(dp)                                :: vol1
+      REAL(dp)                                :: vols
+      REAL(dp)                                :: rho1
+      REAL(dp)                                :: rho2
+      REAL(dp)                                :: rho3
+      REAL(dp)                                :: vp1
+      REAL(dp)                                :: s_ext
+      REAL(dp)                                :: delv
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: r12
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: rs12
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: zs12
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: ru12
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: zu12
+      REAL(dp), DIMENSION(:), ALLOCATABLE     :: vp
+      REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: tmp
+      REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: tmp2
+      REAL(dp), DIMENSION(:), ALLOCATABLE     :: tmp1
 
-      CLASS (fourier_class), POINTER :: four => null()
+      INTEGER, DIMENSION(:), ALLOCATABLE      :: vtor_modes
 
+      CLASS (fourier_class), POINTER          :: four => null()
+
+!  Start of executable code.
       IF (.NOT.l_vessel) RETURN  ! FIXME: This check should be outsize the subroutine
 
       CALL init_extender
-
-      i = INDEX(wout_file, '.', BACK=.TRUE.)
-      j = INDEX(wout_file,'_')
-      IF (j .LT. i) THEN
-         device = wout_file(j+1:i-1)
-      ELSE
-         device = wout_file(1:i)
-      END IF
 
 !  chfit = 'quad'
 !  chfit = TRIM(itype)
@@ -136,7 +164,14 @@
                rv_ves(ntheta,nzeta), zv_ves(ntheta,nzeta))
 
 !  FIXME: The vessel file could have a different periodicity than the equilbirum.
-      four => fourier_class(mpol_v, ntor_v, ntheta, nzeta, nfp, lasym)
+      ALLOCATE(vtor_modes(-ntor_v:ntor_v))
+      
+      DO n = 0, ntor_v
+         vtor_modes(n) = n
+      END DO
+      four => fourier_class(mpol_v, ntor_v, ntheta, nzeta, nfp, lasym,         &
+     &                      vtor_modes)
+      DEALLOCATE(vtor_modes)
 
 !  Set internal normalization
       rmnc_v = rmnc_v/four%orthonorm
@@ -330,123 +365,136 @@
          presf_i = tmp1
          DEALLOCATE(tmp1)
 
-       IF (lasym) THEN
-          tmp(:,:,1:nsp) = rmns_i
-          tmp2(:,:,1:nsp) = zmnc_i
-          DEALLOCATE(rmns_i, zmnc_i)
-          ALLOCATE(rmns_i(0:mpol,-ntor:ntor,ns),                        &
-                   zmnc_i(0:mpol,-ntor:ntor,ns), stat=istat)
-          rmns_i(:,:,1:nsp) = tmp(:,:,1:nsp)
-          zmnc_i(:,:,1:nsp) = tmp2(:,:,1:nsp)
-          CALL fourier_context%tomnsp(r1_i(:,:,nsp1:ns), rmns_i(:,:,nsp1:ns),  &
-                                      f_sin)
-          CALL fourier_context%tomnsp(z1_i(:,:,nsp1:ns), zmnc_i(:,:,nsp1:ns),  &
-                                      f_cos)
-          DO js = nsp1, ns
-             rmns_i(:,:,js) = rmns_i(:,:,js)                                   &
-                            / fourier_context%orthonorm(0:mpol,-ntor:ntor)
-             zmnc_i(:,:,js) = zmnc_i(:,:,js)                                   &
-                            / fourier_context%orthonorm(0:mpol,-ntor:ntor)
-          END DO
+         IF (lasym) THEN
+            tmp(:,:,1:nsp) = rmns_i
+            tmp2(:,:,1:nsp) = zmnc_i
+            DEALLOCATE(rmns_i, zmnc_i)
+            ALLOCATE(rmns_i(0:mpol,-ntor:ntor,ns),                             &
+                     zmnc_i(0:mpol,-ntor:ntor,ns), stat=istat)
+            rmns_i(:,:,1:nsp) = tmp(:,:,1:nsp)
+            zmnc_i(:,:,1:nsp) = tmp2(:,:,1:nsp)
+            CALL fourier_context%tomnsp(r1_i(:,:,nsp1:ns),                     &
+     &                                  rmns_i(:,:,nsp1:ns), f_sin)
+            CALL fourier_context%tomnsp(z1_i(:,:,nsp1:ns),                     &
+     &                                  zmnc_i(:,:,nsp1:ns), f_cos)
+            DO js = nsp1, ns
+               rmns_i(:,:,js) = rmns_i(:,:,js)                                 &
+                              / fourier_context%orthonorm(0:mpol,-ntor:ntor)
+               zmnc_i(:,:,js) = zmnc_i(:,:,js)                                 &
+                              / fourier_context%orthonorm(0:mpol,-ntor:ntor)
+            END DO
 
-          tmp = 0
-          tmp(:,:,1:nsp)=jcurrumns
-          DEALLOCATE(jcurrumns)
-          ALLOCATE(jcurrumns(0:mpol,-ntor:ntor,ns))
-          jcurrumns=tmp
+            tmp = 0
+            tmp(:,:,1:nsp)=jcurrumns
+            DEALLOCATE(jcurrumns)
+            ALLOCATE(jcurrumns(0:mpol,-ntor:ntor,ns))
+            jcurrumns=tmp
 
-          tmp=0
-          tmp(:,:,1:nsp)=jcurrvmns
-          DEALLOCATE(jcurrvmns)
-          ALLOCATE(jcurrvmns(0:mpol,-ntor:ntor,ns))
-          jcurrvmns=tmp
-       END IF
+            tmp=0
+            tmp(:,:,1:nsp)=jcurrvmns
+            DEALLOCATE(jcurrvmns)
+            ALLOCATE(jcurrvmns(0:mpol,-ntor:ntor,ns))
+            jcurrvmns=tmp
+         END IF
 
-       DEALLOCATE(tmp, tmp2)
+         DEALLOCATE(tmp, tmp2)
 
-    END IF
+      END IF
 
 #if defined(NOSKS)
-    DO u=1, ntheta
-      DO v=1, nzeta
-        DO js=1, ns
-          WRITE(1600,*) r1_i(u,v,js), z1_i(u,v,js)
-          CALL FLUSH(1600)
-        END DO
+      DO u=1, ntheta
+         DO v=1, nzeta
+            DO js=1, ns
+               WRITE(1600,*) r1_i(u,v,js), z1_i(u,v,js)
+               CALL FLUSH(1600)
+            END DO
+         END DO
       END DO
-    END DO
 
-    ! u = theta, v = zeta
-    ALLOCATE (r12 (ntheta,nzeta), &
-      rs12(ntheta,nzeta), &
-      zs12(ntheta,nzeta), &
-      ru12(ntheta,nzeta), &
-      zu12(ntheta,nzeta), &
-      sqrtg_full(ntheta,nzeta,nse), &
-      stat = istat)
-    CALL ASSERT(istat.eq.0,' Allocation error in grid_extender')
-    sqrtg_full(:,:,1) = 0
-    DO js = 2, nse
-      js1 = js-1
-      r12  = p5*(r1_i(:,:,js) + r1_i(:,:,js1))
-      rs12 = (r1_i(:,:,js) - r1_i(:,:,js1))*ohs
-      zs12 = (z1_i(:,:,js) - z1_I(:,:,js1))*ohs
-      ru12 = p5*(ru_i(:,:,js) + ru_i(:,:,js1))
-      zu12 = p5*(zu_i(:,:,js) + zu_i(:,:,js1))
-      sqrtg_full(:,:,js) = r12*(ru12*zs12 - rs12*zu12)
-    END DO
+!  u = theta, v = zeta
+      ALLOCATE (r12 (ntheta,nzeta),                                            &
+     &          rs12(ntheta,nzeta),                                            &
+     &          zs12(ntheta,nzeta),                                            &
+     &          ru12(ntheta,nzeta),                                            &
+     &          zu12(ntheta,nzeta),                                            &
+     &          sqrtg_full(ntheta,nzeta,nse),                                  &
+     &          stat = istat)
+      CALL ASSERT(istat.eq.0,' Allocation error in grid_extender')
+      sqrtg_full(:,:,1) = 0
+      DO js = 2, nse
+         js1 = js-1
+         r12  = p5*(r1_i(:,:,js) + r1_i(:,:,js1))
+         rs12 = (r1_i(:,:,js) - r1_i(:,:,js1))*ohs
+         zs12 = (z1_i(:,:,js) - z1_I(:,:,js1))*ohs
+         ru12 = p5*(ru_i(:,:,js) + ru_i(:,:,js1))
+         zu12 = p5*(zu_i(:,:,js) + zu_i(:,:,js1))
+         sqrtg_full(:,:,js) = r12*(ru12*zs12 - rs12*zu12)
+      END DO
 
-    DEALLOCATE (r12, rs12, zs12, ru12, zu12)
+      DEALLOCATE (r12, rs12, zs12, ru12, zu12)
 
-    ming = MINVAL(sqrtg_full(:,:,ns:nse) ) 
-    maxg = MAXVAL(sqrtg_full(:,:,ns:nse))
-    PRINT *,' IAM: ', iam, 'MING: ', ming,' MAXG: ',maxg
-    CALL ASSERT(ming*maxg.GT.zero,' Jacobian changed sign in grid_extender')
+      ming = MINVAL(sqrtg_full(:,:,ns:nse) )
+      maxg = MAXVAL(sqrtg_full(:,:,ns:nse))
+      PRINT *,' IAM: ', iam, 'MING: ', ming,' MAXG: ',maxg
+      CALL ASSERT(ming*maxg.GT.zero,' Jacobian changed sign in grid_extender')
 
-    ALLOCATE (vp(nse))
-    CALL SurfAvgLocal(vp,sqrtg_full,1,nse)
-    vp(1) = 0
-    DO js=2, nse
-      ming = MINVAL(sqrtg_full(:,:,js) ) 
-      maxg = MAXVAL(sqrtg_full(:,:,js))
-      WRITE(5000,'(i4,1p,3E14.4)') js, -vp(js), ming, maxg
-    END DO
-    CALL FLUSH(5000)
-    DEALLOCATE (vp,r_ext, z_ext, ru_ext, zu_ext)
-    DEALLOCATE (ri,zi)
+      ALLOCATE (vp(nse))
+      CALL SurfAvgLocal(vp,sqrtg_full,1,nse)
+      vp(1) = 0
+      DO js=2, nse
+         ming = MINVAL(sqrtg_full(:,:,js) )
+         maxg = MAXVAL(sqrtg_full(:,:,js))
+         WRITE(5000,'(i4,1p,3E14.4)') js, -vp(js), ming, maxg
+      END DO
+      CALL FLUSH(5000)
+      DEALLOCATE (vp,r_ext, z_ext, ru_ext, zu_ext)
+      DEALLOCATE (ri,zi)
 #endif
 
-    DEALLOCATE(r1s_vmec, r1su_vmec, r1sv_vmec, z1s_vmec, z1su_vmec, z1sv_vmec)
+      DEALLOCATE(r1s_vmec)
+      DEALLOCATE(r1su_vmec)
+      DEALLOCATE(r1sv_vmec)
+      DEALLOCATE(z1s_vmec)
+      DEALLOCATE(z1su_vmec)
+      DEALLOCATE(z1sv_vmec)
 
-  END SUBROUTINE grid_extender
+      END SUBROUTINE
 
-  SUBROUTINE init_extender
-    REAL(dp) :: fac
+!-------------------------------------------------------------------------------
+!>  @brief Initialize the grid extender.
+!-------------------------------------------------------------------------------
+      SUBROUTINE init_extender
 
-    ALLOCATE(r1_vmec(ntheta,nzeta),z1_vmec(ntheta,nzeta))
-    ALLOCATE(ru_vmec(ntheta,nzeta),zu_vmec(ntheta,nzeta))
-    ALLOCATE(rv_vmec(ntheta,nzeta),zv_vmec(ntheta,nzeta))
-    r1_vmec = r1_i(:,:,ns); z1_vmec = z1_i(:,:,ns)
-    ru_vmec = ru_i(:,:,ns); zu_vmec(:,:) = zu_i(:,:,ns)
-    rv_vmec = rv_i(:,:,ns); zv_vmec(:,:) = zv_i(:,:,ns)
+      IMPLICIT NONE
 
-    !First derivatives on s=1 surface
-    ALLOCATE(r1s_vmec(ntheta,nzeta),z1s_vmec(ntheta,nzeta))
-    ALLOCATE(r1su_vmec(ntheta,nzeta),z1su_vmec(ntheta,nzeta))
-    ALLOCATE(r1sv_vmec(ntheta,nzeta),z1sv_vmec(ntheta,nzeta))
+!  Local Variables.
+      REAL(dp) :: fac
 
-    fac =.5  !COULD SCAN THIS TO MAKE MAX(sqrt(g) < 0) IF NECESSARY
+!  Start of executable code.
+      ALLOCATE(r1_vmec(ntheta,nzeta),z1_vmec(ntheta,nzeta))
+      ALLOCATE(ru_vmec(ntheta,nzeta),zu_vmec(ntheta,nzeta))
+      ALLOCATE(rv_vmec(ntheta,nzeta),zv_vmec(ntheta,nzeta))
+      r1_vmec = r1_i(:,:,ns); z1_vmec = z1_i(:,:,ns)
+      ru_vmec = ru_i(:,:,ns); zu_vmec(:,:) = zu_i(:,:,ns)
+      rv_vmec = rv_i(:,:,ns); zv_vmec(:,:) = zv_i(:,:,ns)
+
+!  First derivatives on s=1 surface
+      ALLOCATE(r1s_vmec(ntheta,nzeta),z1s_vmec(ntheta,nzeta))
+      ALLOCATE(r1su_vmec(ntheta,nzeta),z1su_vmec(ntheta,nzeta))
+      ALLOCATE(r1sv_vmec(ntheta,nzeta),z1sv_vmec(ntheta,nzeta))
+
+      fac =.5  !COULD SCAN THIS TO MAKE MAX(sqrt(g) < 0) IF NECESSARY
 !!    fac =.17  !COULD SCAN THIS TO MAKE MAX(sqrt(g) < 0) IF NECESSARY
-    r1s_vmec=(r1_vmec - r1_i(:,:,ns-1))*ohs*fac
-    z1s_vmec=(z1_vmec - z1_i(:,:,ns-1))*ohs*fac
+      r1s_vmec=(r1_vmec - r1_i(:,:,ns-1))*ohs*fac
+      z1s_vmec=(z1_vmec - z1_i(:,:,ns-1))*ohs*fac
 
-    r1su_vmec = (ru_vmec - ru_i(:,:,ns-1))*ohs*fac
-    z1su_vmec = (zu_vmec - zu_i(:,:,ns-1))*ohs*fac
+      r1su_vmec = (ru_vmec - ru_i(:,:,ns-1))*ohs*fac
+      z1su_vmec = (zu_vmec - zu_i(:,:,ns-1))*ohs*fac
 
-    r1sv_vmec = (rv_vmec - rv_i(:,:,ns-1))*ohs*fac
-    z1sv_vmec = (zv_vmec - zv_i(:,:,ns-1))*ohs*fac
+      r1sv_vmec = (rv_vmec - rv_i(:,:,ns-1))*ohs*fac
+      z1sv_vmec = (zv_vmec - zv_i(:,:,ns-1))*ohs*fac
 
-  END SUBROUTINE init_extender
+      END SUBROUTINE
 
 !-------------------------------------------------------------------------------
 !>  @brief UNKNOWN
@@ -496,96 +544,137 @@
 
       END FUNCTION
 
-  SUBROUTINE remap_radial(rho, vrho)
-    IMPLICIT NONE
-    INTEGER                 :: it
-    REAL(dp), INTENT(INOUT) :: rho
-    REAL(dp), INTENT(IN)    :: vrho
-    REAL(dp)                :: rootl, rootr, vol, delv
-    REAL(dp), PARAMETER     :: tol=1.E-6_dp
-    !
-    !     ROOT FINDER: FINDS THE NEW rho VALUE CORRESPONDING TO THE 
-    !     INITIAL VOLUME VRHO
-    !
-    rho = p5
-    rootr = 1
-    rootl = 0
+!-------------------------------------------------------------------------------
+!>  @brief Find the new rho value correspond to the inital volume rho.
+!>
+!>  @params[inout] rho  Radial surface.
+!>  @params[in]    vrho Volume inside rho.
+!-------------------------------------------------------------------------------
+      SUBROUTINE remap_radial(rho, vrho)
 
-    DO it = 1, 100
-      vol = get_volume(rho)
-      delv = vol-vrho
-      IF (ABS(delv) .LT. tol*vrho) EXIT
-      IF (delv .GT. 0) THEN
-        rootr = rho
-        rho = (rootl+rho)/2
-      ELSE
-        rootl = rho
-        rho = rootl+(rootr-rho)/2
-      END IF
-    END DO      
-  END SUBROUTINE remap_radial
+      IMPLICIT NONE
 
-  REAL(dp) FUNCTION get_volume (rho)
-    IMPLICIT NONE
-    !     
-    !     USES FORMULA VOLUME(rho) = INTEGRAL[.5*(R^2 * ZU)] 
-    !     WHERE INTEGRATION IS OVER U,V FOR A FIXED rho=X
-    !     FOR SIMPLICITY, WE'LL DO THE INTEGRAL PLANE BY PLANE (WHICH IS NOT QUITE RIGHT)
-    !
-    REAL(dp) :: rho
-    INTEGER  :: i, j
-    REAL(dp) :: zu, r1, dnorm, odelu
+!  Declare Arguments
+      REAL(dp), INTENT(INOUT) :: rho
+      REAL(dp), INTENT(IN)    :: vrho
 
-    get_volume = 0
-    odelu = ntheta
-    odelu = odelu/twopi
-    dnorm = p5*twopi/(nzeta*odelu)
-    IF (.NOT. lasym) odelu = 2*odelu
-    CALL LoadSurfacePoints(rho)
-    DO j = 1, nzeta
-      DO i = 1, ntheta-1
-        zu = (zi(i+1,j)-zi(i,j))*odelu
-        r1 = p5*(ri(i+1,j)+ri(i,j))
-        get_volume = get_volume + r1**2 * zu
+!  Local variables
+      INTEGER                 :: it
+      REAL(dp)                :: rootl, rootr, vol, delv
+
+!  Local parameters
+      REAL(dp), PARAMETER     :: tol=1.E-6_dp
+
+!  Start of executable code.
+      rho = p5
+      rootr = 1
+      rootl = 0
+
+      DO it = 1, 100
+         vol = get_volume(rho)
+         delv = vol-vrho
+         IF (ABS(delv) .LT. tol*vrho) THEN
+            EXIT
+         END IF
+         IF (delv .GT. 0) THEN
+            rootr = rho
+            rho = (rootl+rho)/2
+         ELSE
+            rootl = rho
+            rho = rootl+(rootr-rho)/2
+         END IF
       END DO
-      IF (lasym) THEN
-        zu = (zi(1,j)-zi(ntheta,j))*odelu
-        r1 = p5*(ri(1,j)+ri(ntheta,j))
-        get_volume = get_volume + r1**2*zu
+      END SUBROUTINE
+
+!-------------------------------------------------------------------------------
+!>  @brief Get the volume at the surface rho.
+!>
+!>  Uses forumla volume(rho) = Integral[0.5*(R^2*Zu)] where integration is over
+!>  u, v for a fixed rho. For simpplicity, we do the integral plane by plane.
+!>  NOTE: This is not quite right.
+!>
+!>  @params[in] rho Radial surface.
+!>  @returns The volume enclosed by surface rho.
+!-------------------------------------------------------------------------------
+      FUNCTION get_volume(rho)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      REAL(dp)             :: get_volume
+      REAL(dp), INTENT(IN) :: rho
+
+!  Local variables
+      INTEGER              :: i
+      INTEGER              :: j
+      REAL(dp)             :: zu
+      REAL(dp)             :: r1
+      REAL(dp)             :: dnorm
+      REAL(dp)             :: odelu
+
+!  Start of executable code.
+      get_volume = 0
+      odelu = ntheta
+      odelu = odelu/twopi
+      dnorm = p5*twopi/(nzeta*odelu)
+      IF (.NOT. lasym) THEN
+         odelu = 2*odelu
       END IF
-    END DO
-    get_volume = dnorm*get_volume
+      CALL LoadSurfacePoints(rho)
+      DO j = 1, nzeta
+         DO i = 1, ntheta-1
+            zu = (zi(i+1,j)-zi(i,j))*odelu
+            r1 = p5*(ri(i+1,j)+ri(i,j))
+            get_volume = get_volume + r1**2 * zu
+         END DO
+         IF (lasym) THEN
+            zu = (zi(1,j)-zi(ntheta,j))*odelu
+            r1 = p5*(ri(1,j)+ri(ntheta,j))
+            get_volume = get_volume + r1**2*zu
+         END IF
+      END DO
+      get_volume = dnorm*get_volume
 
-  END FUNCTION get_volume
+      END FUNCTION get_volume
 
-  SUBROUTINE LoadSurfacePoints(rho)
-    USE island_params, ns=>ns_i, mpol=>mpol_i, ntor=>ntor_i, &
-      ntheta=>nu_i, nzeta=>nv_i, mnmax=>mnmax_i, nsv=>ns_v
-    IMPLICIT NONE
-    REAL(dp), INTENT(IN) :: rho
-    REAL(dp)             :: rho1, rho2, rho3
+!-------------------------------------------------------------------------------
+!>  @brief Loads the theta and zeta values.
+!>
+!>  @param[in] rho Radial surface.
+!-------------------------------------------------------------------------------
+      SUBROUTINE LoadSurfacePoints(rho)
+  
+      IMPLICIT NONE
 
-    !LOADS THE THETA AND ZETA VALUES OF RI, ZI ARRAYS 
-    !FOR THE INPUT VALUE OF rho ("radial" surface)
-    rho1 = 1 - rho
-    IF (interp_type .EQ. LIN) THEN
-      ri = rho1*r1_vmec + rho*r1_ves
-      zi = rho1*z1_vmec + rho*z1_ves
-    ELSE
-      rho2 = rho*rho
-      IF (interp_type .EQ. QUAD) THEN
-        !QUADRATIC (R' match at rho = 0)
-        ri = p5*r1s_vmec*(1 - rho2 - rho1*rho1) &
-          + r1_vmec*(1-rho2) + r1_ves*rho2
-        zi = p5*z1s_vmec*(1 - rho2 - rho1*rho1) &
-          + z1_vmec*(1-rho2) + z1_ves*rho2
-      ELSE IF (interp_type .EQ. CUB) THEN
-        !CUBIC     (R', R'' match at rho=0)
-        rho3 = rho*rho2
-        CALL ASSERT(.FALSE., 'Unknown interpolation <TYPE> specified')
+!  Declare Arguments
+      REAL(dp), INTENT(IN) :: rho
+
+!  Local variables
+      REAL(dp)             :: rho1
+      REAL(dp)             :: rho2
+      REAL(dp)             :: rho3
+
+!  Start of executable code.
+      rho1 = 1 - rho
+      IF (interp_type .EQ. LIN) THEN
+         ri = rho1*r1_vmec + rho*r1_ves
+         zi = rho1*z1_vmec + rho*z1_ves
+      ELSE
+         rho2 = rho*rho
+         IF (interp_type .EQ. QUAD) THEN
+!  Quadratic (R' match at rho = 0)
+            ri = p5*r1s_vmec*(1 - rho2 - rho1*rho1)                            &
+     &         + r1_vmec*(1-rho2) + r1_ves*rho2
+            zi = p5*z1s_vmec*(1 - rho2 - rho1*rho1)                            &
+     &         + z1_vmec*(1-rho2) + z1_ves*rho2
+         ELSE IF (interp_type .EQ. CUB) THEN
+!  Cubic (R', R'' match at rho=0)
+            rho3 = rho*rho2
+            CALL ASSERT(.FALSE., 'Unknown interpolation <TYPE> specified')
+         END IF
       END IF
-    END IF
-  END SUBROUTINE LoadSurfacePoints
+
+      END SUBROUTINE
 
 !-------------------------------------------------------------------------------
 !>  @brief Read the vessel file.
@@ -593,8 +682,6 @@
 !>  @returns Error status of the read.
 !-------------------------------------------------------------------------------
       FUNCTION read_vessel_file()
-      USE island_params, ns=>ns_i, mpol=>mpol_i, ntor=>ntor_i, &
-                         ntheta=>nu_i, nzeta=>nv_i, mnmax=>mnmax_i
       USE siesta_namelist, ONLY: vessel_file
 
       IMPLICIT NONE

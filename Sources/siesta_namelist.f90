@@ -52,13 +52,17 @@
 !>  @end_table
 !>
 !>  @table_section{siesta_grid_size_sec, Grid Sizes}
-!>     @item{nsin,     Size of plasma radial grid.,                            siesta_namelist::nsin}
-!>     @item{nsin_ext, Size of extended radial grid.,                          siesta_namelist::nsin_ext}
-!>     @item{mpolin,   Number of poloidal modes.,                              siesta_namelist::mpolin}
-!>     @item{ntorin,   Number of toroidal modes.,                              siesta_namelist::ntorin}
-!>     @item{nfpin,    Number of field periods to use. Setting this to
-!>                     anything less than one will use the value form the wout
-!>                     file.,                                                  siesta_namelist::nfpin}
+!>     @item{nsin,       Size of plasma radial grid.,                            siesta_namelist::nsin}
+!>     @item{nsin_ext,   Size of extended radial grid.,                          siesta_namelist::nsin_ext}
+!>     @item{ntor_type,  Type of toroidal modes. Available types are
+!>                       -# @fixed_width{'dense'}  Use all toroidal modes.
+!>                       -# @fixed_width{'sparse'} Use selected toroidal modes., siesta_namelist::ntor_type}
+!>     @item{mpolin,     Number of poloidal modes.,                              siesta_namelist::mpolin}
+!>     @item{ntorin,     Number of toroidal modes.,                              siesta_namelist::ntorin}
+!>     @item{nfpin,      Number of field periods to use. Setting this to
+!>                       anything less than one will use the value form the wout
+!>                       file.,                                                  siesta_namelist::nfpin}
+!>     @item{ntor_modes, Sparse toroidal mode numbers.,                          siesta_namelist::ntor_modes}
 !>     @table_subsection{siesta_grid_size_out_sec, Output Grid Sizes}
 !>        @item{nphis, Number of cylindrical phi planes.,     siesta_namelist::nphis}
 !>        @item{nrs,   Number of radial grid points.,         siesta_namelist::nrs}
@@ -165,6 +169,8 @@
       INTEGER :: nsin = 101
 !>  Radial size of the extended grid.
       INTEGER :: nsin_ext = 0
+!>  Type of toroidal modes.
+      CHARACTER(LEN=siesta_namelist_name_length) :: ntor_type = 'dense'
 !>  Number of poloidal modes.
       INTEGER :: mpolin = 12
 !>  Number of toroidal modes.
@@ -172,6 +178,8 @@
 !>  Number of field periods to use. -1 means set this to the value in the wout
 !>  file
       INTEGER :: nfpin = 0
+!>  Sparse toroidal modes.
+      INTEGER, DIMENSION(-50:50) :: ntor_modes
 
 !  Output Grid Sizes
 !>  Number of cylindrical phi planes.
@@ -209,7 +217,7 @@
 !  Island parameters Island Parameters
         mres, HelPert, HelPertA,                                               &
 !  Input grid sizes
-        nsin, nsin_ext, mpolin, ntorin, nfpin,                                 &
+        nsin, nsin_ext, ntor_type, mpolin, ntorin, nfpin, ntor_modes,          &
 !  Output grid sizes
         nphis, nrs, nzs, nvs, nus, nss,                                        &
 !  File names
@@ -242,6 +250,7 @@
 !  local variables
       INTEGER                       :: iou_mnli
       INTEGER                       :: status
+      INTEGER                       :: i
 
 !  Start of executable code
       levmarq_param = 1.E-3_dp
@@ -252,6 +261,8 @@
       HelPertA      = 0
       lcolscale     = .TRUE.
       mupar_test    = 0
+      ntor_type     = 'dense'
+      ntor_modes    = 0
 
 !  Initalize a default value of the I\O unit. SIESTA increments from there.
       iou_mnli = 0
@@ -268,6 +279,14 @@
 
       levmarq_param0 = levmarq_param
       mupar0         = mupar
+
+      IF (TRIM(ntor_type) .eq. 'dense') THEN
+         ntor_modes(0) = 0
+         DO i = 1, ntorin
+            ntor_modes(i) = i
+            ntor_modes(-i) = -i
+         END DO
+      END IF
 
       END SUBROUTINE
 
