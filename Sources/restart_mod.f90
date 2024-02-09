@@ -888,7 +888,7 @@
 !  Only some of the toroidal modes will match if nfp_new and nfp_old are
 !  different.
          DO i_n = -ntor_old, ntor_old
-            n = tor_modes_old(i_n/nfp_old)
+            n = tor_modes_old(i_n)/nfp_old
             IF (.not.fourier_context%get_index(n)) THEN
                CYCLE
             END IF

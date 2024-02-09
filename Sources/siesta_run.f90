@@ -322,7 +322,7 @@
          CALL blacs_barrier(icontxt, 'All')
          CALL blacs_gridexit(icontxt)
 
-         CALL blacs_exit(0)
+         CALL blacs_exit(.not.BTEST(this%control_state, siesta_run_control_mpi))
          IF ((myrow.EQ.0) .AND. (mycol.EQ.0)) THEN
             CALL profstat
          END IF
