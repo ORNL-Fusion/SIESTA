@@ -10,7 +10,7 @@ target_sources(xsiesta_test
                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/commandline_parser.hpp>
 )
 
-target_sources(xiesta_unit_tests
+target_sources(xsiesta_unit_tests
                PRIVATE
                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/siesta_unit_tests.f>
 )
