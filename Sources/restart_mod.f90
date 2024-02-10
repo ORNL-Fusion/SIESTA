@@ -53,30 +53,30 @@
       CHARACTER (len=*), PARAMETER :: vn_tor_modes = 'tor_modes'
 
 !>  Name for the restart file jbsupss.
-      CHARACTER (len=*), PARAMETER :: vn_jbsupss = 'JBsupssh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jbsupss = 'JBsupssh_m_n_r_'
 !>  Name for the restart file jbsupuc.
-      CHARACTER (len=*), PARAMETER :: vn_jbsupuc = 'JBsupuch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jbsupuc = 'JBsupuch_m_n_r_'
 !>  Name for the restart file jbsupvc.
-      CHARACTER (len=*), PARAMETER :: vn_jbsupvc = 'JBsupvch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jbsupvc = 'JBsupvch_m_n_r_'
 !>  Name for the restart file jbsupsc.
-      CHARACTER (len=*), PARAMETER :: vn_jbsupsc = 'JBsupsch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jbsupsc = 'JBsupsch_m_n_r_'
 !>  Name for the restart file jbsupus.
-      CHARACTER (len=*), PARAMETER :: vn_jbsupus = 'JBsupush(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jbsupus = 'JBsupush_m_n_r_'
 !>  Name for the restart file jbsupus.
-      CHARACTER (len=*), PARAMETER :: vn_jbsupvs = 'JBsupvsh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jbsupvs = 'JBsupvsh_m_n_r_'
 !>  Name for the restart file jpresc.
-      CHARACTER (len=*), PARAMETER :: vn_jpresc = 'jpresch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jpresc = 'jpresch_m_n_r_'
 !>  Name for the restart file jpress.
-      CHARACTER (len=*), PARAMETER :: vn_jpress = 'jpressh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jpress = 'jpressh_m_n_r_'
 
 !>  Name for the restart file rmnc.
-      CHARACTER (len=*), PARAMETER :: vn_rmnc = 'rmnc(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_rmnc = 'rmnc_m_n_r_'
 !>  Name for the restart file rmns.
-      CHARACTER (len=*), PARAMETER :: vn_rmns = 'rmns(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_rmns = 'rmns_m_n_r_'
 !>  Name for the restart file zmnc.
-      CHARACTER (len=*), PARAMETER :: vn_zmnc = 'zmnc(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_zmnc = 'zmnc_m_n_r_'
 !>  Name for the restart file zmns.
-      CHARACTER (len=*), PARAMETER :: vn_zmns = 'zmns(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_zmns = 'zmns_m_n_r_'
 
 !>  Name for the restart file chipf.
       CHARACTER (len=*), PARAMETER :: vn_chipf = 'chipf(r)'
@@ -84,74 +84,74 @@
       CHARACTER (len=*), PARAMETER :: vn_phipf = 'phipf(r)'
 
 !>  Name for the restart file bsupsmns.
-      CHARACTER (len=*), PARAMETER :: vn_bsupsmns = 'bsupsmnsh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsupsmns = 'bsupsmnsh_m_n_r_'
 !>  Name for the restart file bsupsmnc.
-      CHARACTER (len=*), PARAMETER :: vn_bsupsmnc = 'bsupsmnch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsupsmnc = 'bsupsmnch_m_n_r_'
 !>  Name for the restart file bsupumns.
-      CHARACTER (len=*), PARAMETER :: vn_bsupumns = 'bsupumnsh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsupumns = 'bsupumnsh_m_n_r_'
 !>  Name for the restart file bsupumnc.
-      CHARACTER (len=*), PARAMETER :: vn_bsupumnc = 'bsupumnch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsupumnc = 'bsupumnch_m_n_r_'
 !>  Name for the restart file bsupvmns.
-      CHARACTER (len=*), PARAMETER :: vn_bsupvmns = 'bsupvmnsh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsupvmns = 'bsupvmnsh_m_n_r_'
 !>  Name for the restart file bsupvmnc.
-      CHARACTER (len=*), PARAMETER :: vn_bsupvmnc = 'bsupvmnch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsupvmnc = 'bsupvmnch_m_n_r_'
 !>  Name for the restart file bsubsmns.
-      CHARACTER (len=*), PARAMETER :: vn_bsubsmns = 'bsubsmnsh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsubsmns = 'bsubsmnsh_m_n_r_'
 !>  Name for the restart file bsubsmnc.
-      CHARACTER (len=*), PARAMETER :: vn_bsubsmnc = 'bsubsmnch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsubsmnc = 'bsubsmnch_m_n_r_'
 !>  Name for the restart file bsubumns.
-      CHARACTER (len=*), PARAMETER :: vn_bsubumns = 'bsubumnsh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsubumns = 'bsubumnsh_m_n_r_'
 !>  Name for the restart file bsubumnc.
-      CHARACTER (len=*), PARAMETER :: vn_bsubumnc = 'bsubumnch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsubumnc = 'bsubumnch_m_n_r_'
 !>  Name for the restart file bsubvmns.
-      CHARACTER (len=*), PARAMETER :: vn_bsubvmns = 'bsubvmnsh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsubvmns = 'bsubvmnsh_m_n_r_'
 !>  Name for the restart file bsubvmnc.
-      CHARACTER (len=*), PARAMETER :: vn_bsubvmnc = 'bsubvmnch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_bsubvmnc = 'bsubvmnch_m_n_r_'
 !>  Name for the restart file pmns.
-      CHARACTER (len=*), PARAMETER :: vn_pmns = 'pmnsh(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_pmns = 'pmnsh_m_n_r_'
 !>  Name for the restart file pmnc.
-      CHARACTER (len=*), PARAMETER :: vn_pmnc = 'pmnch(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_pmnc = 'pmnch_m_n_r_'
 !>  Name for the restart file jksupsmns.
-      CHARACTER (len=*), PARAMETER :: vn_jksupsmns = 'jksupsmnsf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jksupsmns = 'jksupsmnsf_m_n_r_'
 !>  Name for the restart file jksupsmnc.
-      CHARACTER (len=*), PARAMETER :: vn_jksupsmnc = 'jksupsmncf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jksupsmnc = 'jksupsmncf_m_n_r_'
 !>  Name for the restart file jksupumns.
-      CHARACTER (len=*), PARAMETER :: vn_jksupumns = 'jksupumnsf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jksupumns = 'jksupumnsf_m_n_r_'
 !>  Name for the restart file jksupumnc.
-      CHARACTER (len=*), PARAMETER :: vn_jksupumnc = 'jksupumncf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jksupumnc = 'jksupumncf_m_n_r_'
 !>  Name for the restart file jksupvmns.
-      CHARACTER (len=*), PARAMETER :: vn_jksupvmns = 'jksupvmnsf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jksupvmns = 'jksupvmnsf_m_n_r_'
 !>  Name for the restart file jksupvmnc.
-      CHARACTER (len=*), PARAMETER :: vn_jksupvmnc = 'jksupvmncf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_jksupvmnc = 'jksupvmncf_m_n_r_'
 !>  Name for the restart file fsupsmns.
-      CHARACTER (len=*), PARAMETER :: vn_fsupsmns = 'fsupsmnsf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsupsmns = 'fsupsmnsf_m_n_r_'
 !>  Name for the restart file fsupsmnc.
-      CHARACTER (len=*), PARAMETER :: vn_fsupsmnc = 'fsupsmncf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsupsmnc = 'fsupsmncf_m_n_r_'
 !>  Name for the restart file fsupumns.
-      CHARACTER (len=*), PARAMETER :: vn_fsupumns = 'fsupumnsf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsupumns = 'fsupumnsf_m_n_r_'
 !>  Name for the restart file fsupumnc.
-      CHARACTER (len=*), PARAMETER :: vn_fsupumnc = 'fsupumncf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsupumnc = 'fsupumncf_m_n_r_'
 !>  Name for the restart file fsupvmns.
-      CHARACTER (len=*), PARAMETER :: vn_fsupvmns = 'fsupvmnsf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsupvmns = 'fsupvmnsf_m_n_r_'
 !>  Name for the restart file fsupvmnc.
-      CHARACTER (len=*), PARAMETER :: vn_fsupvmnc = 'fsupvmncf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsupvmnc = 'fsupvmncf_m_n_r_'
 !>  Name for the restart file fsubsmns.
-      CHARACTER (len=*), PARAMETER :: vn_fsubsmns = 'fsubsmnsf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsubsmns = 'fsubsmnsf_m_n_r_'
 !>  Name for the restart file fsubsmnc.
-      CHARACTER (len=*), PARAMETER :: vn_fsubsmnc = 'fsubsmncf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsubsmnc = 'fsubsmncf_m_n_r_'
 !>  Name for the restart file fsubumns.
-      CHARACTER (len=*), PARAMETER :: vn_fsubumns = 'fsubumnsf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsubumns = 'fsubumnsf_m_n_r_'
 !>  Name for the restart file fsubumnc.
-      CHARACTER (len=*), PARAMETER :: vn_fsubumnc = 'fsubumncf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsubumnc = 'fsubumncf_m_n_r_'
 !>  Name for the restart file fsubvmns.
-      CHARACTER (len=*), PARAMETER :: vn_fsubvmns = 'fsubvmnsf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsubvmns = 'fsubvmnsf_m_n_r_'
 !>  Name for the restart file fsubvmnc.
-      CHARACTER (len=*), PARAMETER :: vn_fsubvmnc = 'fsubvmncf(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_fsubvmnc = 'fsubvmncf_m_n_r_'
 
 !>  Name for the restart file lmns.
-      CHARACTER (len=*), PARAMETER :: vn_lmns = 'lmns(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_lmns = 'lmns_m_n_r_'
 !>  Name for the restart file lmnc.
-      CHARACTER (len=*), PARAMETER :: vn_lmnc = 'lmnc(m,n,r)'
+      CHARACTER (len=*), PARAMETER :: vn_lmnc = 'lmnc_m_n_r_'
 
 !>  Name for the restart file p_factor.
       CHARACTER (len=*), PARAMETER :: vn_p_factor = 'p_factor'
