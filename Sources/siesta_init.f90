@@ -200,7 +200,7 @@
 !   L o c a l   V a r i a b l e s
 !-----------------------------------------------
        LOGICAL                 :: lrealloc, lalloc
-       INTEGER                 :: istat, n1, n2, n3, nsmin, nsmax,      &
+       INTEGER                 :: istat, n1, n2, n3, nsmin, nsmax,             &
                                   nsmin1, nsmax1
 !-----------------------------------------------
        lalloc = ALLOCATED(jvsupsijf) 
@@ -219,72 +219,74 @@
        END IF
 
        IF (lalloc) THEN
-          IF (SIZE(bsupsijh0,3) .EQ. n3) lrealloc=.FALSE.
+          IF (SIZE(bsupsijh0,3) .EQ. n3) THEN
+             lrealloc = .FALSE.
+          END IF
           IF (lrealloc) THEN
-          DEALLOCATE (jvsupsijf, jvsupuijf, jvsupvijf,                  &
-                      bsupsijf0, bsupuijf0, bsupvijf0,                  &
-                      bsupsijf,  bsupuijf,  bsupvijf,                     &
-                      bsupsijh0, bsupuijh0, bsupvijh0,                  &
-                      bsubsijf,  bsubuijf,  bsubvijf,                   &
-                      ksupsijf0, ksupuijf0, ksupvijf0,                  &
-                      ksupsijf,  ksupuijf,  ksupvijf,                     &
-                      ksubsijf,  ksubuijf,  ksubvijf,                   &
-                      pijf0, pijh0, pijf0_ds,                           &
-                      pijh0_du, pijh0_dv,  stat=istat)
-          CALL assert_eq(0, istat,                                             &
-                         'Deallocation error #1 in INIT_ALLOCATE_ARRAYS')
+             DEALLOCATE (jvsupsijf, jvsupuijf, jvsupvijf,                      &
+                         bsupsijf0, bsupuijf0, bsupvijf0,                      &
+                         bsupsijf,  bsupuijf,  bsupvijf,                       &
+                         bsupsijh0, bsupuijh0, bsupvijh0,                      &
+                         bsubsijf,  bsubuijf,  bsubvijf,                       &
+                         ksupsijf0, ksupuijf0, ksupvijf0,                      &
+                         ksupsijf,  ksupuijf,  ksupvijf,                       &
+                         ksubsijf,  ksubuijf,  ksubvijf,                       &
+                         pijf0, pijh0, pijf0_ds,                               &
+                         pijh0_du, pijh0_dv,  stat=istat)
+             CALL assert_eq(0, istat,                                          &
+                            'Deallocation error #1 in INIT_ALLOCATE_ARRAYS')
           END IF
        END IF
 
        IF (lrealloc) THEN
           n3 = ns
-          ALLOCATE (jvsupsijf(n1,n2,n3), jvsupuijf(n1,n2,n3),           & ! Full mesh quantities (real space)
-                    jvsupvijf(n1,n2,n3))                                  ! jacobian*(V_s , V_u , V_v)
+          ALLOCATE (jvsupsijf(n1,n2,n3), jvsupuijf(n1,n2,n3),                  & ! Full mesh quantities (real space)
+                    jvsupvijf(n1,n2,n3))                                         ! jacobian*(V_s , V_u , V_v)
           IF (lpar) THEN
-          ALLOCATE (bsupsijh0(n1,n2,nsmin1:nsmax1),                     & ! B^s, B^u, B^v (half)
-                    bsupuijh0(n1,n2,nsmin1:nsmax1),                     &
-                    bsupvijh0(n1,n2,nsmin1:nsmax1),                     &
-                    bsupsijf0(n1,n2,nsmin1:nsmax1),                     & ! B^s, B^u, B^v (full)
-                    bsupuijf0(n1,n2,nsmin1:nsmax1),                     &
-                    bsupvijf0(n1,n2,nsmin1:nsmax1),                     &
-                    ksupsijf0(n1,n2,nsmin1:nsmax),                      & ! K^s, K^u, K^v 
-                    ksupuijf0(n1,n2,nsmin1:nsmax),                      &
-                    ksupvijf0(n1,n2,nsmin1:nsmax),                      &
-                    ksubsijf(n1,n2,nsmin1:nsmax),                       & ! Full mesh quantities (real space)
-                    ksubuijf(n1,n2,nsmin1:nsmax),                       & ! K_s, K_u, K_v
-                    ksubvijf(n1,n2,nsmin1:nsmax),                       &
-                    bsubsijf(n1,n2,nsmin1:nsmax),                       & ! Full mesh quantities (real space)
-                    bsubuijf(n1,n2,nsmin1:nsmax),                       & ! B_s, B_u, B_v
-                    bsubvijf(n1,n2,nsmin1:nsmax),                       &
-                    ksupsijf(n1,n2,nsmin:nsmax),                           & 
-                    ksupuijf(n1,n2,nsmin:nsmax),                           & 
-                    ksupvijf(n1,n2,nsmin:nsmax),                           & 
-                    bsupsijf(n1,n2,nsmin:nsmax),                           &
-                    bsupuijf(n1,n2,nsmin:nsmax),                           &
-                    bsupvijf(n1,n2,nsmin:nsmax),                           &
-                    pijh0(n1,n2,nsmin1:nsmax1),                         &
-                    pijh0_du(n1,n2,nsmin1:nsmax),                       &
-                    pijh0_dv(n1,n2,nsmin1:nsmax),                       &
-                    pijf0(n1,n2,nsmin1:nsmax1),                         &
-                    pijf0_ds(n1,n2,nsmin1:nsmax), stat=istat)
+             ALLOCATE (bsupsijh0(n1,n2,nsmin1:nsmax1),                         & ! B^s, B^u, B^v (half)
+                       bsupuijh0(n1,n2,nsmin1:nsmax1),                         &
+                       bsupvijh0(n1,n2,nsmin1:nsmax1),                         &
+                       bsupsijf0(n1,n2,nsmin1:nsmax1),                         & ! B^s, B^u, B^v (full)
+                       bsupuijf0(n1,n2,nsmin1:nsmax1),                         &
+                       bsupvijf0(n1,n2,nsmin1:nsmax1),                         &
+                       ksupsijf0(n1,n2,nsmin1:nsmax),                          & ! K^s, K^u, K^v
+                       ksupuijf0(n1,n2,nsmin1:nsmax),                          &
+                       ksupvijf0(n1,n2,nsmin1:nsmax),                          &
+                       ksubsijf(n1,n2,nsmin1:nsmax),                           & ! Full mesh quantities (real space)
+                       ksubuijf(n1,n2,nsmin1:nsmax),                           & ! K_s, K_u, K_v
+                       ksubvijf(n1,n2,nsmin1:nsmax),                           &
+                       bsubsijf(n1,n2,nsmin1:nsmax),                           & ! Full mesh quantities (real space)
+                       bsubuijf(n1,n2,nsmin1:nsmax),                           & ! B_s, B_u, B_v
+                       bsubvijf(n1,n2,nsmin1:nsmax),                           &
+                       ksupsijf(n1,n2,nsmin:nsmax),                            &
+                       ksupuijf(n1,n2,nsmin:nsmax),                            &
+                       ksupvijf(n1,n2,nsmin:nsmax),                            &
+                       bsupsijf(n1,n2,nsmin:nsmax),                            &
+                       bsupuijf(n1,n2,nsmin:nsmax),                            &
+                       bsupvijf(n1,n2,nsmin:nsmax),                            &
+                       pijh0(n1,n2,nsmin1:nsmax1),                             &
+                       pijh0_du(n1,n2,nsmin1:nsmax),                           &
+                       pijh0_dv(n1,n2,nsmin1:nsmax),                           &
+                       pijf0(n1,n2,nsmin1:nsmax1),                             &
+                       pijf0_ds(n1,n2,nsmin1:nsmax), stat=istat)
           ELSE
-          ALLOCATE (ksupsijf0(n1,n2,n3), ksupuijf0(n1,n2,n3),           &
-                    ksupvijf0(n1,n2,n3), ksupsijf(n1,n2,n3),               &
-                    ksupuijf(n1,n2,n3),  ksupvijf(n1,n2,n3),               &
-                    ksubsijf(n1,n2,n3),                                 &
-                    ksubuijf(n1,n2,n3),                                 &
-                    ksubvijf(n1,n2,n3),                                 &
-                    bsubsijf(n1,n2,n3),                                 &
-                    bsubuijf(n1,n2,n3),                                 &
-                    bsubvijf(n1,n2,n3),                                 &
-                    pijf0(n1,n2,n3), pijh0(n1,n2,n3),                   &
-                    pijh0_du(n1,n2,n3), pijh0_dv(n1,n2,n3),             &
-                    pijf0_ds(n1,n2,n3), bsupsijf0(n1,n2,n3),            &
-                    bsupuijf0(n1,n2,n3),bsupvijf0(n1,n2,n3),            &
-                    bsupsijf(n1,n2,n3), bsupuijf(n1,n2,n3),               &
-                    bsupvijf(n1,n2,n3), bsupsijh0(n1,n2,n3),              &
-                    bsupuijh0(n1,n2,n3),bsupvijh0(n1,n2,n3),            &
-                    stat=istat)
+             ALLOCATE (ksupsijf0(n1,n2,n3), ksupuijf0(n1,n2,n3),               &
+                       ksupvijf0(n1,n2,n3), ksupsijf(n1,n2,n3),                &
+                       ksupuijf(n1,n2,n3),  ksupvijf(n1,n2,n3),                &
+                       ksubsijf(n1,n2,n3),                                     &
+                       ksubuijf(n1,n2,n3),                                     &
+                       ksubvijf(n1,n2,n3),                                     &
+                       bsubsijf(n1,n2,n3),                                     &
+                       bsubuijf(n1,n2,n3),                                     &
+                       bsubvijf(n1,n2,n3),                                     &
+                       pijf0(n1,n2,n3), pijh0(n1,n2,n3),                       &
+                       pijh0_du(n1,n2,n3), pijh0_dv(n1,n2,n3),                 &
+                       pijf0_ds(n1,n2,n3), bsupsijf0(n1,n2,n3),                &
+                       bsupuijf0(n1,n2,n3),bsupvijf0(n1,n2,n3),                &
+                       bsupsijf(n1,n2,n3), bsupuijf(n1,n2,n3),                 &
+                       bsupvijf(n1,n2,n3), bsupsijh0(n1,n2,n3),                &
+                       bsupuijh0(n1,n2,n3),bsupvijh0(n1,n2,n3),                &
+                       stat=istat)
           END IF
           CALL assert_eq(0, istat,                                             &
                          'Allocation error #1 in Init_Allocate_Arrays')

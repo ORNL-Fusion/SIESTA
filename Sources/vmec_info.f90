@@ -256,7 +256,7 @@
       USE island_params
       USE stel_constants, ONLY: twopi, zero, mu0
       USE island_params, hs=>hs_i, ns=>ns_i
-      USE shared_data, ONLY: lasym, torflux, polflux
+      USE shared_data, ONLY: lasym
 
       IMPLICIT NONE
 
@@ -344,14 +344,6 @@
                           chipf_i(2)/phipf_i(2), chipf_i(ns)/phipf_i(ns),      &
                           gamma
       END IF
-
-      ALLOCATE(torflux(ns), polflux(ns))
-      torflux(1) = 0
-      polflux(1) = 0;
-      DO js = 2, ns
-         polflux(js) = polflux(js - 1) + hs*(chipf_i(js) + chipf_i(js - 1))/2
-         torflux(js) = torflux(js - 1) + hs*(phipf_i(js) + phipf_i(js - 1))/2
-      END DO
 
       CALL vmec_info_set_RZL
 
