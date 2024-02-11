@@ -857,8 +857,14 @@
       IF (ALLOCATED(ksupsijf0)) THEN
          DEALLOCATE(ksupsijf0, ksupuijf0, ksupvijf0)
       END IF
+      IF (ALLOCATED(ksupsijf)) THEN
+         DEALLOCATE(ksupsijf, ksupuijf, ksupvijf)
+      END IF
       IF (ALLOCATED(bsubsijf)) THEN
          DEALLOCATE(bsubsijf, bsubuijf, bsubvijf)
+      END IF
+      IF (ALLOCATED(bsupsijf)) THEN
+         DEALLOCATE(bsupsijf, bsupuijf, bsupvijf)
       END IF
 
 !  Asymmetric quantities.
