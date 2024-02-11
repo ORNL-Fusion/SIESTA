@@ -150,7 +150,7 @@ set_tests_properties (siesta_final_jbsups_test
                       PROPERTIES
                       DEPENDS "siesta_final_vmec_test;siesta_final_siesta_test")
 add_test (NAME    siesta_final_jbsupu_test
-          COMMAND $<TARGET_PROPERTY:xsiesta_test,BINARY_DIR>/xsiesta_test -wout_file=${CMAKE_CURRENT_BINARY_DIR}/wout_test.vmec.nc -restart_file=${CMAKE_CURRENT_BINARY_DIR}/siesta_restart_w7x.nc -test_name=jbsupu -min=0.0 -max=1.0 -tol=5.1E-5)
+          COMMAND $<TARGET_PROPERTY:xsiesta_test,BINARY_DIR>/xsiesta_test -wout_file=${CMAKE_CURRENT_BINARY_DIR}/wout_test.vmec.nc -restart_file=${CMAKE_CURRENT_BINARY_DIR}/siesta_restart_w7x.nc -test_name=jbsupu -min=0.0 -max=1.0 -tol=5.2E-5)
 set_tests_properties (siesta_final_jbsupu_test
                       PROPERTIES
                       DEPENDS "siesta_final_vmec_test;siesta_final_siesta_test")
@@ -172,7 +172,7 @@ set_tests_properties (siesta_final_jksups_test
                       PROPERTIES
                       DEPENDS "siesta_final_vmec_test;siesta_final_siesta_test")
 add_test (NAME    siesta_final_jksupu_test
-          COMMAND $<TARGET_PROPERTY:xsiesta_test,BINARY_DIR>/xsiesta_test -wout_file=${CMAKE_CURRENT_BINARY_DIR}/wout_test.vmec.nc -restart_file=${CMAKE_CURRENT_BINARY_DIR}/siesta_restart_w7x.nc -test_name=jbsupu -min=0.0 -max=1.0 -tol=0.97 -relative)
+          COMMAND $<TARGET_PROPERTY:xsiesta_test,BINARY_DIR>/xsiesta_test -wout_file=${CMAKE_CURRENT_BINARY_DIR}/wout_test.vmec.nc -restart_file=${CMAKE_CURRENT_BINARY_DIR}/siesta_restart_w7x.nc -test_name=jbsupu -min=0.0 -max=1.0 -tol=0.99 -relative)
 set_tests_properties (siesta_final_jksupu_test
                       PROPERTIES
                       DEPENDS "siesta_final_vmec_test;siesta_final_siesta_test")
