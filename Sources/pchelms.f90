@@ -24,7 +24,7 @@
                              asubsmncf, asubumnsf, asubvmnsf
       USE quantities, ONLY: fsupsmnsf, fsupumncf, fsupvmncf,                   &
                             fsupsmncf, fsupumnsf, fsupvmnsf
-      USE shared_data, ONLY: torflux, polflux, nsp, r1_i, z1_i, ru_i,          &
+      USE shared_data, ONLY: nsp, r1_i, z1_i, ru_i,                            &
                              zu_i, rv_i, zv_i, lcolscale
       USE descriptor_mod, ONLY: iam, nprocs, lscalapack, INHESSIAN, SIESTA_COMM
       USE v3_utilities, ONLY: assert

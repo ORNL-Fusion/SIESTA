@@ -101,7 +101,6 @@
 !-------------------------------------------------------------------------------
       SUBROUTINE init_metric_elements()
       USE timer_mod, ONLY: init_timers
-      USE shared_data, ONLY: torflux, polflux
       USE island_params, hs=>hs_i, ns=>ns_i
 
       IMPLICIT NONE

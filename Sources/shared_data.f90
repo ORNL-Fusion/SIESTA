@@ -165,10 +165,6 @@
 !  Shared quantities.
 !>  FIXME: UNKNOWN
       REAL (dp)                                   :: jsupvdotA
-!>  Toroidal flux profile.
-      REAL (dp), DIMENSION(:), ALLOCATABLE        :: torflux
-!>  Poloidal flux profile.
-      REAL (dp), DIMENSION(:), ALLOCATABLE        :: polflux
 !>  Covariant vector potential for stellator symmetric s component on full grid.
       REAL (dp), DIMENSION(:,:,:), POINTER        :: asubsmnsf
 !>  Covariant vector potential for non-stellator symmetric s component on full
