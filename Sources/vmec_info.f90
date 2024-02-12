@@ -280,8 +280,8 @@
 !  Load wout file.
       IF (load_wout) THEN
          CALL read_wout_file(wout_file, istat)
+         CALL assert_eq(0, istat, 'Read-wout error in vmec_info_set_wout')
       END IF
-      CALL assert_eq(0, istat, 'Read-wout error in vmec_info_set_wout')
 
       IF (nfp_in .lt. 1) THEN
          nfp_i = nfp_vmec
