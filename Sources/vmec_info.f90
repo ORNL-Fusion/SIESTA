@@ -248,9 +248,10 @@
 !>  @param[in] ntor_in       Number of SIESTA toroidal modes.
 !>  @param[in] nfp_in        Number of SIESTA field periods.
 !>  @param[in] ntor_modes_in SIESTA Toroidal mode numbers.
+!>  @param[in] load_wout     Flag to load the wout file.
 !-------------------------------------------------------------------------------
       SUBROUTINE vmec_info_set_wout(wout_file, ns_in, mpol_in, ntor_in,        &
-     &                              nfp_in, ntor_modes_in)
+     &                              nfp_in, ntor_modes_in, load_wout)
       USE descriptor_mod, ONLY: iam
       USE v3_utilities, ONLY: assert_eq, assert
       USE island_params
@@ -267,6 +268,7 @@
       INTEGER, INTENT(IN)                              :: ntor_in
       INTEGER, INTENT(IN)                              :: nfp_in
       INTEGER, DIMENSION(-ntor_in:ntor_in), INTENT(in) :: ntor_modes_in
+      LOGICAL                                          :: load_wout
 
 !  Local variables
       INTEGER                                          :: istat
@@ -276,8 +278,10 @@
 !  Start of executable code
 
 !  Load wout file.
-      CALL read_wout_file(wout_file, istat)
-      CALL assert_eq(0, istat, 'Read-wout error in vmec_info_set_wout')
+      IF (load_wout) THEN
+         CALL read_wout_file(wout_file, istat)
+         CALL assert_eq(0, istat, 'Read-wout error in vmec_info_set_wout')
+      END IF
 
       IF (nfp_in .lt. 1) THEN
          nfp_i = nfp_vmec

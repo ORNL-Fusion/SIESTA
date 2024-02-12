@@ -78,7 +78,7 @@
       IF (lrestart) THEN
          CALL context%set_restart
       ELSE
-         CALL context%set_vmec
+         CALL context%set_vmec(.true.)
       END IF
 
       CALL context%converge
