@@ -379,9 +379,10 @@
 !>  This method loads and sets variables based on the VMEC equilibrium. VMEC 
 !>  controls the metric elements and coordinate system jacobian.
 !>
-!>  @param[inout] this A @ref siesta_run_class instance.
+!>  @param[inout] this      A @ref siesta_run_class instance.
+!>  @param[in]    load_wout Flag to load the wout file.
 !-------------------------------------------------------------------------------
-      SUBROUTINE siesta_run_set_vmec(this)
+      SUBROUTINE siesta_run_set_vmec(this, load_wout)
       USE siesta_namelist, ONLY: nsin, mpolin, ntorin, nfpin, wout_file,       &
                                  l_vessel, ntor_modes
       USE metrics, ONLY: init_metric_elements, LoadGrid, sqrtg
@@ -398,13 +399,14 @@
 
 !  Declare Arguments
       CLASS (siesta_run_class), INTENT(inout) :: this
+      LOGICAL, INTENT(in)                     :: load_wout
 
 !  local variables
       INTEGER                                 :: istat
 
 !  Start of executable code
       CALL vmec_info_set_wout(wout_file, nsin, mpolin, ntorin, nfpin,          &
-     &                        ntor_modes(-ntorin:ntorin))
+     &                        ntor_modes(-ntorin:ntorin), load_wout)
 
 !  CONSTRUCT R, Z, L REAL-SPACE ARRAYS ON SQRT(FLUX) - "POLAR" - MESH AND
 !  COMPUTE METRIC ELEMENTS AND JACOBIAN
