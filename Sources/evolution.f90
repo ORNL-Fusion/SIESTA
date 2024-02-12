@@ -70,6 +70,8 @@
       REAL (dp), DIMENSION(:), ALLOCATABLE :: xcdot
 !>  Change in force squared residule.
       REAL (dp)                            :: fsq_last
+!>  Pertubation was added.
+      LOGICAL                              :: pert_added
 
       CONTAINS
 
@@ -87,7 +89,7 @@
 !>  @param[in] ftol      Force residual tolerance.
 !-------------------------------------------------------------------------------
       SUBROUTINE converge_diagonal(wout_file, ftol)
-      USE siesta_namelist, ONLY: ladd_pert, l_output_alliter
+      USE siesta_namelist, ONLY: l_output_alliter
       USE perturbation, ONLY: add_perturb, niter_max
       USE dumping_mod, ONLY: write_output
 
@@ -138,17 +140,19 @@
             CALL write_output(wout_file, niter, .false.)
          END IF
 
-         l_iterate = fsq_ratio1 .le. 0.5_dp    .and.                           &
-                     fsq_total1 .gt. fsq_block .and.                           &
-                     niter      .lt. niter_max
+         l_iterate = (fsq_ratio1 .le. 0.5_dp    .and.                          &
+                      fsq_total1 .gt. fsq_block .and.                          &
+                      niter      .lt. niter_max) .or.                          &
+                     niter .eq. 1
 
-         IF (ladd_pert .and. fsq_total1.lt.100*fsq_block) THEN
+         IF (.not.pert_added .and. fsq_total1.lt.100*fsq_block) THEN
             l_init_state = .true.
             CALL second0(t1)
             CALL add_perturb(xc, getwmhd)
             CALL second0(t2)
             diag_add_pert_time=diag_add_pert_time+(t2-t1)
-            ladd_pert = .FALSE.
+            pert_added = .TRUE.
+            fsq_min = 1.0E20_dp
          END IF
          niter = niter + 1
       END DO
@@ -166,7 +170,7 @@
 !>  @param[in] ftol      Force residual tolerance.
 !-------------------------------------------------------------------------------
       SUBROUTINE converge_blocks(wout_file, ftol)
-      USE siesta_namelist, ONLY: l_output_alliter, ladd_pert
+      USE siesta_namelist, ONLY: l_output_alliter
       USE perturbation, ONLY: add_perturb, niter_max
       USE dumping_mod, ONLY: write_output
 
@@ -224,24 +228,25 @@
          IF (nprecon .gt. 2 .and. ABS(1 - fsq_ratio1) .lt. 1.E-2_dp) THEN
             levm_scale = levm_scale/3
             nrow = nrow + 1
-            IF (nrow.EQ.3 .and. l_iterate) THEN
+!            IF (nrow.EQ.3 .and. l_iterate) THEN
 !               IF (iam .eq. 0 .and. lverbose) THEN
 !                  WRITE(*,1001), fsq_ratio1
 !               END IF
 !               l_iterate = .false.
-            END IF
-         ELSE 
+!            END IF
+         ELSE
             nrow = 0
          END IF
 
 !  In case we didn't add it in diag loop.
-         IF (ladd_pert .and. fsq_total1 .lt. 100*fsq_prec) THEN
+         IF (.not.pert_added .and. fsq_total1 .lt. 100*fsq_prec) THEN
            l_init_state = .true.
            CALL second0(t1)
            CALL add_perturb(xc, getwmhd)
            CALL second0(t2)
            block_add_pert_time = block_add_pert_time + (t2 - t1)
-           ladd_pert = .FALSE.
+           pert_added = .TRUE.
+           fsq_min = 1.0E20_dp
 !  To output right after pert is applied, set l_iterate = .false. here.
          END IF
 
@@ -316,15 +321,19 @@
       n1 = ns*mnmax
       neqs = ndims*n1
 
-      ALLOCATE(xc(neqs), col_scale(0:mpol,-ntor:ntor,ndims,ns), stat=istat)
-      CALL ASSERT(istat.eq.0,'Allocate xc failed!')
+      IF (.not.ALLOCATED(xc)) THEN
+         ALLOCATE(xc(neqs), col_scale(0:mpol,-ntor:ntor,ndims,ns), stat=istat)
+         CALL ASSERT(istat.eq.0,'Allocate xc failed!')
+      END IF
       xc = 0
       col_scale = 1
       CALL init_ptrs(xc, jvsupsmncf, jvsupumnsf, jvsupvmnsf,                   &
                          jvsupsmnsf, jvsupumncf, jvsupvmncf)
 
-      ALLOCATE(gc(neqs), gc_sup(neqs), stat=istat)
-      CALL ASSERT(istat.eq.0,'Allocate gc failed!')
+      IF (.not.ALLOCATED(gc)) THEN
+         ALLOCATE(gc(neqs), gc_sup(neqs), stat=istat)
+         CALL ASSERT(istat.eq.0,'Allocate gc failed!')
+      END IF
       gc = 0
       CALL init_ptrs(gc_sup, fsupsmncf, fsupumnsf, fsupvmnsf,                  &
                              fsupsmnsf, fsupumncf, fsupvmncf)
