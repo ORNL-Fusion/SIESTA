@@ -38,12 +38,15 @@
 !>  Control state.
          INTEGER   :: control_state
       CONTAINS
-         PROCEDURE, PASS :: set_vmec => siesta_run_set_vmec
-         PROCEDURE, PASS :: set_restart => siesta_run_set_restart
-         PROCEDURE, PASS :: set_1d => siesta_run_set_1d
-         GENERIC         :: set => set_1d
-         PROCEDURE, PASS :: converge => siesta_run_converge
-         FINAL           :: siesta_run_destruct
+!  FIXME: Remove _temp after merge of V3FIT fixes.
+         PROCEDURE :: set_vmec_ => siesta_run_set_vmec
+         PROCEDURE :: set_vmec_temp => siesta_run_set_vmec_temp
+         GENERIC   :: set_vmec => set_vmec_, set_vmec_temp
+         PROCEDURE :: set_restart => siesta_run_set_restart
+         PROCEDURE :: set_1d => siesta_run_set_1d
+         GENERIC   :: set => set_1d
+         PROCEDURE :: converge => siesta_run_converge
+         FINAL     :: siesta_run_destruct
       END TYPE
 
 !*******************************************************************************
@@ -382,7 +385,15 @@
 !>  @param[inout] this      A @ref siesta_run_class instance.
 !>  @param[in]    load_wout Flag to load the wout file.
 !-------------------------------------------------------------------------------
-      SUBROUTINE siesta_run_set_vmec(this, load_wout)
+!  FIXME: Temp routine to make sure CI tests still. Remove once V3FIT changes
+!         finished.
+      SUBROUTINE siesta_run_set_vmec(this)
+      IMPLICIT NONE
+      CLASS (siesta_run_class), INTENT(inout) :: this
+      CALL siesta_run_set_vmec_temp(this, .true.)
+      END SUBROUTINE
+
+      SUBROUTINE siesta_run_set_vmec_temp(this, load_wout)
       USE siesta_namelist, ONLY: nsin, mpolin, ntorin, nfpin, wout_file,       &
                                  l_vessel, ntor_modes
       USE metrics, ONLY: init_metric_elements, LoadGrid, sqrtg
