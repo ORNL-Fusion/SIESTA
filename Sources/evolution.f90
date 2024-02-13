@@ -143,7 +143,7 @@
          l_iterate = (fsq_ratio1 .le. 0.5_dp    .and.                          &
                       fsq_total1 .gt. fsq_block .and.                          &
                       niter      .lt. niter_max) .or.                          &
-                     niter .eq. 1
+                     (niter .eq. 1 .and. niter_max .ne. 1)
 
          IF (.not.pert_added .and. fsq_total1.lt.100*fsq_block) THEN
             l_init_state = .true.
