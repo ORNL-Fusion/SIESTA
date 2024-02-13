@@ -219,11 +219,13 @@
 !  Start of executable code
 
 !  Stellarator symmetric quantities.
-      DEALLOCATE(rmnc_i)
-      DEALLOCATE(zmns_i)
-      DEALLOCATE(lmns_i)
-      DEALLOCATE(jcurrumnc)
-      DEALLOCATE(jcurrvmnc)
+      IF (ALLOCATED(rmnc_i)) THEN
+         DEALLOCATE(rmnc_i)
+         DEALLOCATE(zmns_i)
+         DEALLOCATE(lmns_i)
+         DEALLOCATE(jcurrumnc)
+         DEALLOCATE(jcurrvmnc)
+      END IF
 
 !  Asymmetric quantities.
       IF (ALLOCATED(rmns_i)) THEN

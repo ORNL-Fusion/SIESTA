@@ -991,7 +991,7 @@
          CALL CheckEigenvalues_Serial(ns, mblk_size)
          CALL CheckConditionNumber_Serial(ns,mblk_size,anorm,rcond,info)
          CALL second0(toff)                  
-         IF (INFO .EQ. 0) THEN
+         IF (INFO .EQ. 0 .and. lverbose) THEN
             PRINT '(1x,3(a,1p,e12.3))','RCOND = ', rcond,               &
             ' ||A|| = ', ANORM,' TIME: ', toff-ton
          END IF

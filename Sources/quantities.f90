@@ -253,8 +253,10 @@
 !*******************************************************************************
 !-------------------------------------------------------------------------------
 !>  @brief Intialize quantities.
+!>
+!>  @param[in] restarted Flag to signal that we are in restart mode.
 !-------------------------------------------------------------------------------
-      SUBROUTINE init_quantities
+      SUBROUTINE init_quantities(restarted)
       USE descriptor_mod, ONLY: LSCALAPACK
       USE island_params, ONLY: fourier_context
       USE fourier, ONLY: f_none, f_cos, f_sin, f_sum, m0
@@ -264,9 +266,11 @@
       USE prof_mod, ONLY: SetUpScalingAllGather
 #endif
       USE blocktridiagonalsolver_s, ONLY: Initialize
-      USE siesta_namelist, ONLY: lrestart
 
       IMPLICIT NONE
+
+!  Declare Arguments
+      LOGICAL                                  :: restarted
 
 !  Local variables.
       INTEGER                                  :: istat
@@ -287,7 +291,7 @@
          endglobrow = ns
       END IF
 
-      IF (.not.lrestart) THEN
+      IF (.not.restarted) THEN
 !  Allocate and initialize dependent variables
          CALL alloc_quantities
 

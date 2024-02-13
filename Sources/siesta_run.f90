@@ -435,7 +435,7 @@
       END IF
 
       CALL init_metric_elements()
-      CALL init_quantities !Initializes BCYCLIC
+      CALL init_quantities(.false.) !Initializes BCYCLIC
       CALL init_evolution !neqs is set here
       CALL initRemap(mpol, ntor, ns, nprocs, iam)
       CALL InitHess
@@ -491,7 +491,7 @@
                              ns, ntor_modes(-ntorin:ntorin))
 
       CALL init_metric_elements()
-      CALL init_quantities !Initializes BCYCLIC
+      CALL init_quantities(.true.) !Initializes BCYCLIC
       CALL init_evolution !neqs is set here
       CALL initRemap(mpolin, ntorin, ns, nprocs, iam)
       CALL InitHess
@@ -582,10 +582,11 @@
 !>  @param[inout] this A @ref siesta_run_class instance.
 !-------------------------------------------------------------------------------
       SUBROUTINE siesta_run_converge(this)
-      USE evolution, ONLY: converge_diagonal, converge_blocks
+      USE evolution, ONLY: converge_diagonal, converge_blocks, pert_added
       USE descriptor_mod, ONLY: DIAGONALDONE
-      USE siesta_namelist, ONLY: ftol, wout_file
+      USE siesta_namelist, ONLY: ftol, wout_file, ladd_pert
       USE utilities, ONLY: test_utilities
+      USE shared_data, ONLY: xc
 
       IMPLICIT NONE
 
@@ -596,12 +597,15 @@
       LOGICAL                                 :: passed
 
 !  Start of executable code
+      pert_added = .not.ladd_pert
+
       IF (test_utilities()) THEN
          WRITE (*,*) 'Failed Diverence Test.'
 !         STOP
       END IF
 
 !  Converge initial residues with diagonal preconditioner
+      xc = 0
       DIAGONALDONE = .false.
       CALL converge_diagonal(wout_file, ftol)
       DIAGONALDONE = .true.
