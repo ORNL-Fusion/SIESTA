@@ -196,17 +196,20 @@
                             jbsupumnsh, jbsupumnch,                            &
                             jbsupvmnsh, jbsupvmnch,                            &
                             jpmnsh,     jpmnch,                                &
-                            b_factor, p_factor, alloc_quantities
+                            b_factor, p_factor, alloc_quantities,              &
+                            dealloc_quantities
       USE island_params, ONLY: chipf => chipf_i, phipf => phipf_i,             &
      &                         wb => wb_i, wp => wp_i, nfp_i, gamma,           &
      &                         gnorm => gnorm_i, rmajor => rmajor_i,           &
      &                         fourier_context, nu_i, nv_i
       USE vmec_info, ONLY: rmnc => rmnc_i, zmns => zmns_i,                     &
      &                     rmns => rmns_i, zmnc => zmnc_i,                     &
-     &                     vmec_info_construct_island
+     &                     vmec_info_construct_island,                         &
+     &                     vmec_info_destruct_island
       USE metrics, ONLY: LoadGrid
       USE fourier, ONLY: m0, m1, fourier_class
       USE stel_constants, ONLY: one
+      USE siesta_namelist, ONLY: lrestart
 
       IMPLICIT NONE
 
@@ -237,6 +240,7 @@
 !  Start of executable code
       restart_read = 1
 
+      CALL dealloc_quantities
       CALL alloc_quantities
 
       filename = 'siesta_' // TRIM(restart_ext) // '.nc'
@@ -272,13 +276,18 @@
 !  The namelist input file may turn the asymmetric terms on and off.
       ALLOCATE(tempmn_r(0:mpol,-ntor:ntor,ns))
       ALLOCATE(temp_r(ns))
+      CALL vmec_info_destruct_island
       CALL vmec_info_construct_island(mpolin, ntorin, nsin, lasym)
 
-      ALLOCATE(chipf(nsin))
+      IF (.not.ALLOCATED(chipf)) THEN
+         ALLOCATE(chipf(nsin))
+      END IF
       CALL cdf_read(ncid, vn_chipf, temp_r)
       CALL interpit_1d(temp_r, chipf, ns, nsin, .false., 1)
 
-      ALLOCATE(phipf(nsin))
+      IF (.not.ALLOCATED(phipf)) THEN
+         ALLOCATE(phipf(nsin))
+      END IF
       CALL cdf_read(ncid, vn_phipf, temp_r)
       CALL interpit_1d(temp_r, phipf, ns, nsin, .false., 1)
 

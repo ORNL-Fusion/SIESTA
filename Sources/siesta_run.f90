@@ -38,12 +38,15 @@
 !>  Control state.
          INTEGER   :: control_state
       CONTAINS
-         PROCEDURE, PASS :: set_vmec => siesta_run_set_vmec
-         PROCEDURE, PASS :: set_restart => siesta_run_set_restart
-         PROCEDURE, PASS :: set_1d => siesta_run_set_1d
-         GENERIC         :: set => set_1d
-         PROCEDURE, PASS :: converge => siesta_run_converge
-         FINAL           :: siesta_run_destruct
+!  FIXME: Remove _temp after merge of V3FIT fixes.
+         PROCEDURE :: set_vmec_ => siesta_run_set_vmec
+         PROCEDURE :: set_vmec_temp => siesta_run_set_vmec_temp
+         GENERIC   :: set_vmec => set_vmec_, set_vmec_temp
+         PROCEDURE :: set_restart => siesta_run_set_restart
+         PROCEDURE :: set_1d => siesta_run_set_1d
+         GENERIC   :: set => set_1d
+         PROCEDURE :: converge => siesta_run_converge
+         FINAL     :: siesta_run_destruct
       END TYPE
 
 !*******************************************************************************
@@ -379,9 +382,18 @@
 !>  This method loads and sets variables based on the VMEC equilibrium. VMEC 
 !>  controls the metric elements and coordinate system jacobian.
 !>
-!>  @param[inout] this A @ref siesta_run_class instance.
+!>  @param[inout] this      A @ref siesta_run_class instance.
+!>  @param[in]    load_wout Flag to load the wout file.
 !-------------------------------------------------------------------------------
+!  FIXME: Temp routine to make sure CI tests still. Remove once V3FIT changes
+!         finished.
       SUBROUTINE siesta_run_set_vmec(this)
+      IMPLICIT NONE
+      CLASS (siesta_run_class), INTENT(inout) :: this
+      CALL siesta_run_set_vmec_temp(this, .true.)
+      END SUBROUTINE
+
+      SUBROUTINE siesta_run_set_vmec_temp(this, load_wout)
       USE siesta_namelist, ONLY: nsin, mpolin, ntorin, nfpin, wout_file,       &
                                  l_vessel, ntor_modes
       USE metrics, ONLY: init_metric_elements, LoadGrid, sqrtg
@@ -398,13 +410,14 @@
 
 !  Declare Arguments
       CLASS (siesta_run_class), INTENT(inout) :: this
+      LOGICAL, INTENT(in)                     :: load_wout
 
 !  local variables
       INTEGER                                 :: istat
 
 !  Start of executable code
       CALL vmec_info_set_wout(wout_file, nsin, mpolin, ntorin, nfpin,          &
-     &                        ntor_modes(-ntorin:ntorin))
+     &                        ntor_modes(-ntorin:ntorin), load_wout)
 
 !  CONSTRUCT R, Z, L REAL-SPACE ARRAYS ON SQRT(FLUX) - "POLAR" - MESH AND
 !  COMPUTE METRIC ELEMENTS AND JACOBIAN
@@ -422,7 +435,7 @@
       END IF
 
       CALL init_metric_elements()
-      CALL init_quantities !Initializes BCYCLIC
+      CALL init_quantities(.false.) !Initializes BCYCLIC
       CALL init_evolution !neqs is set here
       CALL initRemap(mpol, ntor, ns, nprocs, iam)
       CALL InitHess
@@ -478,7 +491,7 @@
                              ns, ntor_modes(-ntorin:ntorin))
 
       CALL init_metric_elements()
-      CALL init_quantities !Initializes BCYCLIC
+      CALL init_quantities(.true.) !Initializes BCYCLIC
       CALL init_evolution !neqs is set here
       CALL initRemap(mpolin, ntorin, ns, nprocs, iam)
       CALL InitHess
@@ -569,10 +582,11 @@
 !>  @param[inout] this A @ref siesta_run_class instance.
 !-------------------------------------------------------------------------------
       SUBROUTINE siesta_run_converge(this)
-      USE evolution, ONLY: converge_diagonal, converge_blocks
+      USE evolution, ONLY: converge_diagonal, converge_blocks, pert_added
       USE descriptor_mod, ONLY: DIAGONALDONE
-      USE siesta_namelist, ONLY: ftol, wout_file
+      USE siesta_namelist, ONLY: ftol, wout_file, ladd_pert
       USE utilities, ONLY: test_utilities
+      USE shared_data, ONLY: xc
 
       IMPLICIT NONE
 
@@ -583,12 +597,15 @@
       LOGICAL                                 :: passed
 
 !  Start of executable code
+      pert_added = .not.ladd_pert
+
       IF (test_utilities()) THEN
          WRITE (*,*) 'Failed Diverence Test.'
 !         STOP
       END IF
 
 !  Converge initial residues with diagonal preconditioner
+      xc = 0
       DIAGONALDONE = .false.
       CALL converge_diagonal(wout_file, ftol)
       DIAGONALDONE = .true.
