@@ -381,7 +381,7 @@
       lresistive = lresist_save
       eta_factor = eta_factor_save
 
-1000  FORMAT(' Adding helical magnetic field perturbations'/' 10^6 X Del-W',      &
+1000  FORMAT(' Adding helical magnetic field perturbations'/' 10^6 X Del-W',   &
              '    mres    nres     HelPert     rad  |m*chip+n*phip|',          &
              '     iota   radial width')
 1001  FORMAT(1p,e12.3,2(i8),3x,1pe10.2,0p,f8.2,f11.2,4x,2(f11.2))

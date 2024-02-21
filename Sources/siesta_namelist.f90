@@ -240,7 +240,7 @@
       SUBROUTINE siesta_namelist_read(namelist_file)
       USE safe_open_mod
       USE v3_utilities
-      USE Hessian, ONLY: levmarq_param, mupar, levmarq_param0, mupar0
+      USE Hessian, ONLY: levmarq_param0, mupar0
 
       IMPLICIT NONE
 

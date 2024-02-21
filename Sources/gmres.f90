@@ -151,32 +151,40 @@
 !
 !     THIS IS STANDARD GMRES CALL
 !
-      CALL second0(skston)
-      xc = xcmin
-      CALL gmres_wrap (xc, brhs)
-      CALL second0(skstoff)
-      gmres_wrap_time=gmres_wrap_time+(skstoff-skston)
+         CALL second0(skston)
+         xc = xcmin
+         CALL gmres_wrap (xc, brhs)
+         CALL second0(skstoff)
+         gmres_wrap_time=gmres_wrap_time+(skstoff-skston)
 
-      IF (fsq_total1 .LT. fsq_min .OR. ALL(xcmin .EQ. zero)) THEN
-         xcmin = xc
-         fsq_min = fsq_total1
-         IF (lm0 .GT. zero) scale_fac = levmarq_param/lm0
-      END IF
+         IF (fsq_total1 .LT. fsq_min .OR. ALL(xcmin .EQ. zero)) THEN
+            xcmin = xc
+            fsq_min = fsq_total1
+            IF (lm0 .GT. zero) THEN
+               scale_fac = levmarq_param/lm0
+            END IF
+         END IF
 !!!END GMRES CONVERGENCE
 !FOR NOW, THIS IS ONLY IMPLEMENTED FOR PARSOLVER=TRUE: MUST IMPLEMENT
 !RefactorHessian FOR LSCALAPACK=T
-      IF (.FALSE.) THEN
-!      IF (.NOT.l_Diagonal_Only .AND. PARSOLVER) THEN
-         IF (fsq_min.GE.0.95_dp*fmhd .AND. iter.LT.SIZE(levscan)) THEN
-            iter = iter+1
-            levmarq_param = lm0*levscan(iter)
-            IF (levmarq_param .LT. levm_ped) levmarq_param = 100*levm_ped
-            IF (levmarq_param .GE. levmarq_param0) levmarq_param = levmarq_param0/10._dp**iter
-            IF (iam.EQ.0 .AND. lverbose) PRINT 930,' Refactoring Hessian: LM = ',levmarq_param
-            CALL RefactorHessian(levmarq_param)
-            GOTO 920
+         IF (.FALSE.) THEN
+!        IF (.NOT.l_Diagonal_Only .AND. PARSOLVER) THEN
+            IF (fsq_min.GE.0.95_dp*fmhd .AND. iter.LT.SIZE(levscan)) THEN
+               iter = iter+1
+               levmarq_param = lm0*levscan(iter)
+               IF (levmarq_param .LT. levm_ped) THEN
+                  levmarq_param = 100*levm_ped
+               END IF
+               IF (levmarq_param .GE. levmarq_param0) THEN
+                  levmarq_param = levmarq_param0/10._dp**iter
+               END IF
+               IF (iam.EQ.0 .AND. lverbose) THEN
+                  PRINT 930,' Refactoring Hessian: LM = ',levmarq_param
+               END IF
+               CALL RefactorHessian(levmarq_param)
+               GOTO 920
+            END IF
          END IF
-      END IF
       END IF LGMRES
 
  912  FORMAT(i5,3(3x,1pe12.3))
@@ -231,7 +239,7 @@
       muPar = muParS
 
       DEALLOCATE (xcmin, brhs)
-      
+
       END SUBROUTINE gmres_fun
 
       SUBROUTINE init_gmres0 (icntl, cntl, etak, m, n)

@@ -342,8 +342,10 @@
          wint(l,:,:) = fourier_context%cosmui(l,m0)
       END DO
 
-      ALLOCATE (vp_f(ns), stat=istat)
-      CALL assert_eq(0, istat, 'Allocation error in init_quantities')
+      IF (.not.ALLOCATED(vp_f)) THEN
+         ALLOCATE (vp_f(ns), stat=istat)
+         CALL assert_eq(0, istat, 'Allocation error in init_quantities')
+      END IF
       CALL SurfAverage(vp_f, jacobf, 1, ns)
 
 !  Compar volumes for a sanity check that the siesta grid and orginal VMEC
@@ -796,37 +798,46 @@
 
 !  Start of executable code
 !  Half mesh quantities (harmonics), B^s (sine), B^u (cosine), B^v (cosine)
-      ALLOCATE(jbsupsmnsh(0:mpol,-ntor:ntor,ns),                               &
-               jbsupumnch(0:mpol,-ntor:ntor,ns),                               &
-               jbsupvmnch(0:mpol,-ntor:ntor,ns),                               &
-               jpmnch    (0:mpol,-ntor:ntor,ns), stat=istat)
-      CALL assert_eq(0, istat, 'Allocation #1 failed in alloc_quantities')
+      IF (.not.ALLOCATED(jbsupsmnsh)) THEN
+         ALLOCATE(jbsupsmnsh(0:mpol,-ntor:ntor,ns),                            &
+                  jbsupumnch(0:mpol,-ntor:ntor,ns),                            &
+                  jbsupvmnch(0:mpol,-ntor:ntor,ns),                            &
+                  jpmnch    (0:mpol,-ntor:ntor,ns), stat=istat)
+         CALL assert_eq(0, istat, 'Allocation #1 failed in alloc_quantities')
+      END IF
       jbsupsmnsh = zero
       jbsupumnch = zero
       jbsupvmnch = zero
       jpmnch = zero
 
-      ALLOCATE(pwr_spec_s(0:mpol,-ntor:ntor,ns,4),                             &
-               pwr_spec_a(0:mpol,-ntor:ntor,ns,4), stat=istat)
-      CALL assert_eq(0, istat, 'Allocation #2 failed in alloc_quantities')
+      IF (.not.ALLOCATED(pwr_spec_s)) THEN
+         ALLOCATE(pwr_spec_s(0:mpol,-ntor:ntor,ns,4),                          &
+                  pwr_spec_a(0:mpol,-ntor:ntor,ns,4), stat=istat)
+         CALL assert_eq(0, istat, 'Allocation #2 failed in alloc_quantities')
+      END IF
 
       IF (lasym) THEN
 !  Half mesh quantities (harmonics), B^s (sine), B^u (cosine), B^v (cosine)
-         ALLOCATE(jbsupsmnch(0:mpol,-ntor:ntor,ns),                            &
-                  jbsupumnsh(0:mpol,-ntor:ntor,ns),                            &
-                  jbsupvmnsh(0:mpol,-ntor:ntor,ns),                            &
-                  jpmnsh    (0:mpol,-ntor:ntor,ns), stat=istat)
-         CALL assert_eq(0, istat, 'Allocation #3 failed in alloc_quantities')
+         IF (.not.ALLOCATED(jbsupsmnsh)) THEN
+            ALLOCATE(jbsupsmnch(0:mpol,-ntor:ntor,ns),                         &
+                     jbsupumnsh(0:mpol,-ntor:ntor,ns),                         &
+                     jbsupvmnsh(0:mpol,-ntor:ntor,ns),                         &
+                     jpmnsh    (0:mpol,-ntor:ntor,ns), stat=istat)
+            CALL assert_eq(0, istat,                                           &
+     &                     'Allocation #3 failed in alloc_quantities')
+         END IF
          jbsupsmnch = zero
          jbsupumnsh = zero
          jbsupvmnsh = zero
          jpmnsh = zero
       END IF
-                
-      ALLOCATE(bsq(ntheta,nzeta,ns), jacobh(ntheta,nzeta,ns),                  &
-               jacobf(ntheta,nzeta,ns), wint(ntheta,nzeta,ns), stat=istat)
+
+      IF (.not.ALLOCATED(bsq)) THEN
+         ALLOCATE(bsq(ntheta,nzeta,ns), jacobh(ntheta,nzeta,ns),               &
+                  jacobf(ntheta,nzeta,ns), wint(ntheta,nzeta,ns), stat=istat)
+         CALL assert_eq(0, istat, 'Allocation #4 failed in alloc_quantities')
+      END IF
       bsq = 0.0
-      CALL assert_eq(0, istat, 'Allocation #4 failed in alloc_quantities')
 
       END SUBROUTINE
 
