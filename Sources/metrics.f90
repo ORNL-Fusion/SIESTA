@@ -16,14 +16,7 @@
       USE island_params
       USE shared_data, ONLY: lasym, r1_i, z1_i, ru_i, zu_i, rv_i, zv_i,  &
                              lverbose, jsupvdotA, nsp
-      USE read_wout_mod, ns_vmec=>ns, mpol_vmec=>mpol, ntor_vmec=>ntor,  &
-          rmnc_vmec=>rmnc, zmns_vmec=>zmns, lmns_vmec=>lmns,             &
-          xm_vmec=>xm, xn_vmec=>xn, chipf_vmec=>chipf,                   &  ! MRC 4/1/2016
-          rmns_vmec=>rmns, zmnc_vmec=>zmnc, lmnc_vmec=>lmnc,             &  ! MRC 12/1/2016
-          phipf_vmec=>phipf, presf_vmec=>presf, nfp_vmec=>nfp,           &
-          wb_vmec=>wb, wp_vmec=>wp, gamma_vmec=>gamma,                   &
-          volume_vmec=>volume, raxis_vmec=>raxis, lasym_vmec=>lasym,     &
-          iasym_vmec=>iasym
+      USE v3_utilities
       USE descriptor_mod, ONLY: iam
       USE timer_mod
       USE utilities, ONLY: to_full_mesh
@@ -226,10 +219,14 @@
       INTEGER, INTENT(out) :: istat
 
 !  Start executable code.
-      ALLOCATE (r1_i(nu_i, nv_i, ns_i), z1_i(nu_i, nv_i, ns_i),         &
-                ru_i(nu_i, nv_i, ns_i), zu_i(nu_i, nv_i, ns_i),         &
-                rv_i(nu_i, nv_i, ns_i), zv_i(nu_i, nv_i, ns_i),         &
-                stat = istat)
+      IF (.not.ALLOCATED(r1_i)) THEN
+         ALLOCATE (r1_i(nu_i, nv_i, ns_i), z1_i(nu_i, nv_i, ns_i),             &
+                   ru_i(nu_i, nv_i, ns_i), zu_i(nu_i, nv_i, ns_i),             &
+                   rv_i(nu_i, nv_i, ns_i), zv_i(nu_i, nv_i, ns_i),             &
+                   stat = istat)
+      ELSE
+         istat = 0
+      END IF
 
       CALL rz_to_ijsp(rmnc_i, zmns_i, .false.)
       IF (lasym) THEN
@@ -480,17 +477,17 @@
 
 !  Start executable code.
       CALL ASSERT(ALL(ABS(hss*gssf + hsu*gsuf + hsv*gsvf - 1) .lt. tolarance), &
-                      's Diagonal metric element failed.')
+                  's Diagonal metric element failed.')
       CALL ASSERT(ALL(ABS(hsu*gsuf + huu*guuf + huv*guvf - 1) .lt. tolarance), &
-                      'u Diagonal metric element failed.')
+                  'u Diagonal metric element failed.')
       CALL ASSERT(ALL(ABS(hsv*gsvf + huv*guvf + hvv*gvvf - 1) .lt. tolarance), &
-                      'v Diagonal metric element failed.')
+                  'v Diagonal metric element failed.')
       CALL ASSERT(ALL(ABS(hss*gsuf + hsu*guuf + hsv*guvf) .lt. tolarance),     &
-                      'su Off diagonal metric element failed.')
+                  'su Off diagonal metric element failed.')
       CALL ASSERT(ALL(ABS(hss*gsvf + hsu*guvf + hsv*gvvf) .lt. tolarance),     &
-                      'sv Off diagonal metric element failed.')
+                  'sv Off diagonal metric element failed.')
       CALL ASSERT(ALL(ABS(hsu*gsvf + huu*guvf + huv*gvvf) .lt. tolarance),     &
-                      'uv Off diagonal metric element failed.')
+                  'uv Off diagonal metric element failed.')
 
       END SUBROUTINE
 

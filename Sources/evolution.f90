@@ -145,7 +145,7 @@
                       niter      .lt. niter_max) .or.                          &
                      (niter .eq. 1 .and. niter_max .ne. 1)
 
-         IF (.not.pert_added .and. fsq_total1.lt.100*fsq_block) THEN
+         IF (.not.pert_added .and. fsq_total1 .lt. 100*fsq_block) THEN
             l_init_state = .true.
             CALL second0(t1)
             CALL add_perturb(xc, getwmhd)

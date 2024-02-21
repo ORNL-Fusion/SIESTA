@@ -1341,9 +1341,12 @@
       IF (JOBZ .NE. 'N') DEALLOCATE(Z)
       
       CALL second0(toff)
-      PRINT 100,' Eigenvalue TIME: ', (toff-ton), ' INFO: ', info,      &
-                ' Eigenvalues written to FORT.',4000+ncount
- 100  FORMAT(a,1p,e10.2,2(a,i4))      
+      IF (lverbose) THEN
+         PRINT 100,' Eigenvalue TIME: ', (toff-ton), ' INFO: ', info,          &
+                   ' Eigenvalues written to FORT.',4000+ncount
+      END IF
+
+ 100  FORMAT(a,1p,e10.2,2(a,i4))
       
       END SUBROUTINE CheckEigenvalues_Serial
       

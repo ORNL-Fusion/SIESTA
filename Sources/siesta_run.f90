@@ -26,6 +26,8 @@
       INTEGER, PARAMETER :: siesta_run_control_mpi = 1
 !>  Bit position to close the wout file.
       INTEGER, PARAMETER :: siesta_run_control_wout = 2
+!>  Bit position to sycn the namelist inputs.
+      INTEGER, PARAMETER :: siesta_run_sync_namelist = 3
 
 !*******************************************************************************
 !  DERIVED-TYPE DECLARATIONSf
@@ -46,6 +48,7 @@
          PROCEDURE :: set_1d => siesta_run_set_1d
          GENERIC   :: set => set_1d
          PROCEDURE :: converge => siesta_run_converge
+         PROCEDURE :: sync => siesta_run_sync
          FINAL     :: siesta_run_destruct
       END TYPE
 
@@ -416,6 +419,8 @@
       INTEGER                                 :: istat
 
 !  Start of executable code
+      CALL this%sync
+
       CALL vmec_info_set_wout(wout_file, nsin, mpolin, ntorin, nfpin,          &
      &                        ntor_modes(-ntorin:ntorin), load_wout)
 
@@ -478,6 +483,8 @@
       CLASS (siesta_run_class), INTENT(inout) :: this
 
 !  Start of executable code
+      CALL this%sync
+
       IF (l_vessel) THEN
          ns = nsin + nsin_ext
       ELSE
@@ -523,6 +530,8 @@
 
          CASE ('helpert')
             helpert(index) = value
+            this%control_state = IBSET(this%control_state,                     &
+                                       siesta_run_sync_namelist)
 
          CASE DEFAULT
             CALL siesta_error_set_error(siesta_error_param,                    &
@@ -612,6 +621,40 @@
 
 !  Converge using block preconditioner
       CALL converge_blocks(wout_file, ftol)
+
+      END SUBROUTINE
+
+!*******************************************************************************
+!  MPI SUBROUTINES
+!*******************************************************************************
+!-------------------------------------------------------------------------------
+!>  @brief Sync child equilibria.
+!>
+!>  @param[inout] this A @ref siesta_run_class instance.
+!-------------------------------------------------------------------------------
+      SUBROUTINE siesta_run_sync(this)
+      USE siesta_namelist, ONLY: helpert
+      USE nscalingtools, ONLY: SIESTA_COMM, MPI_ERR
+#if defined(MPI_OPT)
+      USE mpi_inc
+#endif
+
+      IMPLICIT NONE
+
+!  Declate Arguments
+      CLASS (siesta_run_class), INTENT(inout) :: this
+
+!  Start of executable code
+#if defined(MPI_OPT)
+      CALL MPI_BCAST(this%control_state, 1, MPI_INTEGER, 0, SIESTA_COMM,       &
+                     MPI_ERR)
+      IF (BTEST(this%control_state, siesta_run_sync_namelist)) THEN
+         CALL MPI_BCAST(helpert, SIZE(helpert), MPI_REAL8, 0, SIESTA_COMM,     &
+                        MPI_ERR)
+         this%control_state = IBCLR(this%control_state,                        &
+                                    siesta_run_sync_namelist)
+      END IF
+#endif
 
       END SUBROUTINE
 
