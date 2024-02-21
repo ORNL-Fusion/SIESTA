@@ -11,7 +11,8 @@
       USE vmec_info, ONLY: jcurrumnc, jcurrvmnc
       USE stel_kinds
       USE stel_constants
-      USE shared_data, ONLY: lasym, r1_i, z1_i, ru_i, zu_i, rv_i, zv_i, nsp
+      USE shared_data, ONLY: lasym, r1_i, z1_i, ru_i, zu_i, rv_i, zv_i, nsp,   &
+                             lverbose
       USE island_params, ns=>ns_i, mpol=>mpol_i, ntor=>ntor_i, &
                          ntheta=>nu_i, nzeta=>nv_i, mnmax=>mnmax_i, nsv=>ns_v, &
                          ohs=>ohs_i, nfp=>nfp_i
@@ -720,7 +721,7 @@
   100 CONTINUE
 
       REWIND(UNIT=iou, iostat=read_vessel_file)
-      IF (read_vessel_file .NE. 0) THEN
+      IF (read_vessel_file .NE. 0 .and. lverbose) THEN
          WRITE (*,*) vessel_file
          RETURN
       END IF

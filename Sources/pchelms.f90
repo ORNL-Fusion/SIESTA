@@ -21,7 +21,7 @@
                                endglobrow, rcounts, MPI_ERR
       USE shared_data, ONLY: gc, xc, neqs, gc0, xc0, fsq_total, mblk_size, ndims
       USE shared_data, ONLY: asubsmnsf, asubumncf, asubvmncf,                  &
-                             asubsmncf, asubumnsf, asubvmnsf
+                             asubsmncf, asubumnsf, asubvmnsf, lverbose
       USE quantities, ONLY: fsupsmnsf, fsupumncf, fsupvmncf,                   &
                             fsupsmncf, fsupumnsf, fsupvmnsf
       USE shared_data, ONLY: nsp, r1_i, z1_i, ru_i,                            &
@@ -1332,7 +1332,7 @@ REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: divf
                         f_cos)
          END IF
 
-         IF (iam .eq. 0) THEN
+         IF (iam .eq. 0 .and. lverbose) THEN
             WRITE (*,*) '<chiedge> = ',                                        &
                twopi*asubvmncf(1,ntor + 1,ns)*fourier_context%orthonorm(0,0)
             WRITE (*,*) '<phiedge> = ',                                        &

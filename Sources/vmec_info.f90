@@ -146,6 +146,7 @@
 !  Start of executable code
 
 !  Stellarator symmetric quantities.
+      CALL vmec_info_destruct_island
       ALLOCATE(rmnc_i(0:mpol,-ntor:ntor,ns))
       ALLOCATE(zmns_i(0:mpol,-ntor:ntor,ns))
       ALLOCATE(lmns_i(0:mpol,-ntor:ntor,ns + 1))
@@ -324,8 +325,7 @@
       ALLOCATE(phipf_i(ns), chipf_i(ns), presf_i(ns), stat=istat)
       CALL vmec_info_spline_oned_array(chipf_vmec, chipf_i, istat)
       CALL vmec_info_spline_oned_array(phipf_vmec, phipf_i, istat)
-      presf_vmec = mu0*presf_vmec
-      CALL vmec_info_spline_oned_array(presf_vmec, presf_i, istat)
+      CALL vmec_info_spline_oned_array(mu0*presf_vmec, presf_i, istat)
 
 !  Pessure should never be negative.
       WHERE (presf_i .lt. 0)
