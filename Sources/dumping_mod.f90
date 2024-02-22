@@ -812,23 +812,23 @@
            CALL fourier_context%tomnsp(ksubvijf, ksubvmncf, f_cos)
 
            IF (lasym) THEN
-           ksupsmncf = ksupsmncf/b_factor
-           ksupumnsf = ksupumnsf/b_factor
-           ksupvmnsf = ksupvmnsf/b_factor
+              ksupsmncf = ksupsmncf/b_factor
+              ksupumnsf = ksupumnsf/b_factor
+              ksupvmnsf = ksupvmnsf/b_factor
 
-           ALLOCATE(bsubsmnch(0:mpol,-ntor:ntor,ns),                    &
-                    bsubumnsh(0:mpol,-ntor:ntor,ns),                    &
-                    bsubvmnsh(0:mpol,-ntor:ntor,ns),                    &
-                    ksubsmncf(0:mpol,-ntor:ntor,ns),                    &
-                    ksubumnsf(0:mpol,-ntor:ntor,ns),                    &
-                    ksubvmnsf(0:mpol,-ntor:ntor,ns), stat=istat)
-           CALL ASSERT(istat.eq.0,'Allocation failed in DUMPING PREPARE_QUANTITIES')
-           CALL fourier_context%tomnsp(bsubsijh, bsubsmnch, f_cos)                       ! compute harmonics
-           CALL fourier_context%tomnsp(bsubuijh, bsubumnsh, f_sin)
-           CALL fourier_context%tomnsp(bsubvijh, bsubvmnsh, f_sin)
-           CALL fourier_context%tomnsp(ksubsijf, ksubsmncf, f_cos)
-           CALL fourier_context%tomnsp(ksubuijf, ksubumnsf, f_sin)
-           CALL fourier_context%tomnsp(ksubvijf, ksubvmnsf, f_sin)
+              ALLOCATE(bsubsmnch(0:mpol,-ntor:ntor,ns),                    &
+                       bsubumnsh(0:mpol,-ntor:ntor,ns),                    &
+                       bsubvmnsh(0:mpol,-ntor:ntor,ns),                    &
+                       ksubsmncf(0:mpol,-ntor:ntor,ns),                    &
+                       ksubumnsf(0:mpol,-ntor:ntor,ns),                    &
+                       ksubvmnsf(0:mpol,-ntor:ntor,ns), stat=istat)
+              CALL ASSERT(istat.eq.0,'Allocation failed in DUMPING PREPARE_QUANTITIES')
+              CALL fourier_context%tomnsp(bsubsijh, bsubsmnch, f_cos)                       ! compute harmonics
+              CALL fourier_context%tomnsp(bsubuijh, bsubumnsh, f_sin)
+              CALL fourier_context%tomnsp(bsubvijh, bsubvmnsh, f_sin)
+              CALL fourier_context%tomnsp(ksubsijf, ksubsmncf, f_cos)
+              CALL fourier_context%tomnsp(ksubuijf, ksubumnsf, f_sin)
+              CALL fourier_context%tomnsp(ksubvijf, ksubvmnsf, f_sin)
            END IF
 
            DEALLOCATE (bsubsijh, bsubuijh, bsubvijh)
