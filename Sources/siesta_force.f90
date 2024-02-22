@@ -694,8 +694,10 @@
          END IF
 
 #if defined(MPI_OPT)
-         CALL MPI_ALLREDUCE(MPI_IN_PLACE, tmps, 10, MPI_REAL8, MPI_SUM,        &
-                            SIESTA_COMM, MPI_ERR)
+         IF (PARSOLVER) THEN
+            CALL MPI_ALLREDUCE(MPI_IN_PLACE, tmps, 10, MPI_REAL8, MPI_SUM,     &
+                               SIESTA_COMM, MPI_ERR)
+         END IF
 #endif
 
          IF (iam .eq. 0 .and. lverbose) THEN

@@ -56,6 +56,7 @@
      &                    r_grid, z_grid, dphi, A_r, A_p, A_z)
       USE read_wout_mod, ONLY: nfp_vmec=>nfp
       USE island_params, ONLY: nfp_i
+      USE descriptor_mod, ONLY: SIESTA_COMM
 
 !  Declare Arguments
       CHARACTER (len=*), INTENT(in)                 :: mgrid_file_name
@@ -80,7 +81,7 @@
 !  Start of executable code
       CALL profiler_construct
 
-      parallel => bmw_parallel_context_class(MPI_COMM_WORLD)
+      parallel => bmw_parallel_context_class(SIESTA_COMM)
       flags = bmw_state_flags_off
 
       CALL parallel%set_threads(-1)

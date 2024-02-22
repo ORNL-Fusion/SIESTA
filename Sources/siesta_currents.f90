@@ -143,13 +143,13 @@
 
          wb = SUM(bsq(:,:,nmin:nmax)*jacobh(:,:,nmin:nmax)*wint(:,:,nmin:nmax))
 
-         IF (PARSOLVER) THEN
 #if defined(MPI_OPT)
+         IF (PARSOLVER) THEN
 !  FIXME: All reduce is not deterministic. This causes a divergent run sequence.
             CALL MPI_ALLREDUCE(MPI_IN_PLACE, wb, 1, MPI_REAL8, MPI_SUM,        &
                                SIESTA_COMM, MPI_ERR)
-#endif
          END IF
+#endif
          wb = signjac*(twopi*pi*hs_i)*wb
       END IF
 

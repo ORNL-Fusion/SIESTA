@@ -100,12 +100,14 @@ INTEGER                 :: s,m,n
 
       divb_rms = SUM(divbmnsf(:,:,nl:nh)**2 + divbmncf(:,:,nl:nh)**2)
 #if defined(MPI_OPT)
-      temp(1) = divb_rms
-      temp(2) = tnorm
-      CALL MPI_ALLREDUCE(MPI_IN_PLACE,temp,2,MPI_REAL8, MPI_SUM,               &
-                         SIESTA_COMM,MPI_ERR)
-      divb_rms = temp(1)
-      tnorm = temp(2)
+      IF (PARSOLVER) THEN
+         temp(1) = divb_rms
+         temp(2) = tnorm
+         CALL MPI_ALLREDUCE(MPI_IN_PLACE,temp,2,MPI_REAL8, MPI_SUM,            &
+                            SIESTA_COMM,MPI_ERR)
+         divb_rms = temp(1)
+         tnorm = temp(2)
+      END IF
 #endif
       IF (tnorm .NE. zero) THEN
          divb_rms = SQRT(divb_rms/tnorm)
@@ -526,12 +528,12 @@ INTEGER                 :: s,m,n
       wbgradp = SUM(bgradpf(:,:,n1:n2)**2*wint(:,:,n1:n2))
       temp(1) = tnorm_bgradp
       temp(2) = wbgradp
-      IF (PARSOLVER) THEN
 #if defined(MPI_OPT)
+      IF (PARSOLVER) THEN
          CALL MPI_ALLREDUCE(MPI_IN_PLACE, temp, 2, MPI_REAL8, MPI_SUM,         &
                             SIESTA_COMM, MPI_ERR)
-#endif
       END IF
+#endif
       tnorm_bgradp = temp(1)
       wbgradp = temp(2)
 
@@ -544,12 +546,12 @@ INTEGER                 :: s,m,n
          min_bgradp = MINVAL(bgradpf(:,:,n1:n2))/tnorm_bgradp
          temp(1) = max_bgradp
          temp(2) = -min_bgradp
-         IF (PARSOLVER) THEN
 #if defined(MPI_OPT)
+         IF (PARSOLVER) THEN
             CALL MPI_ALLREDUCE(MPI_IN_PLACE, temp, 2, MPI_REAL8, MPI_MAX,      &
                                SIESTA_COMM, MPI_ERR)
-#endif
          END IF
+#endif
          max_bgradp = temp(1)
          min_bgradp = -temp(2)
          IF (.not.lasym) THEN
@@ -588,14 +590,12 @@ INTEGER                 :: s,m,n
 
 !Averages over all toroidal cross sections (which should be the same)
       toroidal_flux = SUM(jbsupvmnch(m0,n0,nsmin:nsmax))
-      IF (PARSOLVER) THEN
 #if defined(MPI_OPT)
-      CALL MPI_ALLREDUCE(MPI_IN_PLACE,toroidal_flux,1,MPI_REAL8, MPI_SUM,   &
-                         SIESTA_COMM,MPI_ERR)
-#endif      
-!      ELSE
-!      toroidal_flux = part_sum      
+      IF (PARSOLVER) THEN
+         CALL MPI_ALLREDUCE(MPI_IN_PLACE,toroidal_flux,1,MPI_REAL8, MPI_SUM,   &
+                            SIESTA_COMM,MPI_ERR)
       END IF
+#endif
       toroidal_flux = signjac*twopi*toroidal_flux*hs_i/b_factor  
       
       IF (toroidal_flux0 .EQ. zero) toroidal_flux0 = toroidal_flux
@@ -1054,12 +1054,14 @@ INTEGER                 :: s,m,n
       divj_rms = SUM(divjmnsh(:,:,n1:n2)**2                                    &
                +     divjmnch(:,:,n1:n2)**2)
 #if defined(MPI_OPT)
-      temp(1) = divj_rms
-      temp(2) = tnorm
-      CALL MPI_ALLREDUCE(MPI_IN_PLACE,temp,2,MPI_REAL8, MPI_SUM,               &
-                         SIESTA_COMM,MPI_ERR)
-      divj_rms = temp(1)
-      tnorm = temp(2)
+      IF (PARSOLVER) THEN
+         temp(1) = divj_rms
+         temp(2) = tnorm
+         CALL MPI_ALLREDUCE(MPI_IN_PLACE,temp,2,MPI_REAL8, MPI_SUM,            &
+                            SIESTA_COMM,MPI_ERR)
+         divj_rms = temp(1)
+         tnorm = temp(2)
+      END IF
 #endif
 
 !  Compute rms of divergence of J
