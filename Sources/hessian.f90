@@ -129,55 +129,21 @@
 !-------------------------------------------------------------------------------
 !>  @brief Gather column arrays.
 !>
-!>  @param[in]  coltmp  Temp columns.
-!>  @param[out] colgath Gathered columns.
+!>  @param[inout] colgath Gathered columns.
 !-------------------------------------------------------------------------------
-      SUBROUTINE GatherCols(colgath, coltmp)
+      SUBROUTINE GatherCols(colgath)
 
       IMPLICIT NONE
 
 !  Declare Arguments
-      REAL(dp), DIMENSION(mblk_size), INTENT(out) :: colgath
-      REAL(dp), DIMENSION(mblk_size2), INTENT(in) :: coltmp
+      REAL(dp), DIMENSION(mblk_size), INTENT(inout) :: colgath
 
 #if defined(MPI_OPT)
-!  local variables
-      INTEGER                                     :: icol
-      INTEGER                                     :: icol_mpi
-      INTEGER                                     :: iorder
-      INTEGER                                     :: np
-      INTEGER                                     :: mbloc
-      INTEGER                                     :: imax
-      REAL(dp), DIMENSION(:), ALLOCATABLE         :: unordered
-
 !  Start of executable code
-      ALLOCATE (unordered(mblk_size))
-
-!  Gather to unordered array.
-      CALL MPI_ALLGATHERV(coltmp, mblk_size2, MPI_REAL8,                &
-                          unordered, scalcounts, scaldisps,             &
-                          MPI_REAL8, SIESTA_COMM, MPI_ERR)
-      CALL ASSERT(MPI_ERR.EQ.0, 'MPI ERR IN GatherCols')   
-
-!  Reorder cyclic permutations and save to colgath
-      iorder = 0
-      imax = 0
-      DO np = 1, nprocs
-         icol_mpi = np - nprocs
-         mbloc = scalcounts(np)
-         DO icol = 1, mbloc
-            icol_mpi = icol_mpi + nprocs
-            imax = MAX(imax, icol_mpi)
-            iorder = iorder + 1
-            colgath(icol_mpi) = unordered(iorder)
-         END DO
-      END DO
-         
-      CALL assert_eq(iorder, mblk_size, 'iorder != mblk_size in GatherCols')
-      CALL assert_eq(imax, mblk_size, 'imax != mblk_size in GatherCols')
-            
-      DEALLOCATE(unordered)
-#endif            
+      CALL MPI_ALLREDUCE(MPI_IN_PLACE, colgath, mblk_size, MPI_REAL8,          &
+                         MPI_SUM, SIESTA_COMM, MPI_ERR)
+      CALL ASSERT(MPI_ERR.EQ.0, 'MPI ERR IN GatherCols')
+#endif
       END SUBROUTINE
 
       SUBROUTINE InitHess
@@ -241,7 +207,9 @@
       l_Compute_Hessian = .TRUE.
       l_Diagonal_Only   = ldiagonal
       l_linearize = .TRUE.
-      IF (lColScale) col_scale = 1
+      IF (lColScale) THEN
+         col_scale = 1
+      END IF
 
       IF (iam .EQ. 0) THEN
          DO iunit = 6, unit_out, unit_out-6
@@ -1080,9 +1048,9 @@
 !   L o c a l   V a r i a b l e s
 !----------------------------------------------
       REAL(dp), PARAMETER   :: zero=0, one=1
-      INTEGER               :: js, icol, icount
+      INTEGER               :: js, icol, icol2, icount
       REAL(dp)              :: eps, minScale, ton, toff, colcnd
-      REAL(dp), ALLOCATABLE :: col2(:), coltmp(:), col0(:,:)
+      REAL(dp), ALLOCATABLE :: col(:)
 !----------------------------------------------
       CALL ASSERT(ALL(col_scale.EQ.1), 'COL_SCALE != 1 INITIALLY IN SERIAL SCALING')
       icount = 0
@@ -1095,64 +1063,57 @@
          minScale = 1.E-8_dp
       END IF
 
-      ALLOCATE(colsum(mblk_size, ns), col2(mblk_size),                  &
-               coltmp(mblk_size2), col0(mblk_size2, ns))
+      ALLOCATE(colsum(mblk_size, ns), col(mblk_size))
 
  111  CONTINUE
-
+      colsum = 0
       BLOCK_ROW1: DO js = 1, ns
-         COLS1: DO icol = 1, mblk_size2
-            col2 = ABS(dblk(:,icol,js))
+         COLS1: DO icol = iam + 1, mblk_size, nprocs
+            icol2 = CEILING((1.0*icol)/nprocs)
+            col = ABS(dblk(:,icol2,js))
             IF (lequi1) THEN
-               coltmp(icol) = SUM(col2)
+               colsum(icol,js) = SUM(col)
             ELSE
-               coltmp(icol) = MAXVAL(col2)
+               colsum(icol,js) = MAXVAL(col)
             END IF
             IF (js .GT. 1) THEN
-               col2 = ABS(ublk(:,icol,js-1))
+               col = ABS(ublk(:,icol2,js-1))
                IF (lequi1) THEN
-                  coltmp(icol) = coltmp(icol) + SUM(col2)
+                  colsum(icol,js) = colsum(icol,js) + SUM(col)
                ELSE
-                  coltmp(icol) = MAX(coltmp(icol),MAXVAL(col2))
+                  colsum(icol,js) = MAX(colsum(icol,js),MAXVAL(col))
                END IF
             END IF
             IF (js .LT. ns) THEN
-               col2 = ABS(lblk(:,icol,js+1))
+               col = ABS(lblk(:,icol2,js+1))
                IF (lequi1) THEN
-                  coltmp(icol) = coltmp(icol) + SUM(col2)
+                  colsum(icol,js) = colsum(icol,js) + SUM(col)
                ELSE
-                  coltmp(icol) = MAX(coltmp(icol),MAXVAL(col2))
+                  colsum(icol,js) = MAX(colsum(icol,js),MAXVAL(col))
                END IF
             END IF
          END DO COLS1
-         eps = minScale*MAXVAL(coltmp)                                   !need ALL(DataItem.eq.zero) check
-         CALL assert(eps.GT.zero,' coltmp == 0 in SerialScaling')
-         coltmp = MAX(coltmp, eps)
-         coltmp = one/SQRT(coltmp)
-         col0(:,js) = coltmp                                             !save original ordering for col factors
-
-!gather colsum onto mblk_size from nprocs (each with mblk_size2 cols)
-!and reorder ROW indices
          IF (LSCALAPACK) THEN
-            CALL GatherCols(colsum(:,js), coltmp)
-         ELSE
-            colsum(:,js) = coltmp
+            CALL GatherCols(colsum(:,js))
          END IF
-
+         eps = minScale*MAXVAL(colsum(:,js))                                   !need ALL(DataItem.eq.zero) check
+         CALL assert(eps.GT.zero,' coltmp == 0 in SerialScaling')
+         colsum(:,js) = one/SQRT(MAX(colsum(:,js), eps))
       ENDDO BLOCK_ROW1
 
       CALL VECTOR_COPY_SER (colsum, col_scale)
 
 !SCALE BLOCKS
       BLOCK_ROW2: DO js = 1, ns
-      COLS2: DO icol = 1, mblk_size2
-         dblk(:,icol,js) = colsum(:,js)*dblk(:,icol,js)*col0(icol,js)
-         IF (js .GT. 1) THEN
-             lblk(:,icol,js) = colsum(:,js)*lblk(:,icol,js)*col0(icol,js-1)
-         END IF
-         IF (js .LT. ns) THEN
-             ublk(:,icol,js) = colsum(:,js)*ublk(:,icol,js)*col0(icol,js+1)
-         END IF
+         COLS2: DO icol = iam + 1, mblk_size, nprocs
+            icol2 = CEILING((1.0*icol)/nprocs)
+            dblk(:,icol2,js) = colsum(:,js)*dblk(:,icol2,js)*colsum(icol,js)
+            IF (js .GT. 1) THEN
+               lblk(:,icol2,js) = colsum(:,js)*lblk(:,icol2,js)*colsum(icol,js-1)
+            END IF
+            IF (js .LT. ns) THEN
+               ublk(:,icol2,js) = colsum(:,js)*ublk(:,icol2,js)*colsum(icol,js+1)
+            END IF
          END DO COLS2
       END DO BLOCK_ROW2
 
@@ -1165,10 +1126,8 @@
       END IF         
 
       icount = icount + 1
-         
-!      IF (icount.LE.6 .AND. colcnd.LT.0.01_dp) GO TO 111                 !dgeequ logic
 
-      DEALLOCATE(colsum, col0, col2, coltmp)
+      DEALLOCATE(colsum, col)
 
       CALL FindMinMax_TRI_Serial
       CALL second0(toff)
