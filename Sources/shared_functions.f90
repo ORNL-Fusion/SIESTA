@@ -250,7 +250,7 @@
       INTEGER                                  :: iter
 !      INTEGER                                  :: j
 
-!  Start if executable code.
+!  Start of executable code.
       facmin = 1 !3 !mrc
       l_init_state = .false.
       l_getfsq = .true.

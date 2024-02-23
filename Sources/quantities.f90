@@ -403,23 +403,23 @@
         chiph(1) = 0
 
         IF (.not.l_vessel .and. l_lambda) THEN
-          CALL ReCompute_Lambda(lmns_i, lmnc_i, jacobh,                        &
-                                fourier_context%orthonorm, phiph, chiph,       &
-                                nsmin, nsmax)
+           CALL ReCompute_Lambda(lmns_i, lmnc_i, jacobh,                       &
+                                 fourier_context%orthonorm, phiph, chiph,      &
+                                 nsmin, nsmax)
         END IF
          
   		CALL Init_Bfield(jbsupsmnsh, jbsupumnch, jbsupvmnch,                   &
                          lmns_i, phiph, chiph, nsmin, nsmax, f_sin)
 		IF (lasym) THEN
-		    CALL Init_Bfield(jbsupsmnch, jbsupumnsh, jbsupvmnsh,               &
-                             lmnc_i, phiph, chiph, nsmin, nsmax, f_cos)
+           CALL Init_Bfield(jbsupsmnch, jbsupumnsh, jbsupvmnsh,                &
+                            lmnc_i, phiph, chiph, nsmin, nsmax, f_cos)
         END IF
 
         DEALLOCATE (phiph, chiph, stat=istat)
         CALL ASSERT(istat.EQ.0,'Deallocate error #1 in init_fields')
 
 !  Initialize half mesh pressure
-        nloc = MAX(1,startglobrow - 1)
+        nloc = MAX(1, startglobrow - 1)
         ALLOCATE(presih(ntheta,nzeta,nloc:nsmax),                              &
                  presif(ntheta,nzeta,nloc:nsmax), stat=istat)
         CALL ASSERT(istat.EQ.0, 'Allocate error #1 in init_fields')
@@ -702,7 +702,7 @@
       END DO
 
 !  Compute lambda from sqrt(g)*J^s == mB_v - nB_u = 0
-      DO js = MAX(nsmin,2), nsmax
+      DO js = MAX(nsmin, 2), nsmax
          mn = 0
 
          DO n = -ntor, ntor
@@ -853,16 +853,24 @@
 
 !  Start of executable code
 !  Quantities allocated in alloc_quantities
-      DEALLOCATE(jpmnch, jbsupsmnsh, jbsupumnch, jbsupvmnch)
-      DEALLOCATE(pwr_spec_s, pwr_spec_a)
+      IF (ALLOCATED(jpmnch)) THEN
+         DEALLOCATE(jpmnch, jbsupsmnsh, jbsupumnch, jbsupvmnch)
+      END IF
+      IF (ALLOCATED(pwr_spec_s)) THEN
+         DEALLOCATE(pwr_spec_s, pwr_spec_a)
+      END IF
 
 !  Other quantities
-      DEALLOCATE(djpmnch, djbsupsmnsh, djbsupumnch, djbsupvmnch,               &
-                 ksupsmnsf, ksupumncf, ksupvmncf)
-      DEALLOCATE(jacobh, jacobf, jvsupsijf, jvsupuijf, jvsupvijf,              &
-                 ksubsijf, ksubuijf, ksubvijf, pijh0, pijf0,                   &
-                 pijf0_ds, bsupuijf0, vp_f, bsq, wint,                         &
-                 bsupvijf0, bsupsijf0, pijh0_du, pijh0_dv)
+      IF (ALLOCATED(jpmnch)) THEN
+         DEALLOCATE(djpmnch, djbsupsmnsh, djbsupumnch, djbsupvmnch,            &
+                    ksupsmnsf, ksupumncf, ksupvmncf)
+      END IF
+      IF (ALLOCATED(jpmnch)) THEN
+         DEALLOCATE(jacobh, jacobf, jvsupsijf, jvsupuijf, jvsupvijf,           &
+                    ksubsijf, ksubuijf, ksubvijf, pijh0, pijf0,                &
+                    pijf0_ds, bsupuijf0, vp_f, bsq, wint,                      &
+                    bsupvijf0, bsupsijf0, pijh0_du, pijh0_dv)
+      END IF
       IF (ALLOCATED(bsupsijf0)) THEN
          DEALLOCATE(bsupsijf0, bsupuijf0, bsupvijf0)
       END IF
@@ -885,10 +893,14 @@
 !  Asymmetric quantities.
       IF (lasym) THEN
 !  Quantities allocated in alloc_quantities
-         DEALLOCATE(jpmnsh, jbsupsmnch, jbsupumnsh, jbsupvmnsh)
+         IF (ALLOCATED(jpmnsh)) THEN
+            DEALLOCATE(jpmnsh, jbsupsmnch, jbsupumnsh, jbsupvmnsh)
+         END IF
 !  Other quantities
-         DEALLOCATE(djpmnsh, djbsupsmnch, djbsupumnsh, djbsupvmnsh,            &
-                    ksupsmncf, ksupumnsf, ksupvmnsf)
+         IF (ALLOCATED(djpmnsh)) THEN
+            DEALLOCATE(djpmnsh, djbsupsmnch, djbsupumnsh, djbsupvmnsh,         &
+                       ksupsmncf, ksupumnsf, ksupvmnsf)
+         END IF
       END IF
 
       END SUBROUTINE

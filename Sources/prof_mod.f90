@@ -84,14 +84,14 @@
         enddo
 
         if (.not.found) then
-          nroutine = nroutine + 1
-          isok = (nroutine .le. maxroutines)
-          call assert(isok, '** profstart: nroutine > maxroutines')
+           nroutine = nroutine + 1
+           isok = (nroutine .le. maxroutines)
+           call assert(isok, '** profstart: nroutine > maxroutines')
 
-          ipos = nroutine
-          dictname(ipos) = name
-          dictcount(ipos) = 0
-          dicttotal(ipos) = 0.0
+           ipos = nroutine
+           dictname(ipos) = name
+           dictcount(ipos) = 0
+           dicttotal(ipos) = 0.0
         endif
 
         dictstart(ipos) = dclock()
@@ -119,30 +119,30 @@
 
         isok = (name .eq. lastroutine(nlevels))
         if (.not.isok) then
-          print*,'** profend name != lastroutine(',nlevels,') '
-          print*,'name: ', name
-          print*,'lastroutine(nlevels): ', lastroutine(nlevels)
+           print*,'** profend name != lastroutine(',nlevels,') '
+           print*,'name: ', name
+           print*,'lastroutine(nlevels): ', lastroutine(nlevels)
 
-          stop '** error ** '
+           stop '** error ** '
         endif
 
         found = .false.
-        do j=1,nroutine
+        do j = 1, nroutine
            i = nroutine - j + 1
 
            if (dictname(i)(1:1) .eq. name(1:1)) then
-                found = (dictname(i) .eq. name)
-                if (found) then
-                        ipos = i
-                        exit
-                endif
+              found = (dictname(i) .eq. name)
+              if (found) then
+                 ipos = i
+                 exit
+              endif
            endif
         enddo
 
         if (.not.found) then
-                print*,'** profend: routine name not found '
-                print*,'name: ',name
-                stop '** error ** '
+           print*,'** profend: routine name not found '
+           print*,'name: ',name
+           stop '** error ** '
         endif
 
         dicttotal(ipos) = dicttotal(ipos) + (tend - dictstart(ipos));
@@ -167,7 +167,7 @@
         endif
 
         fname = 'profstat.dat'
-        open(outdev, file=fname, form='formatted',                            &
+        open(outdev, file=fname, form='formatted',                             &
      &       access='sequential',status='unknown')
         rewind(outdev)
 
@@ -179,7 +179,9 @@
 
         close(outdev)
 
-        IF (ALLOCATED(scalcounts)) DEALLOCATE (scalcounts, scaldisps)
+        IF (ALLOCATED(scalcounts)) THEN
+           DEALLOCATE (scalcounts, scaldisps)
+        END IF
 
         return
         end subroutine profstat
@@ -191,20 +193,24 @@
         INTEGER :: i, numroc
         EXTERNAL :: numroc, blacs_gridinfo
 
-        IF (.NOT.ALLOCATED(scalcounts)) ALLOCATE (scalcounts(nprocs))
-        IF (.NOT.ALLOCATED(scaldisps)) ALLOCATE (scaldisps(nprocs))
+        IF (.NOT.ALLOCATED(scalcounts)) THEN
+           ALLOCATE (scalcounts(nprocs))
+        END IF
+        IF (.NOT.ALLOCATED(scaldisps)) THEN
+           ALLOCATE (scaldisps(nprocs))
+        END IF
 
         CALL numrocMapping(iam, nprocs, mblk_size)
 
-        DO i=1,nprocs
-           scalcounts(i)=(EndBlockProc(i)-StartBlockProc(i)+1)
+        DO i = 1, nprocs
+           scalcounts(i) = (EndBlockProc(i) - StartBlockProc(i) + 1)
         END DO
 
         DEALLOCATE (StartBlockProc, EndBlockProc)
 
 !Sanity consistency check        
 !!!!!!!!!!!!!!!!!!!!!!!!!
-        CALL blacs_gridinfo(icontxt_1xp,nprow,npcol,myrow,mycol)
+        CALL blacs_gridinfo(icontxt_1xp, nprow, npcol, myrow, mycol)
         mb = mblk_size
         nb = 1
 
@@ -212,14 +218,14 @@
         csrc = 0
         Locq = numroc( mblk_size, nb, mycol, csrc, npcol )
 !        Locp = numroc( mblk_size, mb, myrow, rsrc, nprow )
-        mblk_size2 = MAX(1,Locq)
-        CALL ASSERT(scalcounts(iam+1).EQ.mblk_size2,                    &
-        'scalcounts != mblk_size2 in SetupScalingAllGather')
+        mblk_size2 = MAX(1, Locq)
+        CALL ASSERT(scalcounts(iam + 1) .EQ. mblk_size2,                       &
+                    'scalcounts != mblk_size2 in SetupScalingAllGather')
 !!!!!!!!!!!!!!!!!!!!!!!!!
 
         scaldisps(1)=0
-        DO i=2,nprocs
-           scaldisps(i)=scaldisps(i-1)+scalcounts(i-1)
+        DO i = 2, nprocs
+           scaldisps(i) = scaldisps(i - 1) + scalcounts(i - 1)
         END DO
 
         END SUBROUTINE SetUpScalingAllGather
@@ -233,53 +239,56 @@
         INTEGER :: numL, numS, mpi_err
         INTEGER :: r, c
 
-        IF (.NOT.ALLOCATED(StartBlockProc)) ALLOCATE (StartBlockProc(activeranks))
-        IF (.NOT.ALLOCATED(EndBlockProc)) ALLOCATE (EndBlockProc(activeranks))
-
-        lload=CEILING(REAL(N)/activeranks)
-        sload=FLOOR(REAL(N)/activeranks)
-
-        IF (lload.EQ.sload) THEN
-        myload=lload
-        ELSE
-           IF (rank.LT.MOD(N,activeranks)) THEN
-           myload=lload
-        ELSE
-           myload=sload
+        IF (.NOT.ALLOCATED(StartBlockProc)) THEN
+           ALLOCATE (StartBlockProc(activeranks))
         END IF
+        IF (.NOT.ALLOCATED(EndBlockProc)) THEN
+           ALLOCATE (EndBlockProc(activeranks))
+        END IF
+
+        lload = CEILING(REAL(N)/activeranks)
+        sload = FLOOR(REAL(N)/activeranks)
+
+        IF (lload .EQ. sload) THEN
+           myload = lload
+        ELSE
+           IF (rank .LT. MOD(N, activeranks)) THEN
+              myload = lload
+           ELSE
+              myload = sload
+           END IF
         END IF
 
         IF (sload.EQ.lload) THEN
-           numS=0
-           numL=rank
+           numS = 0
+           numL = rank
         ELSE
-        IF (myload.EQ.lload) THEN
-           numL=rank
-           numS=0
-        ELSE
-           numL=MOD(N,activeranks)
-           numS=rank-numL
-        END IF
+           IF (myload.EQ.lload) THEN
+              numL = rank
+              numS = 0
+           ELSE
+              numL = MOD(N, activeranks)
+              numS = rank - numL
+           END IF
         END IF
 
         IF (rank.LT.activeranks) THEN !active ranks
-           startblock=numL*lload+numS*sload
-           endblock=startblock+myload-1
+           startblock = numL*lload + numS*sload
+           endblock = startblock + myload - 1
         ELSE                          !idle ranks
-           startblock=-2
-           endblock=-3
+           startblock = -2
+           endblock = -3
         END IF
 
 ! Fortranized indices
-        startblock=startblock+1
-        endblock=endblock+1
+        startblock = startblock + 1
+        endblock = endblock + 1
 
-        CALL MPI_Allgather(startblock,1,MPI_INTEGER,StartBlockProc,     &
-                           1,MPI_INTEGER,SIESTA_COMM,MPI_ERR)
+        CALL MPI_Allgather(startblock, 1, MPI_INTEGER, StartBlockProc,         &
+                           1, MPI_INTEGER, SIESTA_COMM, MPI_ERR)
 
-        CALL MPI_Allgather(endblock,1,MPI_INTEGER,EndBlockProc,         &
-                           1,MPI_INTEGER,SIESTA_COMM,MPI_ERR)
-
+        CALL MPI_Allgather(endblock, 1, MPI_INTEGER, EndBlockProc,             &
+                           1, MPI_INTEGER, SIESTA_COMM, MPI_ERR)
 
         END SUBROUTINE numrocMapping
 #endif
