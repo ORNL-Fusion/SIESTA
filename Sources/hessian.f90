@@ -1626,7 +1626,9 @@
 
          IF (l_backslv) THEN
             istat = 0
-            IF (.NOT.ALLOCATED(gc_s)) ALLOCATE (gc_s(mblk_size,ns), stat=istat)
+            IF (.NOT.ALLOCATED(gc_s)) THEN
+               ALLOCATE (gc_s(mblk_size,ns), stat=istat)
+            END IF
             CALL ASSERT(istat.EQ.0,'Allocation error0 in block_precond')
             gc_s = gc
          END IF
