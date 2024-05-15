@@ -10,7 +10,6 @@
       MODULE restart_mod
       USE ezcdf
       USE stel_kinds
-      USE utilities, ONLY: GradientFull
       USE metrics, ONLY: tolowerh
       USE descriptor_mod, ONLY: iam
       USE shared_data, ONLY: lasym, unit_out

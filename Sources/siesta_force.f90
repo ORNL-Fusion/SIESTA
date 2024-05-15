@@ -84,7 +84,7 @@
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: KxBuij
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: KxBvij
       REAL (dp), DIMENSION(:,:), ALLOCATABLE   :: pardamp
-      INTEGER                                  :: istat
+      INTEGER                                  :: istat            ,m,n
       INTEGER                                  :: n1
       INTEGER                                  :: n2
       REAL (dp)                                :: ton
@@ -117,6 +117,16 @@
                         djbsupsmnch, djbsupumnsh, djbsupvmnsh, djpmnsh,        &
                         bsupsijh, bsupuijh, bsupvijh, pijh, f_cos)
       END IF
+
+!      IF (nsmin .le. 5 .and. nsmax .ge. 5) THEN
+!         DO n = -ntor, ntor
+!            DO m = 0, mpol
+!               IF (jpmnch(m,n,5) .gt. 0.0 .or. djpmnch(m,n,6) .gt. 0.0) THEN
+!                  WRITE (*,*) iam, n, m, nsmin, nsmax, jpmnch(m,n,6), djpmnch(m,n,6)
+!               END IF
+!            END DO
+!         END DO
+!      END IF
 
 !  Update thermal energy (pressure based). pijh contains the jacobian term at
 !  this point.
@@ -191,7 +201,7 @@
       END IF
 
       CALL Apply_ColScale(gc, col_scale, nsmin, nsmax)
-	   
+
       DEALLOCATE(pijf1, KxBsij, KxBuij, KxBvij, pijh, stat=istat)
       IF (ALLOCATED(pardamp)) THEN
          DEALLOCATE(pardamp)
@@ -504,7 +514,7 @@
       END IF
 
 !  Add pressure gradient to the lorentz force.
-      fsubsmnf(:,:,nsmin:nsmax) = fsubsmnf(:,:,nsmin:nsmax) - pmnf_ds
+      fsubsmnf(:,:,nsmin:nsmax) = fsubsmnf(:,:,nsmin:nsmax) - pmnf_ds(:,:,nsmin:nsmax)
       DO m = 0, mpol
          moff = m + LBOUND(fsubumnf, 1)
          fsubumnf(moff,:,nsmin:nsmax) = fsubumnf(moff,:,nsmin:nsmax)           &

@@ -2229,7 +2229,7 @@ END SUBROUTINE GetRanks
 !! To be invoked, before solve, after initialize, by user, to set up the matrix
 !<
 !-------------------------------------------------------------------------------
-SUBROUTINE SetMatrixRow( globrow, L, D, U )
+SUBROUTINE SetMatrixRow(globrow, L, D, U)
   !-----------------------------------------------------------------------------
   ! Formal arguments
   !-----------------------------------------------------------------------------
@@ -2244,13 +2244,19 @@ SUBROUTINE SetMatrixRow( globrow, L, D, U )
   !-------------------------------------------
   ! Sanity checks on globrow
   !-------------------------------------------
-  IF ( (globrow .LT. 1) .OR. (globrow .GT. N) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRow: Bad input globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #14')
+  IF ((globrow .LT. 1) .OR. (globrow .GT. N)) THEN
+     IF (KPDBG) THEN
+        WRITE (OFU,*) 'SetMatrixRow: Bad input globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #14')
   END IF
-  IF ( (globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRow: Non-local globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #15')
+  IF ((globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow)) THEN
+     IF (KPDBG) THEN
+        WRITE (OFU,*) 'SetMatrixRow: Non-local globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #15')
   END IF
 
   globrowoff = globrow-startglobrow+1
@@ -2258,25 +2264,25 @@ SUBROUTINE SetMatrixRow( globrow, L, D, U )
   !-------------------------------------------
   ! Copy given blocks into allocated matrix
   !-------------------------------------------
-  DO i = 1, M
-    DO j = 1, M
-      IF ( globrow .EQ. 1 ) THEN
-          val = 0
-      ELSE
-          val = L(i,j)
-      END IF
-      lelement(1, globrowoff)%L(i,j) = val
+  DO j = 1, M
+     DO i = 1, M
+        IF (globrow .EQ. 1) THEN
+           val = 0
+        ELSE
+           val = L(i,j)
+        END IF
+        lelement(1, globrowoff)%L(i,j) = val
 
-      val = D(i,j)
-      lelement(1, globrowoff)%D(i,j) = val
+        val = D(i,j)
+        lelement(1, globrowoff)%D(i,j) = val
 
-      IF ( globrow .EQ. N ) THEN
-          val = 0
-      ELSE
-          val = U(i,j)
-      END IF
-      lelement(1, globrowoff)%U(i,j) = val
-    END DO
+        IF (globrow .EQ. N) THEN
+           val = 0
+        ELSE
+           val = U(i,j)
+        END IF
+        lelement(1, globrowoff)%U(i,j) = val
+     END DO
   END DO
 
   !-------------------------------------------
@@ -2296,7 +2302,7 @@ END SUBROUTINE SetMatrixRow
 !! To be invoked, before solve, after initialize, by user, to set up the matrix
 !<
 !-------------------------------------------------------------------------------
-SUBROUTINE SetMatrixRowL( globrow, L )
+SUBROUTINE SetMatrixRowL(globrow, L)
   !-----------------------------------------------------------------------------
   ! Formal arguments
   !-----------------------------------------------------------------------------
@@ -2311,29 +2317,35 @@ SUBROUTINE SetMatrixRowL( globrow, L )
   !-------------------------------------------
   ! Sanity checks on globrow
   !-------------------------------------------
-  IF ( (globrow .LT. 1) .OR. (globrow .GT. N) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowL: Bad input globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #16')
+  IF ((globrow .LT. 1) .OR. (globrow .GT. N)) THEN
+     IF (KPDBG) THEN
+        WRITE(OFU,*) 'SetMatrixRowL: Bad input globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #16')
   END IF
-  IF ( (globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowL: Non-local globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #17')
+  IF ((globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow)) THEN
+     IF (KPDBG) THEN
+        WRITE(OFU,*) 'SetMatrixRowL: Non-local globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #17')
   END IF
 
-  globrowoff = globrow-startglobrow+1
+  globrowoff = globrow - startglobrow + 1
 
   !-------------------------------------------
   ! Copy given L block into allocated matrix
   !-------------------------------------------
-  DO i = 1, M
-    DO j = 1, M
-      IF ( globrow .EQ. 1 ) THEN
-          val = 0
-      ELSE
-          val = L(i,j)
-      END IF
-      lelement(1, globrowoff)%L(i,j) = val
-    END DO
+  DO j = 1, M
+     DO i = 1, M
+        IF (globrow .EQ. 1) THEN
+           val = 0
+        ELSE
+           val = L(i,j)
+        END IF
+        lelement(1, globrowoff)%L(i,j) = val
+     END DO
   END DO
 
   !-------------------------------------------
@@ -2351,7 +2363,7 @@ END SUBROUTINE SetMatrixRowL
 !! To be invoked, before solve, after initialize, by user, to set up the matrix
 !<
 !-------------------------------------------------------------------------------
-SUBROUTINE SetMatrixRowD( globrow, D )
+SUBROUTINE SetMatrixRowD(globrow, D)
   !-----------------------------------------------------------------------------
   ! Formal arguments
   !-----------------------------------------------------------------------------
@@ -2366,25 +2378,31 @@ SUBROUTINE SetMatrixRowD( globrow, D )
   !-------------------------------------------
   ! Sanity checks on globrow
   !-------------------------------------------
-  IF ( (globrow .LT. 1) .OR. (globrow .GT. N) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowD: Bad input globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #18')
+  IF ((globrow .LT. 1) .OR. (globrow .GT. N)) THEN
+     IF (KPDBG) THEN
+        WRITE(OFU,*) 'SetMatrixRowD: Bad input globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #18')
   END IF
-  IF ( (globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowD: Non-local globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #19')
+  IF ((globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow)) THEN
+     IF (KPDBG) THEN
+        WRITE(OFU,*) 'SetMatrixRowD: Non-local globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #19')
   END IF
 
-  globrowoff = globrow-startglobrow+1
+  globrowoff = globrow - startglobrow + 1
 
   !-------------------------------------------
   ! Copy given D block into allocated matrix
   !-------------------------------------------
-  DO i = 1, M
-    DO j = 1, M
-      val = D(i,j)
-      lelement(1, globrowoff)%D(i,j) = val
-    END DO
+  DO j = 1, M
+     DO i = 1, M
+        val = D(i,j)
+        lelement(1, globrowoff)%D(i,j) = val
+     END DO
   END DO
 
   !-------------------------------------------
@@ -2402,7 +2420,7 @@ END SUBROUTINE SetMatrixRowD
 !! To be invoked, before solve, after initialize, by user, to set up the matrix
 !<
 !-------------------------------------------------------------------------------
-SUBROUTINE SetMatrixRowU( globrow, U )
+SUBROUTINE SetMatrixRowU(globrow, U)
   !-----------------------------------------------------------------------------
   ! Formal arguments
   !-----------------------------------------------------------------------------
@@ -2417,29 +2435,35 @@ SUBROUTINE SetMatrixRowU( globrow, U )
   !-------------------------------------------
   ! Sanity checks on globrow
   !-------------------------------------------
-  IF ( (globrow .LT. 1) .OR. (globrow .GT. N) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowU: Bad input globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #20')
+  IF ((globrow .LT. 1) .OR. (globrow .GT. N)) THEN
+     IF (KPDBG) THEN
+        WRITE(OFU,*) 'SetMatrixRowU: Bad input globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #20')
   END IF
-  IF ( (globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowU: Non-local globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #21')
+  IF ((globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow)) THEN
+     IF (KPDBG) THEN
+        WRITE(OFU,*) 'SetMatrixRowU: Non-local globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #21')
   END IF
 
-  globrowoff = globrow-startglobrow+1
+  globrowoff = globrow - startglobrow + 1
 
   !-------------------------------------------
   ! Copy given U block into allocated matrix
   !-------------------------------------------
-  DO i = 1, M
-    DO j = 1, M
-      IF ( globrow .EQ. N ) THEN
-          val = 0
-      ELSE
-          val = U(i,j)
-      END IF
-      lelement(1, globrowoff)%U(i,j) = val
-    END DO
+  DO j = 1, M
+     DO i = 1, M
+        IF (globrow .EQ. N) THEN
+           val = 0
+        ELSE
+           val = U(i,j)
+        END IF
+        lelement(1, globrowoff)%U(i,j) = val
+     END DO
   END DO
 
   !-------------------------------------------
@@ -2457,7 +2481,7 @@ END SUBROUTINE SetMatrixRowU
 !! To be invoked, before solve, after initialize, by user, to set up the matrix
 !<
 !-------------------------------------------------------------------------------
-SUBROUTINE SetMatrixRowColL( globrow, Lj, j )
+SUBROUTINE SetMatrixRowColL(globrow, Lj, j)
   !-----------------------------------------------------------------------------
   ! Formal arguments
   !-----------------------------------------------------------------------------
@@ -2473,31 +2497,40 @@ SUBROUTINE SetMatrixRowColL( globrow, Lj, j )
   !-------------------------------------------
   ! Sanity checks on globrow
   !-------------------------------------------
-  IF ( (globrow .LT. 1) .OR. (globrow .GT. N) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowColL: Bad input globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #22')
+  IF ((globrow .LT. 1) .OR. (globrow .GT. N) ) THEN
+     IF (KPDBG) THEN
+        WRITE (OFU,*) 'SetMatrixRowColL: Bad input globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #22')
   END IF
-  IF ( (globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowColL: Non-local globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #23')
+  IF ((globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow)) THEN
+     IF (KPDBG) THEN
+        WRITE (OFU,*) 'SetMatrixRowColL: Non-local globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #23')
   END IF
-  IF ( .NOT. ((1 .LE. j) .AND. (j .LE. M)) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowColL: Bad j column ',j; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #24')
+  IF (.NOT.((1 .LE. j) .AND. (j .LE. M))) THEN
+     IF (KPDBG) THEN
+        WRITE(OFU,*) 'SetMatrixRowColL: Bad j column ',j
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #24')
   END IF
 
-  globrowoff = globrow-startglobrow+1
+  globrowoff = globrow - startglobrow + 1
 
   !-------------------------------------------
   ! Copy given L column into allocated matrix
   !-------------------------------------------
   DO i = 1, M
-    IF ( globrow .EQ. 1 ) THEN
-      val = 0
-    ELSE
-      val = Lj(i)
-    END IF
-    lelement(1, globrowoff)%L(i,j) = val
+     IF (globrow .EQ. 1) THEN
+        val = 0
+     ELSE
+        val = Lj(i)
+     END IF
+     lelement(1, globrowoff)%L(i,j) = val
   END DO
 
   !-------------------------------------------
@@ -2515,7 +2548,7 @@ END SUBROUTINE SetMatrixRowColL
 !! To be invoked, before solve, after initialize, by user, to set up the matrix
 !<
 !-------------------------------------------------------------------------------
-SUBROUTINE SetMatrixRowColD( globrow, Dj, j )
+SUBROUTINE SetMatrixRowColD(globrow, Dj, j)
   !-----------------------------------------------------------------------------
   ! Formal arguments
   !-----------------------------------------------------------------------------
@@ -2569,13 +2602,14 @@ END SUBROUTINE SetMatrixRowColD
 !! To be invoked, before solve, after initialize, by user, to set up the matrix
 !<
 !-------------------------------------------------------------------------------
-SUBROUTINE SetMatrixRowColU( globrow, Uj, j )
+SUBROUTINE SetMatrixRowColU(globrow, Uj, j)
+USE descriptor_mod, ONLY: iam
   !-----------------------------------------------------------------------------
   ! Formal arguments
   !-----------------------------------------------------------------------------
-  INTEGER, INTENT(IN) :: globrow !<Original/global block-row num in [1..N]
-  REAL(dp), INTENT(IN) :: Uj(:) !<j'th colum of L at globrow; Nth U is always 0
-  INTEGER, INTENT(IN) :: j !<column number of U at globrow that is being set
+  INTEGER, INTENT(IN)  :: globrow !<Original/global block-row num in [1..N]
+  REAL(dp), INTENT(IN) :: Uj(:) !<j'th colum of U at globrow; Nth U is always 0
+  INTEGER, INTENT(IN)  :: j !<column number of U at globrow that is being set
   !-----------------------------------------------------------------------------
   ! Local variables
   !-----------------------------------------------------------------------------
@@ -2585,31 +2619,40 @@ SUBROUTINE SetMatrixRowColU( globrow, Uj, j )
   !-------------------------------------------
   ! Sanity checks on globrow
   !-------------------------------------------
-  IF ( (globrow .LT. 1) .OR. (globrow .GT. N) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowColU: Bad input globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #28')
+  IF ((globrow .LT. 1) .OR. (globrow .GT. N)) THEN
+     IF (KPDBG) THEN
+        WRITE (OFU,*) 'SetMatrixRowColU: Bad input globrow ', globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #28')
   END IF
-  IF ( (globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowColU: Non-local globrow ',globrow; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #29')
+  IF ((globrow .LT. startglobrow) .OR. (globrow .GT. endglobrow)) THEN
+     IF (KPDBG) THEN
+        WRITE (OFU,*) 'SetMatrixRowColU: Non-local globrow ',globrow
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #29')
   END IF
-  IF ( .NOT. ((1 .LE. j) .AND. (j .LE. M)) ) THEN
-    IF(KPDBG) WRITE(OFU,*) 'SetMatrixRowColL: Bad j column ',j; CALL FL(OFU)
-    CALL ASSERT(.FALSE.,'blocktri #30')
+  IF (.NOT.((1 .LE. j) .AND. (j .LE. M))) THEN
+     IF (KPDBG) THEN
+        WRITE (OFU,*) 'SetMatrixRowColL: Bad j column ',j
+        CALL FL(OFU)
+     END IF
+     CALL ASSERT(.FALSE.,'blocktri #30')
   END IF
 
-  globrowoff = globrow-startglobrow+1
+  globrowoff = globrow - startglobrow + 1
 
   !-------------------------------------------
   ! Copy given U column into allocated matrix
   !-------------------------------------------
   DO i = 1, M
-    IF ( globrow .EQ. N ) THEN
-      val = 0
-    ELSE
-      val = Uj(i)
-    END IF
-    lelement(1, globrowoff)%U(i,j) = val
+     IF (globrow .EQ. N) THEN
+        val = 0
+     ELSE
+        val = Uj(i)
+     END IF
+     lelement(1, globrowoff)%U(i,j) = val
   END DO
 
   !-------------------------------------------
@@ -2627,7 +2670,7 @@ END SUBROUTINE SetMatrixRowColU
 !! To be invoked, before solve, after initialize, by user, to set up the matrix
 !<
 !-------------------------------------------------------------------------------
-SUBROUTINE SetMatrixRHS( globrow, b )
+SUBROUTINE SetMatrixRHS(globrow, b)
   !-----------------------------------------------------------------------------
   ! Formal arguments
   !-----------------------------------------------------------------------------
@@ -4939,22 +4982,21 @@ END SUBROUTINE CheckSymmetry
 !-------------------------------------------------------------------------------
 
 !-------------------------------------------------------------------------------
-SUBROUTINE StoreDiagonal(blkrow,colnum,buf)
+SUBROUTINE StoreDiagonal(blkrow, colnum, buf)
 
 INTEGER, INTENT(IN) :: blkrow, colnum
 REAL(dp), DIMENSION(1:M), INTENT(IN) :: buf
 INTEGER :: indx
 
-IF(blkrow.LT.startglobrow) THEN
-  IF(KPDBG) WRITE(OFU,*) 'Error in indexing global block row index'; CALL FL(OFU)
+IF (blkrow .LT. startglobrow) THEN
+   IF(KPDBG) WRITE(OFU,*) 'Error in indexing global block row index'; CALL FL(OFU)
 END IF
 
-indx=(blkrow-startglobrow)*M+colnum
-OrigDiagElement(indx)=buf(colnum)
+indx = (blkrow - startglobrow)*M + colnum
+OrigDiagElement(indx) = buf(colnum)
 
 END SUBROUTINE StoreDiagonal
 !-------------------------------------------------------------------------------
-
 
 !-------------------------------------------------------------------------------
 SUBROUTINE WriteBlocks(flag)
@@ -5180,6 +5222,7 @@ ELSE
    minScale = 1.0E-8_dp
 END IF
 CALL InitScaleFactors
+cs = 0.0
 DO js = startglobrow, endglobrow
    CALL GetScaleFactors(js,cs(:,js))
    eps = minScale*MAXVAL(cs(:,js))
@@ -5209,13 +5252,13 @@ ALLOCATE (TopScaleFac(M), BotScaleFac(M), tmp1(M), tmp2(M), stat=ic)
 CALL ASSERT(ic.eq.0,'STAT != 0 IN InitScaleFactors')
 
 DO ic=1, M
-IF (lequi1) THEN
-  tmp1(ic)=SUM(ABS(orig(1)%L(:,ic)))
-  tmp2(ic)=SUM(ABS(orig(numBlockRows)%U(:,ic)))
-ELSE
-  tmp1(ic)=MAXVAL(ABS(orig(1)%L(:,ic)))
-  tmp2(ic)=MAXVAL(ABS(orig(numBlockRows)%U(:,ic)))
-ENDIF
+   IF (lequi1) THEN
+      tmp1(ic) = SUM(ABS(orig(1)%L(:,ic)))
+      tmp2(ic) = SUM(ABS(orig(numBlockRows)%U(:,ic)))
+   ELSE
+      tmp1(ic) = MAXVAL(ABS(orig(1)%L(:,ic)))
+      tmp2(ic) = MAXVAL(ABS(orig(numBlockRows)%U(:,ic)))
+   ENDIF
 END DO
 
 CALL MPI_Sendrecv(tmp1,M,MPI_REAL8,top,1,                               &
@@ -5242,8 +5285,7 @@ INTEGER  :: ic, ir
 
 ALLOCATE (coltmp(M))
 
-ir = js-startglobrow+1
-
+ir = js - startglobrow + 1
 !COLUMN SUMS: 1-norm; MAXVAL: infinity norm
 DO ic=1, M
 
@@ -5255,31 +5297,35 @@ DO ic=1, M
    END IF
 
    IF (js.GT.startglobrow) THEN
-   coltmp = ABS(orig(ir-1)%U(:,ic))
-   IF (lequi1) THEN
-      scalevector(ic) = scalevector(ic) + SUM(coltmp)
-      IF (js.EQ.endglobrow .AND. js.NE.N)                               &
-      scalevector(ic) = scalevector(ic) + BotScaleFac(ic)
-   ELSE
-      scalevector(ic) = MAX(scalevector(ic),MAXVAL(coltmp))
-      IF (js.EQ.endglobrow .AND. js.NE.N)                               &
-      scalevector(ic) = MAX(scalevector(ic),BotScaleFac(ic))
-   END IF
+      coltmp = ABS(orig(ir-1)%U(:,ic))
+      IF (lequi1) THEN
+         scalevector(ic) = scalevector(ic) + SUM(coltmp)
+         IF (js.EQ.endglobrow .AND. js.NE.N) THEN
+!WRITE (*,*) iam, js, "Bot"
+            scalevector(ic) = scalevector(ic) + BotScaleFac(ic)
+         END IF
+      ELSE
+         scalevector(ic) = MAX(scalevector(ic),MAXVAL(coltmp))
+         IF (js.EQ.endglobrow .AND. js.NE.N) THEN
+            scalevector(ic) = MAX(scalevector(ic),BotScaleFac(ic))
+         END IF
+      END IF
    END IF
 
    IF (js.LT.endglobrow) THEN
-   coltmp = ABS(orig(ir+1)%L(:,ic))
-   IF (lequi1) THEN
-      scalevector(ic) = scalevector(ic) + SUM(coltmp)
-      IF (js.EQ.startglobrow .AND. js.NE.1)                             &
-      scalevector(ic) = scalevector(ic) + TopScaleFac(ic)
-   ELSE
-      scalevector(ic) = MAX(scalevector(ic),MAXVAL(coltmp))
-      IF (js.EQ.startglobrow .AND. js.NE.1)                             &
-      scalevector(ic) = MAX(scalevector(ic),TopScaleFac(ic))
+      coltmp = ABS(orig(ir+1)%L(:,ic))
+      IF (lequi1) THEN
+         IF (js.EQ.startglobrow .AND. js.NE.1) THEN
+            scalevector(ic) = scalevector(ic) + TopScaleFac(ic)
+         END IF
+         scalevector(ic) = scalevector(ic) + SUM(coltmp)
+      ELSE
+         IF (js.EQ.startglobrow .AND. js.NE.1) THEN
+            scalevector(ic) = MAX(scalevector(ic),TopScaleFac(ic))
+         END IF
+         scalevector(ic) = MAX(scalevector(ic),MAXVAL(coltmp))
+      END IF
    END IF
-   END IF
-   
 END DO
 
 DEALLOCATE (coltmp)
@@ -5499,8 +5545,8 @@ END SUBROUTINE ComputeTranspose
 !-------------------------------------------------------------------------------
 SUBROUTINE VectorCopyPar (colsum, colscale)
 !-----------------------------------------------
-REAL(dp), INTENT(IN)  :: colsum(M,N)
-REAL(dp), INTENT(OUT) :: colscale(M,N)
+REAL(dp), INTENT(IN)    :: colsum(M,N)
+REAL(dp), INTENT(INOUT) :: colscale(M,N)
 !-----------------------------------------------
 INTEGER               :: js
 !-----------------------------------------------
