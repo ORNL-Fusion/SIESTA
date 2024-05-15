@@ -15,7 +15,7 @@
         rcounts, disp, startglobrow, endglobrow, nranks, rank,          &
         SKSDBG, TOFU, UPPER, LOWER, DIAG, SAVEDIAG, nrecd,              &
         SYMMETRYCHECK, totRecvs, PACKSIZE, WriteTime, send, receive,    &
-        SetBlockTriDataStruct, GetFullSolution
+        GetFullSolution
       USE blocktridiagonalsolver_s, ONLY: ApplyParallelScaling,         &
         ForwardSolve, SetMatrixRHS, BackwardSolve, GetSolutionVector,   &
         CheckSymmetry, Dmin_TRI, MAXEIGEN_TRI, FindMinMax_Tri,          &
@@ -281,24 +281,28 @@
 
       END SUBROUTINE Compute_Hessian_Blocks
 
-      SUBROUTINE Compute_Hessian_Blocks_With_No_Col_Redist (xc, gc,     &
-                 func)
+      SUBROUTINE Compute_Hessian_Blocks_With_No_Col_Redist(xc, gc, func)
+      USE blocktridiagonalsolver_s, ONLY:                                      &
+     & SetMatrixRowColL, SetMatrixRowColD, SetMatrixRowColU, StoreDiagonal
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
-      REAL(dp), DIMENSION(mblk_size,ns) :: xc, gc
+      REAL(dp), DIMENSION(mblk_size,ns) :: xc
+      REAL(dp), DIMENSION(mblk_size,ns) :: gc
+      EXTERNAL                          :: func
 !-----------------------------------------------
 !   L o c a l   V a r i a b l e s
 !----------------------------------------------
-      REAL(dp), PARAMETER    :: zero=0, one=1
       INTEGER  :: n, m, js, mesh, ntype, istat, iunit, icol
-      EXTERNAL    :: func
       INTEGER  :: js1
 
       REAL(dp) :: starttime, endtime, usedtime
       REAL(dp) :: colstarttime, colendtime, colusedtime
-      INTEGER  :: nsmin, nsmax
+      INTEGER  :: nsmin, nsmax,              i
       REAL(dp) :: skston, skstoff, temp
+
+      REAL(dp), PARAMETER    :: zero = 0
+      REAL(dp), PARAMETER    :: one = 1
 !----------------------------------------------
 
       starttime=0; endtime=0; usedtime=0; 
@@ -325,82 +329,82 @@
       !----------------------------
       CALL second0(colstarttime)
 
-      icol=0
+      icol = 0
       VAR_TYPE_LG: DO ntype = 1, ndims
-        VAR_N_LG: DO n = -ntor, ntor
-          VAR_M_LG: DO m = 0, mpol
+         VAR_N_LG: DO n = -ntor, ntor
+            VAR_M_LG: DO m = 0, mpol
 
-            icol=icol+1
+               icol = icol + 1
 
-            MESH_3PT_LG: DO mesh = 1, 3
+               MESH_3PT_LG: DO mesh = 1, 3
 
-              IF (.NOT.(m.EQ.0 .AND. n.LT.0)) THEN
-                 DO js = mystart(mesh), myend(mesh), 3
-                    xc(icol,js) = eps
-                 END DO
-			  END IF
+                  IF (.NOT.(m.EQ.0 .AND. n.LT.0)) THEN
+                     DO js = mystart(mesh), myend(mesh), 3
+                        xc(icol,js) = eps
+                     END DO
+                  END IF
 
-              INHESSIAN=.TRUE.
-              CALL second0(skston)
-              
-              CALL func
-              CALL second0(skstoff)
-              hessian_funct_island_time=hessian_funct_island_time+(skstoff-skston)
-              INHESSIAN=.FALSE.
+                  INHESSIAN = .TRUE.
+                  CALL second0(skston)
 
-             
-              SKIP3_MESH_LG: DO js = mystart(mesh), myend(mesh), 3
+                  CALL func
+                  CALL second0(skstoff)
+                  hessian_funct_island_time = hessian_funct_island_time + (skstoff - skston)
+                  INHESSIAN = .FALSE.
 
-                xc(icol, js) = 0
+                  SKIP3_MESH_LG: DO js = mystart(mesh), myend(mesh), 3
 
-                !ublk(js-1)
-                js1=js-1
-                IF (startglobrow.LE.js1 .AND. js1.LE.endglobrow) THEN
-                   DataItem = gc(:,js1)/eps
-                   IF (l_diagonal_only) THEN
-                      temp=DataItem(icol)
-                      DataItem=0
-                      DataItem(icol)=temp
-                   END IF
-                   CALL SetBlockTriDataStruct(UPPER,js1,icol,DataItem) 
-                END IF
+                     xc(icol, js) = 0
 
-                !dblk(js)
-                IF (startglobrow.LE.js .AND. js.LE.endglobrow) THEN
-                   DataItem = gc(:,js)/eps
-                   IF (ALL(DataItem .EQ. zero)) DataItem(icol) = one
- 
-                   IF (l_diagonal_only) THEN
-                      temp=DataItem(icol)
-                      DataItem=0
-                      DataItem(icol)=temp
-                   END IF
+                     !ublk(js-1)
+                     js1 = js - 1
+                     IF (startglobrow.LE.js1 .AND. js1.LE.endglobrow) THEN
+                        DataItem = gc(:,js1)/eps
+                        IF (l_diagonal_only) THEN
+                           temp = DataItem(icol)
+                           DataItem = 0
+                           DataItem(icol) = temp
+                        END IF
+                        CALL SetMatrixRowColU(js1, DataItem, icol)
+                     END IF
 
-                   CALL SetBlockTriDataStruct(SAVEDIAG,js,icol,DataItem) 
-                   CALL SetBlockTriDataStruct(DIAG,js,icol,DataItem) 
-                 END IF
+                     !dblk(js)
+                     IF (startglobrow .LE. js .AND. js .LE. endglobrow) THEN
+                        DataItem = gc(:,js)/eps
+                        IF (ALL(DataItem .EQ. zero)) THEN
+                           DataItem(icol) = one
+                        END IF
 
-                !lblk(js+1) 
-                js1 = js+1
-                IF (startglobrow.LE.js1 .AND. js1.LE.endglobrow) THEN
-                   DataItem = gc(:,js1)/eps
-                   IF (l_diagonal_only) THEN
-                      temp=DataItem(icol)
-                      DataItem=0
-                      DataItem(icol)=temp
-                   END IF
-                   CALL SetBlockTriDataStruct(LOWER,js1,icol,DataItem) 
-                END IF
-              END DO SKIP3_MESH_LG
-            END DO MESH_3PT_LG
-          END DO VAR_M_LG
-        END DO VAR_N_LG
+                        IF (l_diagonal_only) THEN
+                           temp = DataItem(icol)
+                           DataItem = 0
+                           DataItem(icol)=temp
+                        END IF
+
+                        CALL StoreDiagonal(js, icol, DataItem)
+                        CALL SetMatrixRowColD(js, DataItem, icol)
+                     END IF
+
+                     !lblk(js+1)
+                     js1 = js + 1
+                     IF (startglobrow .LE. js1 .AND. js1 .LE. endglobrow) THEN
+                        DataItem = gc(:,js1)/eps
+                        IF (l_diagonal_only) THEN
+                           temp = DataItem(icol)
+                           DataItem = 0
+                           DataItem(icol) = temp
+                        END IF
+                        CALL SetMatrixRowColL(js1, DataItem, icol)
+                     END IF
+                  END DO SKIP3_MESH_LG
+               END DO MESH_3PT_LG
+            END DO VAR_M_LG
+         END DO VAR_N_LG
       END DO VAR_TYPE_LG
 
       CALL second0(colendtime)
       construct_hessian_time=construct_hessian_time+(colendtime-colstarttime)
 
-      
       DEALLOCATE (DataItem, stat=istat)
       CALL ASSERT(istat.EQ.0,'DataItem deallocation error:')
 !----------------------------
@@ -432,11 +436,11 @@
 ! CHECK SYMMETRY OF BLOCKS 
 !
       IF (SYMMETRYCHECK) THEN
-        CALL second0(skston)
-        CALL CheckSymmetry(asym_index)
-        CALL second0(skstoff)
-        asymmetry_check_time=asymmetry_check_time+(skstoff-skston)
-      ENDIF      
+         CALL second0(skston)
+         CALL CheckSymmetry(asym_index)
+         CALL second0(skstoff)
+         asymmetry_check_time=asymmetry_check_time+(skstoff-skston)
+      ENDIF
 
       CALL second0(toff)
       IF (l_Diagonal_Only) THEN
@@ -465,7 +469,7 @@
       END SUBROUTINE Compute_Hessian_Blocks_With_No_Col_Redist
 
 
-      SUBROUTINE Compute_Hessian_Blocks_With_Col_Redist (xc, gc, func)
+      SUBROUTINE Compute_Hessian_Blocks_With_Col_Redist(xc, gc, func)
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
@@ -554,41 +558,48 @@
                      IF (js1 .gt. 0) THEN
                         DataItem = gc(:,js1)/eps
                         !m=0 constraint for n<0
-                        IF (m.eq.0 .and. n.lt.0) DataItem = 0
+                        IF (m.eq.0 .and. n.lt.0) THEN
+                           DataItem = 0
+                        END IF
                         IF (l_diagonal_only) THEN
-                           temp=DataItem(icol)
-                           DataItem=0
-                           DataItem(icol)=temp
+                           temp = DataItem(icol)
+                           DataItem = 0
+                           DataItem(icol) = temp
                         END IF
                         istat = 1
                         CALL receive(PROBEFLAG)
-                        CALL send(DataItem,js1,istat,icol,procID)
-                        IF(procID-1.NE.iam) sendCount(procID) = sendCount(procID)+1
+                        CALL send(DataItem, js1, UPPER, icol, procID)
+                        IF (procID-1.NE.iam) THEN
+                           sendCount(procID) = sendCount(procID) + 1
+                        END IF
                         CALL receive(PROBEFLAG)
                      END IF !js>1
 
                      !dblk(js)
                      DataItem = gc(:,js)/eps
-                     IF (m.eq.0 .and. n.lt.0) DataItem = 0
-                     IF (ALL(DataItem .EQ. zero)) DataItem(icol) = one
-
+                     IF (m.eq.0 .and. n.lt.0) THEN
+                        DataItem = 0
+                     END IF
+                     IF (ALL(DataItem .EQ. zero)) THEN
+                        DataItem(icol) = one
+                     END IF
                      
                      IF (l_diagonal_only) THEN
                         temp=DataItem(icol)
                         DataItem=0
                         DataItem(icol)=temp
                      END IF
-                     SavedDiag=DataItem; istat=4
+                     SavedDiag = DataItem
                      CALL receive(PROBEFLAG)
-                     CALL send(SavedDiag,js,istat,icol,procID)
+                     CALL send(SavedDiag, js, SAVEDIAG, icol, procID)
                      IF(procID-1.NE.iam) sendCount(procID) = sendCount(procID)+1
                      CALL receive(PROBEFLAG)
 !                    Boundary condition at js=1 and ns (CATCH ALL OF THEM HERE)
 !                    and m=0,n<0: NEED THIS to avoid (near) singular Hessian
 !                    ASSUMES DIAGONALS ARE ALL NEGATIVE
-                     istat = 2; js1 = js
+                     js1 = js
                      CALL receive(PROBEFLAG)
-                     CALL send(DataItem,js1,istat,icol,procID)
+                     CALL send(DataItem, js1, DIAG, icol, procID)
                      IF(procID-1.NE.iam) sendCount(procID) = sendCount(procID)+1
                      CALL receive(PROBEFLAG)
                    
@@ -603,9 +614,8 @@
                           DataItem=0
                           DataItem(icol)=temp
                        END IF
-                       istat = 3
                        CALL receive(PROBEFLAG)
-                       CALL send(DataItem,js1,istat,icol,procID)
+                       CALL send(DataItem, js1, LOWER, icol, procID)
                        IF(procID-1.NE.iam) sendCount(procID) = sendCount(procID)+1
                        CALL receive(PROBEFLAG)
                      END IF !JS < NS
