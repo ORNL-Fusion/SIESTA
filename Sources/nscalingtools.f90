@@ -41,7 +41,11 @@ CHARACTER, ALLOCATABLE :: remapBuffer(:)
 INTEGER :: TOFU
 INTEGER :: OpenStatus, nargs
 INTEGER, PRIVATE :: N, M, K, KSQR
-INTEGER, PARAMETER :: SAVEDIAG=4, LOWER=3,DIAG=2,UPPER=1
+
+INTEGER, PARAMETER :: SAVEDIAG = 4
+INTEGER, PARAMETER :: LOWER    = 3
+INTEGER, PARAMETER :: DIAG     = 2
+INTEGER, PARAMETER :: UPPER    = 1
 
 !This is to stitch to blocktri variables of
 !same name. Just USE nscalingtools.
@@ -74,7 +78,7 @@ SUBROUTINE  MyEnvVariables
 !--------------------------------------------------------------------------
 ! Default values of environment values that users are allowed to change
 !--------------------------------------------------------------------------
-PARSOLVER=.FALSE.
+PARSOLVER=.TRUE.
 PARFUNCTISL=.TRUE.
 !--------------------------------------------------------------------------
 
@@ -343,144 +347,131 @@ END SUBROUTINE computeAllGatherParameters
 !------------------------------------------------
 ! A generic binary search routine
 !------------------------------------------------
-SUBROUTINE search(query,FOUND,location)
+SUBROUTINE search(query, FOUND, location)
 
-!INTEGER, DIMENSION(:), INTENT(IN) :: qarray
-INTEGER, INTENT(IN) :: query
+INTEGER, INTENT(IN)  :: query
 LOGICAL, INTENT(OUT) :: FOUND
 INTEGER, INTENT(OUT) :: location
-INTEGER :: p
+INTEGER              :: p
 
 CALL assert(MAPPINGDONE, 'search')
 
 ! To account for P>N
-activeranks=activeranks
-IF (activeranks.GT.N) activeranks=N
+activeranks = activeranks
+IF (activeranks.GT.N) THEN
+   activeranks = N
+END IF
 
 ! Dumb search algorithm
-FOUND=.FALSE.
-DO p=1,activeranks
-  IF ((bcyclicStartBlockProc(p).LE.query).AND.(query.LE.bcyclicEndBlockProc(p))) THEN
-    FOUND=.TRUE.
-    location=p
-    EXIT
-  END IF
+FOUND = .FALSE.
+DO p = 1, activeranks
+   IF ((bcyclicStartBlockProc(p) .LE. query) .AND. (query .LE. bcyclicEndBlockProc(p))) THEN
+      FOUND = .TRUE.
+      location = p
+      EXIT
+   END IF
 END DO
 
 END SUBROUTINE search 
 !------------------------------------------------
 
 !------------------------------------------------
-SUBROUTINE SetBlockTriDataStruct(it, br, ic, coldata)
-
-REAL(dp), DIMENSION(M), INTENT(IN) :: coldata
-INTEGER, INTENT(IN) :: br, ic, it
-
-IF (it.EQ.UPPER) THEN          !UPPER DIAGONAL
-  CALL SetBlockRowCol(br,ic,coldata,UPPER)
-ELSE IF (it.EQ.DIAG) THEN      !MAIN DIAGONAL
-  CALL SetBlockRowCol(br,ic,coldata,DIAG)
-ELSE IF (it.EQ.LOWER) THEN     !LOWER DIAGONAL
-  CALL SetBlockRowCol(br,ic,coldata,LOWER)
-ELSE IF (it.EQ.SAVEDIAG) THEN  !SAVED DIAGONAL
-  CALL StoreDiagonal(br,ic,coldata)
-ELSE
-  WRITE(*,*)'Something wrong in ', rank, siesta_MPI_Status(MPI_TAG),br,ic,it
-  CALL ASSERT(.FALSE., 'IT wrong SetBlockTriDataStruct:')
-END IF
-END SUBROUTINE SetBlockTriDataStruct
-!------------------------------------------------
-
-!------------------------------------------------
-SUBROUTINE send(columnData,blockRowNum,blockRowType,columnNum, procNum)
+SUBROUTINE send(columnData, blockRowNum, blockRowType, columnNum, procNum)
 
 REAL(dp), DIMENSION(1:M), INTENT(IN) :: columnData
-INTEGER, INTENT(IN) :: blockRowNum, blockRowType, columnNum
-INTEGER, INTENT(OUT) :: procNum
+INTEGER, INTENT(IN)                  :: blockRowNum
+INTEGER, INTENT(IN)                  :: blockRowType
+INTEGER, INTENT(IN)                  :: columnNum
+INTEGER, INTENT(OUT)                 :: procNum
 
-CHARACTER, DIMENSION(PACKSIZE) :: sendbuf
-INTEGER :: positn
-LOGICAL :: FOUND
+CHARACTER, DIMENSION(PACKSIZE)       :: sendbuf
+INTEGER                              :: positn
+LOGICAL                              :: FOUND
 
 positn=0
-CALL MPI_Pack(blockRowNum,1,MPI_INTEGER,sendBuf,PACKSIZE,positn,SIESTA_COMM,MPI_ERR)
-CALL MPI_Pack(columnNum,1,MPI_INTEGER,sendBuf,PACKSIZE,positn,SIESTA_COMM,MPI_ERR)
-CALL MPI_Pack(columnData,M,MPI_REAL8,sendBuf,PACKSIZE,positn,SIESTA_COMM,MPI_ERR)
+CALL MPI_Pack(blockRowNum, 1, MPI_INTEGER, sendBuf, PACKSIZE, positn, SIESTA_COMM, MPI_ERR)
+CALL MPI_Pack(columnNum,   1, MPI_INTEGER, sendBuf, PACKSIZE, positn, SIESTA_COMM, MPI_ERR)
+CALL MPI_Pack(columnData,  M, MPI_REAL8,   sendBuf, PACKSIZE, positn, SIESTA_COMM, MPI_ERR)
 
-FOUND=.FALSE.
-CALL search(blockRowNum,FOUND,procNum)
+FOUND = .FALSE.
+CALL search(blockRowNum, FOUND, procNum)
 IF (FOUND) THEN
-  IF(procNum-1.EQ.rank) THEN
-    IF (blockRowType.EQ.UPPER) THEN
-      CALL SetBlockTriDataStruct(UPPER,blockRowNum,columnNum,columnData)
-    ELSE IF (blockRowType.EQ.SAVEDIAG) THEN
-      CALL SetBlockTriDataStruct(SAVEDIAG,blockRowNum,columnNum,columnData)
-    ELSE IF (blockRowType.EQ.DIAG) THEN
-      CALL SetBlockTriDataStruct(DIAG,blockRowNum,columnNum,columnData)
-    ELSE IF (blockRowType.EQ.LOWER) THEN
-      CALL SetBlockTriDataStruct(LOWER,blockRowNum,columnNum,columnData)
-    ELSE
-      CALL ASSERT(.FALSE.,'send error, blockRowType:')
-    END IF
-  ELSE
-    IF (BUFFERED) THEN     
-      CALL MPI_BSend(sendbuf,positn,MPI_PACKED,procNum-1,blockRowType,SIESTA_COMM,MPI_ERR)
-    ELSE
-      CALL MPI_Send(sendbuf,positn,MPI_PACKED,procNum-1,blockRowType,SIESTA_COMM,MPI_ERR)
-    END IF
-  END IF
-ELSE 
-  CALL assert(MAPPINGDONE, 'send')
+   IF (procNum-1 .EQ. rank) THEN
+      IF (blockRowType .EQ. UPPER) THEN
+         CALL SetMatrixRowColU(blockRowNum, columnData, columnNum)
+      ELSE IF (blockRowType .EQ. SAVEDIAG) THEN
+         CALL StoreDiagonal(blockRowNum, columnNum, columnData)
+      ELSE IF (blockRowType .EQ. DIAG) THEN
+         CALL SetMatrixRowColD(blockRowNum, columnData, columnNum)
+      ELSE IF (blockRowType .EQ. LOWER) THEN
+         CALL SetMatrixRowColL(blockRowNum, columnData, columnNum)
+      ELSE
+         CALL ASSERT(.FALSE., 'send error, blockRowType:')
+      END IF
+   ELSE 
+      IF (BUFFERED) THEN
+         CALL MPI_BSend(sendbuf, positn, MPI_PACKED, procNum-1, blockRowType, SIESTA_COMM, MPI_ERR)
+      ELSE
+         CALL MPI_Send(sendbuf, positn, MPI_PACKED, procNum-1, blockRowType, SIESTA_COMM, MPI_ERR)
+      END IF
+   END IF
+ELSE
+   CALL assert(MAPPINGDONE, 'send')
 END IF
 
 END SUBROUTINE send
 !------------------------------------------------
 
 !------------------------------------------------
-SUBROUTINE receive (IPROBEFLAG)
+SUBROUTINE receive(IPROBEFLAG)
+USE blocktridiagonalsolver_s, ONLY:                                            &
+& SetMatrixRowColL, SetMatrixRowColD, SetMatrixRowColU
 
-LOGICAL, INTENT(IN) :: IPROBEFLAG
-LOGICAL :: FLAG
-REAL(dp), DIMENSION(M) :: coldata
+LOGICAL, INTENT(IN)            :: IPROBEFLAG
+LOGICAL                        :: FLAG
+REAL(dp), DIMENSION(M)         :: coldata
 CHARACTER, DIMENSION(PACKSIZE) :: recvbuf
-INTEGER :: br, ic, it
-INTEGER :: positn
+INTEGER                        :: br
+INTEGER                        :: ic
+INTEGER                        :: it
+INTEGER                        :: positn
 
-FLAG=.TRUE.
-IF(IPROBEFLAG) CALL MPI_Iprobe (MPI_ANY_SOURCE,MPI_ANY_TAG,SIESTA_COMM,FLAG,siesta_MPI_Status,MPI_ERR)
+FLAG = .TRUE.
+IF (IPROBEFLAG) THEN
+   CALL MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, SIESTA_COMM, FLAG, siesta_MPI_Status, MPI_ERR)
+END IF
 IF (FLAG) THEN
-  CALL MPI_Recv(recvbuf,PACKSIZE,MPI_PACKED,MPI_ANY_SOURCE,&
-  &MPI_ANY_TAG,SIESTA_COMM,siesta_MPI_Status,MPI_ERR)
-  nrecd=nrecd+1
-  
-  it=siesta_MPI_Status(MPI_TAG)
-  IF (it.NE.1.AND.it.NE.2.AND.it.NE.3.AND.it.NE.4) THEN
-    WRITE(TOFU,*) 'MPI_TAG:',it; FLUSH(TOFU)
-    CALL ASSERT(.FALSE.,'receive 1 error')
-  END IF
-  positn=0
-  CALL MPI_Unpack(recvbuf,PACKSIZE,positn,br,1,MPI_INTEGER,SIESTA_COMM,MPI_ERR)
-  CALL MPI_Unpack(recvbuf,PACKSIZE,positn,ic,1,MPI_INTEGER,SIESTA_COMM,MPI_ERR)
-  CALL MPI_Unpack(recvbuf,PACKSIZE,positn,coldata,M,MPI_REAL8,SIESTA_COMM,MPI_ERR)
-  localbrow=br-bcyclicStartBlockProc(rank+1)+1
+   CALL MPI_Recv(recvbuf, PACKSIZE, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, SIESTA_COMM, siesta_MPI_Status, MPI_ERR)
+   nrecd = nrecd + 1
 
-  IF (localbrow.LT.1.OR.localbrow.GT.numBlocks) THEN 
-    WRITE(TOFU,*) 'localbrow:',localbrow; FLUSH(TOFU)
-    CALL ASSERT(.FALSE.,'receive 2 error')
-  END IF
+   it = siesta_MPI_Status(MPI_TAG)
+   IF (it .NE. 1 .AND. it .NE. 2 .AND. it .NE. 3 .AND. it .NE. 4) THEN
+      WRITE(TOFU,*) 'MPI_TAG:',it; FLUSH(TOFU)
+      CALL ASSERT(.FALSE.,'receive 1 error')
+   END IF
+   positn = 0
+   CALL MPI_Unpack(recvbuf, PACKSIZE, positn, br,      1, MPI_INTEGER, SIESTA_COMM, MPI_ERR)
+   CALL MPI_Unpack(recvbuf, PACKSIZE, positn, ic,      1, MPI_INTEGER, SIESTA_COMM, MPI_ERR)
+   CALL MPI_Unpack(recvbuf, PACKSIZE, positn, coldata, M, MPI_REAL8,   SIESTA_COMM, MPI_ERR)
+   localbrow = br - bcyclicStartBlockProc(rank + 1) + 1
 
-  IF (it.EQ.1) THEN      !UPPER DIAGONAL
-    CALL SetBlockRowCol(br,ic,coldata,1)
-  ELSE IF (it.EQ.2) THEN !MAIN DIAGONAL
-    CALL SetBlockRowCol(br,ic,coldata,2)
-  ELSE IF (it.EQ.3) THEN !LOWER DIAGONAL
-    CALL SetBlockRowCol(br,ic,coldata,3)
-  ELSE IF (it.EQ.4) THEN !SAVED DIAGONAL
-    CALL StoreDiagonal(br,ic,coldata)
-  ELSE
-    WRITE(*,*)'Something wrong in ', rank,siesta_MPI_Status(MPI_TAG),br,ic,it
-    CALL ASSERT(.FALSE.,'receive 3 error')
-  END IF
+   IF (localbrow .LT. 1 .OR. localbrow .GT. numBlocks) THEN
+      WRITE(TOFU,*) 'localbrow:',localbrow; FLUSH(TOFU)
+      CALL ASSERT(.FALSE.,'receive 2 error')
+   END IF
+
+   IF (it .EQ. UPPER) THEN
+      CALL SetMatrixRowColU(br, coldata, ic)
+   ELSE IF (it .EQ. DIAG) THEN
+      CALL SetMatrixRowColD(br, coldata, ic)
+   ELSE IF (it .EQ. LOWER) THEN
+      CALL SetMatrixRowColL(br, coldata, ic)
+   ELSE IF (it .EQ. SAVEDIAG) THEN
+      CALL StoreDiagonal(br, ic, coldata)
+   ELSE
+      WRITE(*,*)'Something wrong in ', rank,siesta_MPI_Status(MPI_TAG),br,ic,it
+      CALL ASSERT(.FALSE.,'receive 3 error')
+   END IF
 END IF
 
 END SUBROUTINE receive
@@ -509,23 +500,6 @@ DO p=1, activeranks
 END DO  
 
 END SUBROUTINE GetFullSolution 
-!------------------------------------------------
-
-!------------------------------------------------
-SUBROUTINE SetBlockRowCol( globrow, colnum, buf, opt)
-  INTEGER :: globrow 
-  REAL(dp), INTENT(IN), DIMENSION(M) :: buf
-  INTEGER :: colnum, opt
-  IF (opt.EQ.1) THEN 
-    CALL SetMatrixRowColU( globrow, buf, colnum )
-  ELSE IF (opt.EQ.2) THEN 
-    CALL SetMatrixRowColD( globrow, buf, colnum )
-  ELSE IF (opt.EQ.3) THEN 
-    CALL SetMatrixRowColL( globrow, buf, colnum )
-  ELSE 
-    WRITE(*,*) 'Error in diagonal type option'
-  END IF
-END SUBROUTINE SetBlockRowCol
 !------------------------------------------------
 
 !-------------------------------------------------------------------------------

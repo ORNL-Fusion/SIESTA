@@ -230,17 +230,23 @@
          END IF
 
          temp(1) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bs_filter - bsubsijh(:,:,nmin:nmax))**2)
+                       (bs_filter(:,:,nmin:nmax) -                             &
+                        bsubsijh(:,:,nmin:nmax))**2)
          temp(2) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bs_filter + bsubsijh(:,:,nmin:nmax))**2)
+                       (bs_filter(:,:,nmin:nmax) +                             &
+                        bsubsijh(:,:,nmin:nmax))**2)
          temp(3) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bu_filter - bsubuijh(:,:,nmin:nmax))**2)
+                       (bu_filter(:,:,nmin:nmax) -                             &
+                        bsubuijh(:,:,nmin:nmax))**2)
          temp(4) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bu_filter + bsubuijh(:,:,nmin:nmax))**2)
+                       (bu_filter(:,:,nmin:nmax) +                             &
+                        bsubuijh(:,:,nmin:nmax))**2)
          temp(5) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bv_filter - bsubvijh(:,:,nmin:nmax))**2)
+                       (bv_filter(:,:,nmin:nmax) -                             &
+                        bsubvijh(:,:,nmin:nmax))**2)
          temp(6) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bv_filter + bsubvijh(:,:,nmin:nmax))**2)
+                       (bv_filter(:,:,nmin:nmax) +                             &
+                        bsubvijh(:,:,nmin:nmax))**2)
 #if defined(MPI_OPT)
          IF (PARSOLVER) THEN
             CALL MPI_ALLREDUCE(MPI_IN_PLACE, temp, 6, MPI_REAL8, MPI_SUM,      &

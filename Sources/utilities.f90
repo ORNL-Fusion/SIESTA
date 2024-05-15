@@ -131,12 +131,16 @@
 !>  @brief Calculate the gradient to the full mesh from a half mesh quantity.
 !>
 !>  The arrays must be passed in as ALLOCATABLE to preserve the array bounds.
+!>  There are three scenarios we need to anticipate for the radial dimension.
+!>  The easiest is when the upper bound of gradientf matches vech. Otherwise
+!>  vech can be the full ns range of one more than the gradientf. To handle this
+!>  an extra is calculated which can be a maximum of one.
 !>
 !>  @param[inout] gradientf Gradient on the full grid.
 !>  @param[in]    vech      Half grid quantity.
 !-------------------------------------------------------------------------------
       SUBROUTINE GradientFull(gradientf, vech)
-
+USE descriptor_mod, ONLY: iam
       IMPLICIT NONE
 
 !  Declare Arguments
@@ -146,15 +150,18 @@
 !  local variables
       INTEGER                                                 :: nsmin
       INTEGER                                                 :: nsmax
+      INTEGER                                                 :: extra
 
 !  Start of executable code
       nsmin = LBOUND(gradientf,3)
       nsmax = UBOUND(gradientf,3)
+      extra = MIN(UBOUND(vech,3) - nsmax, 1)
 
-      gradientf(:,:,nsmin:nsmax - 1) = ohs*(vech(:,:,nsmin + 1:nsmax)          &
-                                     -      vech(:,:,nsmin:nsmax - 1))
+      gradientf(:,:,nsmin:nsmax + extra - 1) =                                 &
+         ohs*(vech(:,:,nsmin + 1:nsmax + extra) -                              &
+              vech(:,:,nsmin:nsmax + extra - 1))
 
-      IF (UBOUND(gradientf,3) .ge. nsmax) THEN
+      IF (UBOUND(gradientf,3) .ge. nsmax + extra) THEN
          gradientf(:,:,nsmax:) = 0
       END IF
 
@@ -463,6 +470,7 @@ LOGICAL :: test
       SUBROUTINE curl_htof(bsubsmnh, bsubumnh, bsubvmnh,                       &
                            jksupsmnf, jksupumnf, jksupvmnf, parity,            &
                            nsmin, nsmax, nsend, curtor)
+USE descriptor_mod, ONLY: iam
       USE stel_constants
 
       IMPLICIT NONE
