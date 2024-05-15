@@ -14,13 +14,13 @@ set_tests_properties (siesta_mpi_vmec_test
                       PROCESSORS $<TARGET_PROPERTY:stell,MPIEXEC_MAX_NUMPROCS>)
 
 macro (siesta_mpi_tests nproc)
-    math(EXPR last_nproc "${nproc} - 1")
+    math (EXPR last_nproc "${nproc} - 1")
 
     add_test (NAME    siesta_mpi_siesta_${nproc}_test
               COMMAND $<TARGET_PROPERTY:stell,MPIEXEC_EXECUTABLE> $<TARGET_PROPERTY:stell,MPIEXEC_NUMPROC_FLAG> ${nproc} $<TARGET_PROPERTY:xsiesta,BINARY_DIR>/xsiesta)
     set_tests_properties (siesta_mpi_siesta_${nproc}_test
                           PROPERTIES
-                          DEPENDS "siesta_mpi_vmec_test$<${last_nproc}:;siesta_mpi_${nproc}_test;siesta_mpi_${nproc}_curtor_test;siesta_mpi_${nproc}_chipf_test;siesta_mpi_${nproc}_phipf_test;siesta_mpi_${nproc}_r_1_test;siesta_mpi_${nproc}_r_2_test;siesta_mpi_${nproc}_r_3_test;siesta_mpi_${nproc}_r_4_test;siesta_mpi_${nproc}_drdu_1_test;siesta_mpi_${nproc}_drdu_2_test;siesta_mpi_${nproc}_drdu_3_test;siesta_mpi_${nproc}_drdu_4_test;siesta_mpi_${nproc}_drdv_test;siesta_mpi_${nproc}_z_1_test;siesta_mpi_${nproc}_z_2_test;siesta_mpi_${nproc}_z_3_test;siesta_mpi_${nproc}_z_4_test;siesta_mpi_${nproc}_dzdu_1_test;siesta_mpi_${nproc}_dzdu_2_test;siesta_mpi_${nproc}_dzdu_3_test;siesta_mpi_${nproc}_dzdu_4_test;siesta_mpi_${nproc}_dzdv_test;siesta_mpi_${nproc}_jacobian_test;siesta_mpi_${nproc}_jbsups_test;siesta_mpi_${nproc}_jbsupu_test;siesta_mpi_${nproc}_jbsupv_test;siesta_mpi_${nproc}_siesta_pressure_test;siesta_mpi_${nproc}_jksups_test;siesta_mpi_${nproc}_jksupu_test;siesta_mpi_${nproc}_jksupv_test>"
+                          DEPENDS $<IF:$<BOOL:${last_nproc}>,"siesta_mpi_vmec_test;siesta_mpi_${last_nproc}_test;siesta_mpi_${last_nproc}_curtor_test;siesta_mpi_${last_nproc}_chipf_test;siesta_mpi_${last_nproc}_phipf_test;siesta_mpi_${last_nproc}_r_1_test;siesta_mpi_${last_nproc}_r_2_test;siesta_mpi_${last_nproc}_r_3_test;siesta_mpi_${last_nproc}_r_4_test;siesta_mpi_${last_nproc}_drdu_1_test;siesta_mpi_${last_nproc}_drdu_2_test;siesta_mpi_${last_nproc}_drdu_3_test;siesta_mpi_${last_nproc}_drdu_4_test;siesta_mpi_${last_nproc}_drdv_test;siesta_mpi_${last_nproc}_z_1_test;siesta_mpi_${last_nproc}_z_2_test;siesta_mpi_${last_nproc}_z_3_test;siesta_mpi_${last_nproc}_z_4_test;siesta_mpi_${last_nproc}_dzdu_1_test;siesta_mpi_${last_nproc}_dzdu_2_test;siesta_mpi_${last_nproc}_dzdu_3_test;siesta_mpi_${last_nproc}_dzdu_4_test;siesta_mpi_${last_nproc}_dzdv_test;siesta_mpi_${last_nproc}_jacobian_test;siesta_mpi_${last_nproc}_jbsups_test;siesta_mpi_${last_nproc}_jbsupu_test;siesta_mpi_${last_nproc}_jbsupv_test;siesta_mpi_${last_nproc}_siesta_pressure_test;siesta_mpi_${last_nproc}_jksups_test;siesta_mpi_${last_nproc}_jksupu_test;siesta_mpi_${last_nproc}_jksupv_test","siesta_mpi_vmec_test">
                           PROCESSORS ${nproc})
 
     add_test (NAME    siesta_mpi_${nproc}_test
@@ -187,8 +187,6 @@ macro (siesta_mpi_tests nproc)
                           DEPENDS "siesta_mpi_vmec_test;siesta_mpi_siesta_${nproc}_test")
 endmacro ()
 
-get_target_property(num_processors stell MPIEXEC_MAX_NUMPROCS)
-
-foreach (i RANGE 1 ${num_processors})
-    siesta_mpi_tests(i)
+foreach (i RANGE 1 ${MPIEXEC_MAX_NUMPROCS})
+    siesta_mpi_tests(${i})
 endforeach ()
