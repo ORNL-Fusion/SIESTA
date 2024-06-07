@@ -191,6 +191,6 @@ macro (siesta_mpi_tests nproc)
 endmacro ()
 
 foreach (i RANGE 1 ${MPIEXEC_MAX_NUMPROCS})
-    message (STATUS "MPI Size is ${i}")
+    message (STATUS "MPI Size is ${i} ${MPIEXEC_MAX_NUMPROCS}")
     siesta_mpi_tests(${i})
 endforeach ()
