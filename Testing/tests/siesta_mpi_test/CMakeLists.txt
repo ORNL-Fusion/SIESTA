@@ -14,7 +14,10 @@ set_tests_properties (siesta_mpi_vmec_test
                       PROCESSORS $<TARGET_PROPERTY:stell,MPIEXEC_MAX_NUMPROCS>)
 
 macro (siesta_mpi_tests nproc)
+    message (STATUS "nproc is ${nproc}")
     math (EXPR last_nproc "${nproc} - 1")
+    message (STATUS "nproc and last_nproc is ${nproc} ${last_nproc}")
+    message (STATUS "The first test is siesta_mpi_siesta_${nproc}_test")
 
     add_test (NAME    siesta_mpi_siesta_${nproc}_test
               COMMAND $<TARGET_PROPERTY:stell,MPIEXEC_EXECUTABLE> $<TARGET_PROPERTY:stell,MPIEXEC_NUMPROC_FLAG> ${nproc} $<TARGET_PROPERTY:xsiesta,BINARY_DIR>/xsiesta)
@@ -188,5 +191,6 @@ macro (siesta_mpi_tests nproc)
 endmacro ()
 
 foreach (i RANGE 1 ${MPIEXEC_MAX_NUMPROCS})
+    message (STATUS "MPI Size is ${i}")
     siesta_mpi_tests(${i})
 endforeach ()
