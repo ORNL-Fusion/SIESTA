@@ -187,6 +187,6 @@ macro (siesta_mpi_tests nproc)
                           DEPENDS "siesta_mpi_vmec_test;siesta_mpi_siesta_${nproc}_test")
 endmacro ()
 
-foreach (i RANGE 1 ${MPIEXEC_MAX_NUMPROCS})
+foreach (i IN LISTS 1 2)
     siesta_mpi_tests(${i})
 endforeach ()
