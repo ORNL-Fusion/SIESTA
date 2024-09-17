@@ -18,7 +18,7 @@
       USE island_params, mpol=>mpol_i, ntor=>ntor_i, ns=>ns_i,                 &
           nfp=>nfp_i, mnmax=>mnmax_i, hs=>hs_i
       USE timer_mod
-      USE siesta_namelist, ONLY: eta_factor
+      USE siesta_namelist, ONLY: eta_factor, l_force_restart
       USE descriptor_mod, ONLY: iam, nprocs
       USE nscalingtools, ONLY: SKSDBG, PARSOLVER, PARFUNCTISL, MPI_ERR,        &
                                startglobrow, endglobrow, rcounts, disp
@@ -690,7 +690,8 @@
       END IF
 
       CALL second0(skston)
-      IF (fsq_total1 .LT. fsq_min .and. iam .eq. 0) THEN
+      IF ((fsq_total1 .LT. fsq_min .or. l_force_restart) .and.                 &
+          iam .eq. 0) THEN
          fsq_min = fsq_total1
          CALL restart_write(restart_ext, wout_file)
       END IF
