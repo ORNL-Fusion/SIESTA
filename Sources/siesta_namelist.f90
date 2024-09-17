@@ -33,6 +33,10 @@
 !>     @item{lrecon,           Add additional output to the restart file when
 !>                             used in a reconstruction context.
 !>                             DEPRICATED,                                       shared_data::lrecon}
+!>     @item{l_lambda,         Recompute the VMEC lambda on a SIESTA grid. Fixed
+!>                             boundary only.,                                   siesta_namelist::l_lambda}
+!>     @item{l_force_restart,  Force writing of the restart file on each
+!>                             iteration.,                                       siesta_namelist::l_force_restart}
 !>  @end_table
 !>
 !>  @table_section{siesta_algrothim_sec, Algrothim Control Variables}
@@ -145,6 +149,8 @@
       LOGICAL :: l_vessel = .FALSE.
 !>  Recompute lambda on the SIESTA grid.
       LOGICAL :: l_lambda = .TRUE.
+!>  Recompute lambda on the SIESTA grid.
+      LOGICAL :: l_force_restart = .FALSE.
 
 !  Algrothim Control Variables}
 !>  Maximum number of iterations after diagonal prec.
@@ -210,7 +216,7 @@
 !  Control flags
         ladd_pert, lresistive, lrestart, l_tracing, lcolscale,                 &
         l_silo_output, l_silo_output, l_silo3D, l_output_alliter,              &
-        l_VMEC_Uniform, lasym, lrecon, l_vessel, l_lambda,                     &
+        l_VMEC_Uniform, lasym, lrecon, l_vessel, l_lambda, l_force_restart,    &
 !  Algrothim Control Variables
         niter, ftol, mupar, levmarq_param, eta_factor, nprecon,                &
         ngmres_type, iortho,                                                   &
