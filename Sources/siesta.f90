@@ -54,16 +54,15 @@
       CALL getcarg(1, command_arg, numargs)
 
       IF (numargs .gt. 0) THEN
-         IF (LEN_TRIM(temp) .ne. 0) THEN
-            IF (command_arg(1:7) .ne. 'siesta_' .AND.                          &
-                command_arg(1:7) .ne. 'SIESTA_') THEN
-               temp = 'siesta_' // TRIM(command_arg)
-            END IF
-            length = LEN_TRIM(temp)
-            IF (temp(length - 3:length) .ne. '.jcf' .AND.                        &
-                temp(length - 3:length) .ne. '.JCF') THEN
-               temp = TRIM(temp) // '.jcf'
-            END IF
+         temp = TRIM(command_arg)
+         IF (command_arg(1:7) .ne. 'siesta_' .AND.                          &
+             command_arg(1:7) .ne. 'SIESTA_') THEN
+            temp = 'siesta_' // TRIM(command_arg)
+         END IF
+         length = LEN_TRIM(temp)
+         IF (temp(length - 3:length) .ne. '.jcf' .AND.                        &
+             temp(length - 3:length) .ne. '.JCF') THEN
+            temp = TRIM(temp) // '.jcf'
          END IF
       ELSE
          temp = 'siesta.jcf'
