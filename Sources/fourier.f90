@@ -749,38 +749,79 @@
 
 !  Then add over toroidal collocation angles.
       xmn(:,:) = 0
-      DO n = n0, UBOUND(this%cosnv, 2) !  ntor
+      IF (parity .eq. f_cos) THEN
          DO j = 1, SIZE(this%cosnv, 1) !  nzeta
-            DO m = m0, UBOUND(this%cosmu, 2) ! mpol
-               IF (parity .eq. f_cos) THEN
+            workcos = this%workmj1(m0,j)*this%cosnv(j,n0)
+            worksin = this%workmj2(m0,j)*this%sinnv(j,n0)
+
+            xmn(m0 + moff,n0 + noff) = xmn(m0 + moff,n0 + noff)                &
+                                     + workcos - worksin
+
+            DO m = m1, UBOUND(this%cosmu, 2) ! mpol
+               workcos = this%workmj1(m,j)*this%cosnv(j,n0)
+               worksin = this%workmj2(m,j)*this%sinnv(j,n0)
+
+               xmn(m + moff,n0 + noff) = xmn(m + moff,n0 + noff)               &
+                                       + workcos - worksin
+            END DO
+         END DO
+
+         DO n = n1, UBOUND(this%cosnv, 2) !  ntor
+            DO j = 1, SIZE(this%cosnv, 1) !  nzeta
+               workcos = this%workmj1(m0,j)*this%cosnv(j,n)
+               worksin = this%workmj2(m0,j)*this%sinnv(j,n)
+
+               xmn(m0 + moff,n + noff) = xmn(m0 + moff,n + noff)               &
+                                       + workcos - worksin
+
+               DO m = m1, UBOUND(this%cosmu, 2) ! mpol
                   workcos = this%workmj1(m,j)*this%cosnv(j,n)
                   worksin = this%workmj2(m,j)*this%sinnv(j,n)
 
                   xmn(m + moff,n + noff) = xmn(m + moff,n + noff)              &
                                          + workcos - worksin
+                  xmn(m + moff,-n + noff) = xmn(m + moff,-n + noff)            &
+                                          + workcos + worksin
+               END DO
+            END DO
+         END DO
+         xmn(m0 + moff,:-n1 + noff) = zero
+      ELSE
+         DO j = 1, SIZE(this%cosnv, 1) !  nzeta
+            workcos = this%workmj2(m0,j)*this%cosnv(j,n0)
+            worksin = this%workmj1(m0,j)*this%sinnv(j,n0)
 
-                  IF (n .ne. n0 .and. m .ne. m0) THEN
-                     xmn(m + moff,-n + noff) = xmn(m + moff,-n + noff)         &
-                                             + workcos + worksin
-                  END IF
-               ELSE
+            xmn(m0 + moff,n0 + noff) = xmn(m0 + moff,n0 + noff)                &
+                                     + workcos + worksin
+
+            DO m = m1, UBOUND(this%cosmu, 2) ! mpol
+               workcos = this%workmj2(m,j)*this%cosnv(j,n0)
+               worksin = this%workmj1(m,j)*this%sinnv(j,n0)
+
+               xmn(m + moff,n0 + noff) = xmn(m + moff,n0 + noff)               &
+                                       + workcos + worksin
+            END DO
+         END DO
+
+         DO n = n1, UBOUND(this%cosnv, 2) !  ntor
+            DO j = 1, SIZE(this%cosnv, 1) !  nzeta
+               workcos = this%workmj2(m0,j)*this%cosnv(j,n)
+               worksin = this%workmj1(m0,j)*this%sinnv(j,n)
+
+               xmn(m0 + moff,n + noff) = xmn(m0 + moff,n + noff)               &
+                                       + workcos + worksin
+
+               DO m = m1, UBOUND(this%cosmu, 2) ! mpol
                   workcos = this%workmj2(m,j)*this%cosnv(j,n)
                   worksin = this%workmj1(m,j)*this%sinnv(j,n)
 
                   xmn(m + moff,n + noff) = xmn(m + moff,n + noff)              &
                                          + workcos + worksin
-                  IF (n .ne. n0 .and. m .ne. m0) THEN
-                     xmn(m + moff,-n + noff) = xmn(m + moff,-n + noff)         &
-                                             + workcos - worksin
-                  END IF
-               END IF
+                  xmn(m + moff,-n + noff) = xmn(m + moff,-n + noff)            &
+                                          + workcos - worksin
+               END DO
             END DO
          END DO
-      END DO
-
-      IF (parity .eq. f_cos) THEN
-         xmn(m0 + moff,:-n1 + noff) = zero
-      ELSE
          xmn(m0 + moff,:n0 + noff) = zero
       END IF
 
