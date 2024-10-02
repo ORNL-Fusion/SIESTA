@@ -754,8 +754,8 @@
             workcos = this%workmj1(m0,j)*this%cosnv(j,n0)
             worksin = this%workmj2(m0,j)*this%sinnv(j,n0)
 
-            xmn(m0 + moff,n + noff) = xmn(m0 + moff,n0 + noff)                 &
-                                    + workcos - worksin
+            xmn(m0 + moff,n0 + noff) = xmn(m0 + moff,n0 + noff)                &
+                                     + workcos - worksin
 
             DO m = m1, UBOUND(this%cosmu, 2) ! mpol
                workcos = this%workmj1(m,j)*this%cosnv(j,n0)
