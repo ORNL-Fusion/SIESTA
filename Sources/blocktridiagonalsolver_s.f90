@@ -4925,43 +4925,39 @@ DO blkrow=1,endglobrow-startglobrow+1
   ! Compute contributions from the main diagonal blocks
   partdiff=0
   DO i=1,M
-    DO j=i,M
+    eij=lelement(1,blkrow)%D(i,i)
+    eji=lelement(1,blkrow)%D(i,i)
+    temp(2)  = temp(2) + eij*eij
+    DO j=i + 1,M
       eij=lelement(1,blkrow)%D(i,j)
       eji=lelement(1,blkrow)%D(j,i)
       partdiff = partdiff+(eij-eji)*(eij-eji)
-
-      IF (i.NE.j) THEN
-        ! Contribution from the off-diagonal elements of 
-        ! this main diagonal block
-        temp(2) = temp(2) + eij*eij + eji*eji
-      ELSE
-        ! Contributions to the norm from just the diagonal 
-        ! elements of this block
-        temp(2)  = temp(2) + eij*eij
-      END IF
+      temp(2) = temp(2) + eij*eij + eji*eji
     END DO
   END DO
   temp(1) = temp(1) + 2*partdiff
 
   ! Compute contributions from off diagonal blocks
-  DO i = 1, M
-    DO j = 1, M
-      IF (blkrow.NE.endglobrow-startglobrow+1) THEN 
+  IF (blkrow.NE.endglobrow-startglobrow+1) THEN
+    DO i = 1, M
+      DO j = 1, M
         eij=lelement(1,blkrow)%U(i,j)
         eji=lelement(1,blkrow+1)%L(j,i)
         temp(1) = temp(1) + (eij - eji)*(eij - eji)
         temp(2) = temp(2) + eij*eij + eji*eji
-      ELSE !Local bottom block row
-        IF (rank.NE.nranks-1) THEN
-          eij=lelement(1,blkrow)%U(i,j)
-          eji=bottomLeftMatrix(j,i)
-          temp(1) = temp(1) + (eij - eji)*(eij - eji)
-          temp(2) = temp(2) + eij*eij + eji*eji
-        END IF
-      END IF
+      END DO
     END DO
-  END DO
-
+  ELSE IF (rank.NE.nranks-1) THEN
+!Local bottom block row
+    DO i = 1, M
+      DO j = 1, M
+        eij=lelement(1,blkrow)%U(i,j)
+        eji=bottomLeftMatrix(j,i)
+        temp(1) = temp(1) + (eij - eji)*(eij - eji)
+        temp(2) = temp(2) + eij*eij + eji*eji
+      END DO
+    END DO
+  END IF
 END DO
 
 CALL FLUSH(360+rank)
