@@ -375,7 +375,7 @@
 
       mintest = MINVAL(sqrtg(:,2:))
       maxtest = MAXVAL(sqrtg(:,2:))
-      
+
       IF (mintest*maxtest .LE. zero) THEN
          imin = MINLOC(sqrtg(:,2:))
          imax = MAXLOC(sqrtg(:,2:))

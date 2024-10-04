@@ -143,8 +143,6 @@
       CLASS (fourier_class), POINTER          :: four => null()
 
 !  Start of executable code.
-      IF (.NOT.l_vessel) RETURN  ! FIXME: This check should be outsize the subroutine
-
       CALL init_extender
 
 !  chfit = 'quad'
@@ -193,8 +191,8 @@
 !  Compute extended "s" coordinate for s>1, assuming Vp(s) = Vp(s=1)*s
 !  where Vp(s=1) is obtained from extrapolating VMEC values. Results is
 !    V(s) = Vp*(s^2-1)/2 + V0 => s_edge = SQRT(2(V1-V0)/Vp + 1)
-      vol0 = Get_Volume(zero)    !rho = 0: s=1 vmec
-      vol1 = Get_Volume(one)     !rho = 1: vessel
+      vol0 = get_volume(zero)    !rho = 0: s=1 vmec
+      vol1 = get_volume(one)     !rho = 1: vessel
 
       vp1 = GetVP1()
       s_edge = SQRT(1 + 2*(vol1 - vol0)/vp1)
@@ -255,7 +253,7 @@
          END IF
       END DO
 
-      nse = nse-1 !Not to double count s=1 surface
+      nse = nse - 1 !Not to double count s=1 surface
       ALLOCATE(r_full(ntheta,nzeta,nse), z_full(ntheta,nzeta,nse),             &
                ru_full(ntheta,nzeta,nse), zu_full(ntheta,nzeta,nse),           &
                rv_full(ntheta,nzeta,nse), zv_full(ntheta,nzeta,nse))
@@ -324,12 +322,6 @@
                                      f_cos)
          CALL fourier_context%tomnsp(z1_i(:,:,nsp1:ns), zmns_i(:,:,nsp1:ns),   &
                                      f_sin)
-         DO js = nsp1, ns
-            rmnc_i(:,:,js) = rmnc_i(:,:,js)                                    &
-                           / fourier_context%orthonorm(0:mpol,-ntor:ntor)
-            zmns_i(:,:,js) = zmns_i(:,:,js)                                    &
-                           / fourier_context%orthonorm(0:mpol,-ntor:ntor)
-         END DO
 
 ! PUT PROFILES ONTO EXTENDED MESH
          tmp = 0
@@ -403,9 +395,9 @@
       END IF
 
 #if defined(NOSKS)
-      DO u=1, ntheta
+      DO js=1, ns
          DO v=1, nzeta
-            DO js=1, ns
+            DO u=1, ntheta
                WRITE(1600,*) r1_i(u,v,js), z1_i(u,v,js)
                CALL FLUSH(1600)
             END DO
@@ -434,7 +426,7 @@
 
       DEALLOCATE (r12, rs12, zs12, ru12, zu12)
 
-      ming = MINVAL(sqrtg_full(:,:,ns:nse) )
+      ming = MINVAL(sqrtg_full(:,:,ns:nse))
       maxg = MAXVAL(sqrtg_full(:,:,ns:nse))
       PRINT *,' IAM: ', iam, 'MING: ', ming,' MAXG: ',maxg
       CALL ASSERT(ming*maxg.GT.zero,' Jacobian changed sign in grid_extender')

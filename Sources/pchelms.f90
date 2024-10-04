@@ -90,7 +90,7 @@
       LOGICAL              :: lcolscale_save
 
 !  local parameters
-      REAL (dp), PARAMETER :: levmarq_param_inital = 1.E-6_dp
+!      REAL (dp), PARAMETER :: levmarq_param_inital = 1.E-6_dp
 
 !  Start of executable code
       siesta_curtor = 0.0
@@ -109,7 +109,7 @@
       CALL second0(ton)
 
 !  Add initial diffusive term to preconditioner instead
-      levmarq_param = levmarq_param_inital
+      !levmarq_param = levmarq_param_inital
 
 !  Note initHess must have already been called prior to this point.
       CALL Compute_Hessian_Blocks(Compute_Forces_Lin, .FALSE.)
