@@ -118,16 +118,6 @@
                         bsupsijh, bsupuijh, bsupvijh, pijh, f_cos)
       END IF
 
-!      IF (nsmin .le. 5 .and. nsmax .ge. 5) THEN
-!         DO n = -ntor, ntor
-!            DO m = 0, mpol
-!               IF (jpmnch(m,n,5) .gt. 0.0 .or. djpmnch(m,n,6) .gt. 0.0) THEN
-!                  WRITE (*,*) iam, n, m, nsmin, nsmax, jpmnch(m,n,6), djpmnch(m,n,6)
-!               END IF
-!            END DO
-!         END DO
-!      END IF
-
 !  Update thermal energy (pressure based). pijh contains the jacobian term at
 !  this point.
       WPRES: IF (l_getwmhd) THEN

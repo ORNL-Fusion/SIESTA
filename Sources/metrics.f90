@@ -582,17 +582,17 @@
       INTEGER, INTENT(IN)                               :: nsmax
 
 !  Start executable code.
-      xsubsij = gss(:,nsmin:nsmax)*xsupsij                               &
-              + gsu(:,nsmin:nsmax)*xsupuij                               &
-              + gsv(:,nsmin:nsmax)*xsupvij
+      xsubsij(:,nsmin:nsmax) = gss(:,nsmin:nsmax)*xsupsij(:,nsmin:nsmax)       &
+                             + gsu(:,nsmin:nsmax)*xsupuij(:,nsmin:nsmax)       &
+                             + gsv(:,nsmin:nsmax)*xsupvij(:,nsmin:nsmax)
 
-      xsubuij = gsu(:,nsmin:nsmax)*xsupsij                               &
-              + guu(:,nsmin:nsmax)*xsupuij                               &
-              + guv(:,nsmin:nsmax)*xsupvij
+      xsubuij(:,nsmin:nsmax) = gsu(:,nsmin:nsmax)*xsupsij(:,nsmin:nsmax)       &
+                             + guu(:,nsmin:nsmax)*xsupuij(:,nsmin:nsmax)       &
+                             + guv(:,nsmin:nsmax)*xsupvij(:,nsmin:nsmax)
       
-      xsubvij = gsv(:,nsmin:nsmax)*xsupsij                               &
-              + guv(:,nsmin:nsmax)*xsupuij                               &
-              + gvv(:,nsmin:nsmax)*xsupvij
+      xsubvij(:,nsmin:nsmax) = gsv(:,nsmin:nsmax)*xsupsij(:,nsmin:nsmax)       &
+                             + guv(:,nsmin:nsmax)*xsupuij(:,nsmin:nsmax)       &
+                             + gvv(:,nsmin:nsmax)*xsupvij(:,nsmin:nsmax)
 
       END SUBROUTINE tolowerh
 
