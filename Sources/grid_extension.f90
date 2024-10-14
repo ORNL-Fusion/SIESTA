@@ -50,26 +50,12 @@
   
       REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: r1s_vmec, r1ss_vmec
       REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: z1s_vmec, z1ss_vmec
-  
-      REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: r1su_vmec, z1su_vmec
-      REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: r1sv_vmec, z1sv_vmec
 
       REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: rmnc_v, zmns_v
       REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: rmns_v, zmnc_v
 
       REAL(dp), ALLOCATABLE, DIMENSION(:,:,:) :: r_ext, z_ext
-      REAL(dp), ALLOCATABLE, DIMENSION(:,:,:) :: ru_ext, zu_ext
-      REAL(dp), ALLOCATABLE, DIMENSION(:,:,:) :: rv_ext, zv_ext
-
       REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: r1_ves, z1_ves
-      REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: ru_ves, zu_ves
-      REAL(dp), ALLOCATABLE, DIMENSION(:,:) :: rv_ves, zv_ves
-
-      REAL(dp), ALLOCATABLE, DIMENSION(:,:,:) :: r_full, z_full
-      REAL(dp), ALLOCATABLE, DIMENSION(:,:,:) :: ru_full, zu_full
-      REAL(dp), ALLOCATABLE, DIMENSION(:,:,:) :: rv_full, zv_full
-
-      REAL(dp), DIMENSION(:,:,:), ALLOCATABLE  :: sqrtg_full
 
       REAL(dp)            :: s_edge, ming, maxg
 
@@ -97,6 +83,7 @@
       USE siesta_namelist, ONLY: nsin_ext
       USE shared_data, ONLY: lverbose
       USE island_params, ONLY: fourier_context
+      USE metrics, ONLY: LoadGrid
 
       IMPLICIT NONE
 
@@ -158,9 +145,7 @@
       END IF
 
       ALLOCATE(ri(ntheta,nzeta), zi(ntheta,nzeta))
-      ALLOCATE(r1_ves(ntheta,nzeta), z1_ves(ntheta,nzeta),                     &
-               ru_ves(ntheta,nzeta), zu_ves(ntheta,nzeta),                     &
-               rv_ves(ntheta,nzeta), zv_ves(ntheta,nzeta))
+      ALLOCATE(r1_ves(ntheta,nzeta), z1_ves(ntheta,nzeta))
 
 !  FIXME: The vessel file could have a different periodicity than the equilbirum.
       ALLOCATE(vtor_modes(-ntor_v:ntor_v))
@@ -179,12 +164,6 @@
 !  FIXME: What about non stellarator symmetric vessels?
       CALL four%toijsp(rmnc_v, r1_ves, f_none, f_cos)
       CALL four%toijsp(zmns_v, z1_ves, f_none, f_sin)
-
-      CALL four%toijsp(rmnc_v, ru_ves, f_du, f_cos)
-      CALL four%toijsp(zmns_v, zu_ves, f_du, f_sin)
-
-      CALL four%toijsp(rmnc_v, rv_ves, f_dv, f_cos)
-      CALL four%toijsp(zmns_v, zv_ves, f_dv, f_sin)
 
       DEALLOCATE(four)
 
@@ -207,13 +186,11 @@
       delv = vol1 - (vol0 + p5*vp1*(s_edge*s_edge - 1))
       delv = delv/(s_edge-1)**2
 
-      ALLOCATE(r_ext (ntheta,nzeta,2:nsv), z_ext (ntheta,nzeta,2:nsv),         &
-               ru_ext(ntheta,nzeta,2:nsv), zu_ext(ntheta,nzeta,2:nsv),         &
-               rv_ext(ntheta,nzeta,2:nsv), zv_ext(ntheta,nzeta,2:nsv),         &
+      ALLOCATE(r_ext(ntheta,nzeta,2:nsv),                                      &
+               z_ext(ntheta,nzeta,2:nsv),                                      &
                stat=istat)
 
       DO j = 2, nsv
-
          s_ext = 1 + (j-1)*hs_i    !at j=nsv, s_ext = s_edge
 
       !V(s) = Vp*(s^2-1)/2 + V0
@@ -226,10 +203,6 @@
          IF (interp_type.EQ.LIN) THEN
             r_ext(:,:,j) = rho1*r1_vmec + rho*r1_ves
             z_ext(:,:,j) = rho1*z1_vmec + rho*z1_ves
-            ru_ext(:,:,j) = rho1*ru_vmec + rho*ru_ves
-            zu_ext(:,:,j) = rho1*zu_vmec + rho*zu_ves
-            rv_ext(:,:,j) = rho1*rv_vmec + rho*rv_ves
-            zv_ext(:,:,j) = rho1*zv_vmec + rho*zv_ves
          ELSE
             rho2 = rho*rho
             IF (interp_type .eq. QUAD) THEN
@@ -238,14 +211,6 @@
                             + r1_vmec*(1-rho2) + r1_ves*rho2
                z_ext(:,:,j) = p5*z1s_vmec*(1 - rho2 - rho1*rho1)               &
                             + z1_vmec*(1-rho2) + z1_ves*rho2
-               ru_ext(:,:,j) = p5*r1su_vmec*(1 - rho2 - rho1*rho1)             &
-                             + ru_vmec*(1-rho2) + ru_ves*rho2
-               zu_ext(:,:,j) = p5*z1su_vmec*(1 - rho2 - rho1*rho1)             &
-                             + zu_vmec*(1-rho2) + zu_ves*rho2
-               rv_ext(:,:,j) = p5*r1sv_vmec*(1 - rho2 - rho1*rho1)             &
-                             + rv_vmec*(1-rho2) + rv_ves*rho2
-               zv_ext(:,:,j) = p5*z1sv_vmec*(1 - rho2 - rho1*rho1)             &
-                             + zv_vmec*(1-rho2) + zv_ves*rho2
             ELSE IF (interp_type .eq. CUB) THEN
                rho3 = rho*rho2
                CALL ASSERT(.FALSE., 'Unknown interpolation <TYPE> specified')
@@ -254,23 +219,6 @@
       END DO
 
       nse = nse - 1 !Not to double count s=1 surface
-      ALLOCATE(r_full(ntheta,nzeta,nse), z_full(ntheta,nzeta,nse),             &
-               ru_full(ntheta,nzeta,nse), zu_full(ntheta,nzeta,nse),           &
-               rv_full(ntheta,nzeta,nse), zv_full(ntheta,nzeta,nse))
- 
-      r_full (:,:,1:ns) = r1_i
-      r_full (:,:,ns + 1:nse) = r_ext
-      z_full (:,:,1:ns) = z1_i
-      z_full (:,:,ns + 1:nse) = z_ext
-      ru_full(:,:,1:ns) = ru_i
-      ru_full(:,:,ns + 1:nse) = ru_ext
-      zu_full(:,:,1:ns) = zu_i
-      zu_full(:,:,ns + 1:nse) = zu_ext
-      rv_full(:,:,1:ns) = rv_i
-      rv_full(:,:,ns + 1:nse) = rv_ext
-      zv_full(:,:,1:ns) = zv_i
-      zv_full(:,:,ns + 1:nse) = zv_ext
-
       nse = MIN(ns + nsin_ext, nse)
 
       IF (lverbose .and. iam .eq. 0) THEN
@@ -293,20 +241,7 @@
          DEALLOCATE(zu_i)
          DEALLOCATE(rv_i)
          DEALLOCATE(zv_i)
-         ALLOCATE(r1_i(ntheta,nzeta,ns), z1_i(ntheta,nzeta,ns),                &
-                  ru_i(ntheta,nzeta,ns), zu_i(ntheta,nzeta,ns),                &
-                  rv_i(ntheta,nzeta,ns), zv_i(ntheta,nzeta,ns))
-         r1_i = r_full(:,:,1:ns)
-         z1_i = z_full(:,:,1:ns)
-         ru_i = ru_full(:,:,1:ns)
-         zu_i = zu_full(:,:,1:ns)
-         rv_i = rv_full(:,:,1:ns)
-         zv_i = zv_full(:,:,1:ns)
       END IF
-
-      DEALLOCATE(r_full, z_full)
-      DEALLOCATE(ru_full, zu_full)
-      DEALLOCATE(rv_full, zv_full)
 
       IF (nsp .NE. ns) THEN
          nsp1 = nsp + 1
@@ -318,10 +253,10 @@
                   zmns_i(0:mpol,-ntor:ntor,ns), stat=istat)
          rmnc_i(:,:,1:nsp) = tmp(:,:,1:nsp)
          zmns_i(:,:,1:nsp) = tmp2(:,:,1:nsp)
-         CALL fourier_context%tomnsp(r1_i(:,:,nsp1:ns), rmnc_i(:,:,nsp1:ns),   &
-                                     f_cos)
-         CALL fourier_context%tomnsp(z1_i(:,:,nsp1:ns), zmns_i(:,:,nsp1:ns),   &
-                                     f_sin)
+         CALL fourier_context%tomnsp(r_ext(:,:,2:nsin_ext + 1),                &
+                                     rmnc_i(:,:,nsp1:ns), f_cos)
+         CALL fourier_context%tomnsp(z_ext(:,:,2:nsin_ext + 1),                &
+                                     zmns_i(:,:,nsp1:ns), f_sin)
 
 ! PUT PROFILES ONTO EXTENDED MESH
          tmp = 0
@@ -366,16 +301,10 @@
                      zmnc_i(0:mpol,-ntor:ntor,ns), stat=istat)
             rmns_i(:,:,1:nsp) = tmp(:,:,1:nsp)
             zmnc_i(:,:,1:nsp) = tmp2(:,:,1:nsp)
-            CALL fourier_context%tomnsp(r1_i(:,:,nsp1:ns),                     &
+            CALL fourier_context%tomnsp(r_ext(:,:,1:nsin_ext),                 &
      &                                  rmns_i(:,:,nsp1:ns), f_sin)
             CALL fourier_context%tomnsp(z1_i(:,:,nsp1:ns),                     &
-     &                                  zmnc_i(:,:,nsp1:ns), f_cos)
-            DO js = nsp1, ns
-               rmns_i(:,:,js) = rmns_i(:,:,js)                                 &
-                              / fourier_context%orthonorm(0:mpol,-ntor:ntor)
-               zmnc_i(:,:,js) = zmnc_i(:,:,js)                                 &
-                              / fourier_context%orthonorm(0:mpol,-ntor:ntor)
-            END DO
+     &                                  z_ext(:,:,1:nsin_ext), f_cos)
 
             tmp = 0
             tmp(:,:,1:nsp)=jcurrumns
@@ -404,39 +333,14 @@
          END DO
       END DO
 
-!  u = theta, v = zeta
-      ALLOCATE (r12 (ntheta,nzeta),                                            &
-     &          rs12(ntheta,nzeta),                                            &
-     &          zs12(ntheta,nzeta),                                            &
-     &          ru12(ntheta,nzeta),                                            &
-     &          zu12(ntheta,nzeta),                                            &
-     &          sqrtg_full(ntheta,nzeta,nse),                                  &
-     &          stat = istat)
-      CALL ASSERT(istat.eq.0,' Allocation error in grid_extender')
-      sqrtg_full(:,:,1) = 0
-      DO js = 2, nse
-         js1 = js-1
-         r12  = p5*(r1_i(:,:,js) + r1_i(:,:,js1))
-         rs12 = (r1_i(:,:,js) - r1_i(:,:,js1))*ohs
-         zs12 = (z1_i(:,:,js) - z1_I(:,:,js1))*ohs
-         ru12 = p5*(ru_i(:,:,js) + ru_i(:,:,js1))
-         zu12 = p5*(zu_i(:,:,js) + zu_i(:,:,js1))
-         sqrtg_full(:,:,js) = r12*(ru12*zs12 - rs12*zu12)
-      END DO
-
-      DEALLOCATE (r12, rs12, zs12, ru12, zu12)
-
-      ming = MINVAL(sqrtg_full(:,:,ns:nse))
-      maxg = MAXVAL(sqrtg_full(:,:,ns:nse))
-      PRINT *,' IAM: ', iam, 'MING: ', ming,' MAXG: ',maxg
-      CALL ASSERT(ming*maxg.GT.zero,' Jacobian changed sign in grid_extender')
+      LoadGrid(istat)
 
       ALLOCATE (vp(nse))
-      CALL SurfAvgLocal(vp,sqrtg_full,1,nse)
+      CALL SurfAvgLocal(vp,sqrtg,1,nse)
       vp(1) = 0
       DO js=2, nse
-         ming = MINVAL(sqrtg_full(:,:,js) )
-         maxg = MAXVAL(sqrtg_full(:,:,js))
+         ming = MINVAL(sqrtg(:,:,js) )
+         maxg = MAXVAL(sqrtg(:,:,js))
          WRITE(5000,'(i4,1p,3E14.4)') js, -vp(js), ming, maxg
       END DO
       CALL FLUSH(5000)
@@ -444,12 +348,10 @@
       DEALLOCATE (ri,zi)
 #endif
 
+      CALL LoadGrid(istat)
+
       DEALLOCATE(r1s_vmec)
-      DEALLOCATE(r1su_vmec)
-      DEALLOCATE(r1sv_vmec)
       DEALLOCATE(z1s_vmec)
-      DEALLOCATE(z1su_vmec)
-      DEALLOCATE(z1sv_vmec)
 
       END SUBROUTINE
 
@@ -473,19 +375,11 @@
 
 !  First derivatives on s=1 surface
       ALLOCATE(r1s_vmec(ntheta,nzeta),z1s_vmec(ntheta,nzeta))
-      ALLOCATE(r1su_vmec(ntheta,nzeta),z1su_vmec(ntheta,nzeta))
-      ALLOCATE(r1sv_vmec(ntheta,nzeta),z1sv_vmec(ntheta,nzeta))
 
       fac =.5  !COULD SCAN THIS TO MAKE MAX(sqrt(g) < 0) IF NECESSARY
 !!    fac =.17  !COULD SCAN THIS TO MAKE MAX(sqrt(g) < 0) IF NECESSARY
       r1s_vmec=(r1_vmec - r1_i(:,:,ns-1))*ohs*fac
       z1s_vmec=(z1_vmec - z1_i(:,:,ns-1))*ohs*fac
-
-      r1su_vmec = (ru_vmec - ru_i(:,:,ns-1))*ohs*fac
-      z1su_vmec = (zu_vmec - zu_i(:,:,ns-1))*ohs*fac
-
-      r1sv_vmec = (rv_vmec - rv_i(:,:,ns-1))*ohs*fac
-      z1sv_vmec = (zv_vmec - zv_i(:,:,ns-1))*ohs*fac
 
       END SUBROUTINE
 
@@ -499,17 +393,18 @@
       IMPLICIT NONE
 
 !  Declare Arguments
-      REAL(dp)                              ::  GetVP1
+      REAL(dp)                                ::  GetVP1
 
 !  Local Variables
-      INTEGER                               :: js
-      INTEGER                               :: js1
-      REAL(dp), DIMENSION(:,:), ALLOCATABLE :: r12
-      REAL(dp), DIMENSION(:,:), ALLOCATABLE :: rs12
-      REAL(dp), DIMENSION(:,:), ALLOCATABLE :: zs12
-      REAL(dp), DIMENSION(:,:), ALLOCATABLE :: ru12
-      REAL(dp), DIMENSION(:,:), ALLOCATABLE :: zu12
-      REAL(dp), DIMENSION(:), ALLOCATABLE   :: vp
+      INTEGER                                 :: js
+      INTEGER                                 :: js1
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: r12
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: rs12
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: zs12
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: ru12
+      REAL(dp), DIMENSION(:,:), ALLOCATABLE   :: zu12
+      REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: sqrtg_full
+      REAL(dp), DIMENSION(:), ALLOCATABLE     :: vp
 
 !  Start of executable code.
       ALLOCATE(vp(ns - 1:ns), sqrtg_full(ntheta,nzeta,ns - 1:ns))
@@ -618,14 +513,20 @@
          DO i = 1, ntheta-1
             zu = (zi(i+1,j)-zi(i,j))*odelu
             r1 = p5*(ri(i+1,j)+ri(i,j))
-            get_volume = get_volume + r1**2 * zu
-         END DO
-         IF (lasym) THEN
-            zu = (zi(1,j)-zi(ntheta,j))*odelu
-            r1 = p5*(ri(1,j)+ri(ntheta,j))
             get_volume = get_volume + r1**2*zu
-         END IF
+         END DO
       END DO
+
+      IF (lasym) THEN
+         DO j = 1, nzeta
+            DO i = 1, ntheta-1
+               zu = (zi(i+1,j)-zi(i,j))*odelu
+               r1 = p5*(ri(i+1,j)+ri(i,j))
+               get_volume = get_volume + r1**2*zu
+            END DO
+         END DO
+      END IF
+
       get_volume = dnorm*get_volume
 
       END FUNCTION get_volume

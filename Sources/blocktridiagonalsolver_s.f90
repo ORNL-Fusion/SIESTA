@@ -5297,7 +5297,6 @@ DO ic=1, M
       IF (lequi1) THEN
          scalevector(ic) = scalevector(ic) + SUM(coltmp)
          IF (js.EQ.endglobrow .AND. js.NE.N) THEN
-!WRITE (*,*) iam, js, "Bot"
             scalevector(ic) = scalevector(ic) + BotScaleFac(ic)
          END IF
       ELSE
