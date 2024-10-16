@@ -84,7 +84,7 @@
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: KxBuij
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: KxBvij
       REAL (dp), DIMENSION(:,:), ALLOCATABLE   :: pardamp
-      INTEGER                                  :: istat            ,m,n
+      INTEGER                                  :: istat
       INTEGER                                  :: n1
       INTEGER                                  :: n2
       REAL (dp)                                :: ton
