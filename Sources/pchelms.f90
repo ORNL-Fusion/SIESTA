@@ -193,6 +193,7 @@
       USE utilities, ONLY: CURL_FtoH, set_bndy_fouier_m0,                      &
                            set_bndy_full_origin
       USE island_params, ONLY: fourier_context
+      USE siesta_namelist, ONLY: nsin
 
       IMPLICIT NONE
 
@@ -232,7 +233,17 @@ REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: divf
       IF (nsmin .eq. 1) THEN
          CALL set_bndy_full_origin(asubsmnf, asubumnf, asubvmnf, f_none)
          asubsmnf(m1 + moff,:,1) = 0
+         asubumnf(m0 + moff,:,1) = 0
          asubvmnf(m0 + moff,:,1) = 0
+      END IF
+      IF (nsmin .le. nsin) THEN
+!  This ensures the inital solution preseves the VMEC solution inside the last
+!  closed flux surface.
+!
+!  A_u = phi/2Pi -> A_u (m ≠ 0 and ≠ 0) = 0
+!  A_v = chi/2Pi -> A_v (m ≠ 0 and ≠ 0) = 0
+         asubumnf(m1 + moff:,:,:MIN(nsin, nsmax)) = 0
+         asubvmnf(m1 + moff:,:,:MIN(nsin, nsmax)) = 0
       END IF
 
 !  At s=0, the poloidal and toroidal flux are zero. This implies that the m=0,
@@ -1143,7 +1154,6 @@ REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: divf
       IMPLICIT NONE
 
 !  Local variables
-      INTEGER   :: i
       REAL (dp) :: currv_int
 
 !  Start of executable code
