@@ -1,3 +1,112 @@
+!-------------------------------------------------------------------------------
+!  The @header, @table_section, @table_subsection, @item and @end_table commands
+!  are custom defined commands in Doxygen.in. They are defined under ALIASES.
+!  For the page created here, the 80 column limit is exceeded. Arguments of
+!  aliases are separated by ','. If you intended ',' to be a string you must use
+!  an escaped comma '\,'.
+!
+!>  @page siesta_restart_sec Discription of the SIESTA restart file.
+!>
+!>  @tableofcontents
+!>  @section siesta_restart_intro_sec Introduction
+!>  This page documents the contents of a SIESTA restart file.
+!>
+!>  @section siesta_restart_var_sec Namelist Variables
+!>  @header{Input variable, Description, Code Reference}
+!>
+!>  @table_section{siesta_restart_flag_sec, Control Flags}
+!>     @item{state_flags, State flags of the model. Aditionally stores the
+!>                        version number in the first 31 bits.
+!>                        * restart_version
+!>                        * restart_lasym,               }
+!>     @item{wout_file,   Name of the inital wout_file., siesta_namelist::wout_file}
+!>  @end_table
+!>
+!>  @table_section{siesta_restart_size_sec, Dimension sizes.}
+!>     @item{mpol, Number of torodial modes.,  siesta_namelist::mpolin}
+!>     @item{nfp,  Number of field periods.,   siesta_namelist::nfpin}
+!>     @item{nrad, Number of radial surfaces., island_params::ns_i}
+!>     @item{ntor, Maximum torodal mode.,      siesta_namelist::ntorin}
+!>  @end_table
+!>
+!>  @table_section{siesta_restart_norm_fact_sec, Normalization factors.}
+!>     @item{b_factor, Normalization factor for the magnetic field., quantities::b_factor}
+!>     @item{p_factor, Normalization factor for the pressure.,       quantities::p_factor}
+!>  @end_table
+!>
+!>  @table_section{siesta_restart_scalar_sec, Scalar quantities.}
+!>     @item{curtor, The toroidal current.,                shared_data::siesta_curtor}
+!>     @item{p_max,  Maximum pressure.,                    }
+!>     @item{p_min,  Minimum pressure.,                    }
+!>     @item{rmajor, Major radius.,                        island_params::rmajor_i}
+!>     @item{wb,     Energy stored in the magnetid field., quantities::wb}
+!>     @item{wp,     Energy stored in the pressure.,       quantities::wb}
+!>  @end_table
+!>
+!>  @table_section{siesta_restart_1D_arrays_sec, 1D profiles.}
+!>     @item{chipf_r_, Radial derivative of the poloidal flux., island_params::chipf_i}
+!>     @item{phipf_r_, Radial derivative of the toroidal flux., island_params::phipf_i}
+!>  @end_table
+!>
+!>  @table_sections{siesta_restart_2D_arrays_sec, 3D arrays.}
+!>     @table_subsection{siesta_restart_internal_arrays_sec, Internal arrays}.
+!>        @item{JBsupssh_m_n_r_, Normalized JB^s component sine parity.,   quantities::jbsupsmnsh}
+!>        @item{JBsupuch_m_n_r_, Normalized JB^u component cosine parity., quantities::jbsupumnch}
+!>        @item{JBsupvch_m_n_r_, Normalized JB^v component cosine parity., quantities::jbsupvmnch}
+!>        @item{jpresch_m_n_r_,  Normalized JP   component cosine parity., quantities::jpmnch}
+!>     @table_subsection{siesta_restart_internal_arrays_asym_sec, Internal arrays asym.}
+!>        @item{JBsupsch_m_n_r_, Normalized JB^s component cosine parity., quantities::jbsupsmnch}
+!>        @item{JBsupush_m_n_r_, Normalized JB^u component sine parity.,   quantities::jbsupumnsh}
+!>        @item{JBsupvsh_m_n_r_, Normalized JB^v component sine parity.,   quantities::jbsupvmnsh}
+!>        @item{jpressh_m_n_r_,  Normalized JB^v component sine parity.,   quantities::jpmnsh}
+!>     @table_subsection{siesta_restart_grid_arrays_sec, Grid arrays}.
+!>        @item{rmnc_m_n_r_, R cosine parity., vmec_info::rmnc_i}
+!>        @item{zmns_m_n_r_, Z sine parity.,   vmec_info::zmns_i}
+!>     @table_subsection{siesta_restart_grid_arrays_asym_sec, Gird arrays asym.}
+!>        @item{rmns_m_n_r_, R sine parity.,   vmec_info::rmns_i}
+!>        @item{zmnc_m_n_r_, Z cosine parity., vmec_info::zmnc_i}
+!>     @table_subsection{siesta_restart_vmec_arrays_sec, VMEC arrays.}
+!>        @item{lmns_m_n_r_, Lambda sine parity.,   vmec_info::lmns_i}
+!>     @table_subsection{siesta_restart_vmec_arrays_asym_sec, VMEC arrays asym.}
+!>        @item{lmnc_m_n_r_, Lambda cosine parity., vmec_info::lmnc_i}
+!>     @table_subsection{siesta_restart_mag_arrays_sec, Magnetic fields.}
+!>        @item{bsubsmnsh_m_n_r_, B_s component sine parity.,   }
+!>        @item{bsubumnch_m_n_r_, B_u component cosine parity., }
+!>        @item{bsubvmnch_m_n_r_, B_v component cosine parity., }
+!>        @item{bsupsmnsh_m_n_r_, B^s component sine parity.,   }
+!>        @item{bsupumnch_m_n_r_, B^u component cosine parity., }
+!>        @item{bsupvmnch_m_n_r_, B^v component cosine parity., }
+!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Magnetic fields.}
+!>        @item{bsubsmnch_m_n_r_, B_s component cosine parity., }
+!>        @item{bsubumnsh_m_n_r_, B_u component sine parity.,   }
+!>        @item{bsubvmnsh_m_n_r_, B_v component sine parity.,   }
+!>        @item{bsupsmnch_m_n_r_, B^s component cosine parity., }
+!>        @item{bsupumnsh_m_n_r_, B^u component sine parity.,   }
+!>        @item{bsupvmnsh_m_n_r_, B^v component sine parity.,   }
+!>     @table_subsection{siesta_restart_pres_arrays_sec, Pressure.}
+!>        @item{pmnch_m_n_r_, Pressure cosine parity., }
+!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Magnetic fields.}
+!>        @item{pmnsh_m_n_r_, Pressure sine parity., }
+!>     @table_subsection{siesta_restart_mag_arrays_sec, Magnetic fields.}
+!>        @item{fsubsmnsh_m_n_r_, F_s component sine parity.,   quantities::fsubsmnsf}
+!>        @item{fsubumnch_m_n_r_, F_u component cosine parity., quantities::fsubumncf}
+!>        @item{fsubvmnch_m_n_r_, F_v component cosine parity., quantities::fsubvmncf}
+!>        @item{fsupsmnsh_m_n_r_, F^s component sine parity.,   quantities::fsupsmncf}
+!>        @item{fsupumnch_m_n_r_, F^u component cosine parity., quantities::fsupumnsf}
+!>        @item{fsupvmnch_m_n_r_, F^v component cosine parity., quantities::fsupvmnsf}
+!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Magnetic fields.}
+!>        @item{fsubsmnch_m_n_r_, F_s component cosine parity., quantities::fsubsmncf}
+!>        @item{fsubumnsh_m_n_r_, F_u component sine parity.,   quantities::fsubumnsf}
+!>        @item{fsubvmnsh_m_n_r_, F_v component sine parity.,   quantities::fsubvmnsf}
+!>        @item{fsupsmnch_m_n_r_, F^s component cosine parity., quantities::fsupsmncf}
+!>        @item{bsupumnsh_m_n_r_, F^u component sine parity.,   quantities::fsupumnsf}
+!>        @item{bsupvmnsh_m_n_r_, F^v component sine parity.,   quantities::fsupvmnsf}
+!>  @end_table
+!>
+!>  @section siesta_restart_prog_ref_sec Programmers Reference
+!>  Reference material for the coding to implement this restart file is found in
+!>  the @ref restart_mod module.
+!-------------------------------------------------------------------------------
 !*******************************************************************************
 !>  @file restart_mod.f90
 !>  @brief Contains module @ref restart_mod.
@@ -12,7 +121,7 @@
       USE stel_kinds
       USE metrics, ONLY: tolowerh
       USE descriptor_mod, ONLY: iam
-      USE shared_data, ONLY: lasym, unit_out
+      USE shared_data, ONLY: lasym, unit_out, wtotal0
       USE v3_utilities, ONLY: assert_eq
       USE stel_constants, ONLY: mu0
 
@@ -170,6 +279,9 @@
 !>  Name for the restart file p_min.
       CHARACTER (len=*), PARAMETER :: vn_p_min = 'p_min'
 
+!>  Inital stored energy.
+      CHARACTER (len=*), PARAMETER :: vn_wtotal0 = 'wtotal0'
+
       CONTAINS
 
 !*******************************************************************************
@@ -255,6 +367,8 @@
       CALL cdf_read(ncid, vn_mpolin, mpol)
       CALL cdf_read(ncid, vn_ntorin, ntor)
       CALL cdf_read(ncid, vn_nfpin, nfp)
+
+      CALL cdf_read(ncid, vn_wtotal0, wtotal0)
 
       ALLOCATE(temp_modes(-ntor:ntor))
       CALL cdf_read(ncid, vn_tor_modes, temp_modes)
@@ -478,6 +592,8 @@
       CALL cdf_define(ncid, vn_nfpin, nfp)
       CALL cdf_define(ncid, vn_wout, wout_file)
 
+      CALL cdf_define(ncid, vn_wtotal0, wtotal0)
+
       CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes)
 
       CALL cdf_define(ncid, vn_jbsupss, jbsupsmnsh, dimname=restart_dims)
@@ -554,6 +670,8 @@
       CALL cdf_write(ncid, vn_ntorin, ntor)
       CALL cdf_write(ncid, vn_nfpin, nfp)
       CALL cdf_write(ncid, vn_wout, wout_file)
+
+      CALL cdf_write(ncid, vn_wtotal0, wtotal0)
 
       CALL cdf_write(ncid, vn_tor_modes, fourier_context%tor_modes)
 
