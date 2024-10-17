@@ -18,7 +18,7 @@
       USE island_params, mpol=>mpol_i, ntor=>ntor_i, ns=>ns_i,                 &
           nfp=>nfp_i, mnmax=>mnmax_i, hs=>hs_i
       USE timer_mod
-      USE siesta_namelist, ONLY: eta_factor, l_force_restart
+      USE siesta_namelist, ONLY: eta_factor, l_force_restart, lrestart
       USE descriptor_mod, ONLY: iam, nprocs
       USE nscalingtools, ONLY: SKSDBG, PARSOLVER, PARFUNCTISL, MPI_ERR,        &
                                startglobrow, endglobrow, rcounts, disp
@@ -302,7 +302,9 @@
       fsqprev = -1;  fsqprev1 = -1
       fsq_min = 1.E20_dp
       niter    = 0
-      wtotal0  = -1
+      IF (.not.lrestart) THEN
+         wtotal0  = -1
+      END IF
 !  Initial Newton tolerance parameter.
       etak_tol = 1.E-01_dp
       delta_t = 1.0
