@@ -59,7 +59,7 @@
 !>        @item{JBsupush_m_n_r_, Normalized JB^u component sine parity.,   quantities::jbsupumnsh}
 !>        @item{JBsupvsh_m_n_r_, Normalized JB^v component sine parity.,   quantities::jbsupvmnsh}
 !>        @item{jpressh_m_n_r_,  Normalized JB^v component sine parity.,   quantities::jpmnsh}
-!>     @table_subsection{siesta_restart_grid_arrays_sec, Grid arrays}.
+!>     @table_subsection{siesta_restart_grid_arrays_sec, Grid arrays}
 !>        @item{rmnc_m_n_r_, R cosine parity., vmec_info::rmnc_i}
 !>        @item{zmns_m_n_r_, Z sine parity.,   vmec_info::zmns_i}
 !>     @table_subsection{siesta_restart_grid_arrays_asym_sec, Gird arrays asym.}
