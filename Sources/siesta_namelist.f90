@@ -88,6 +88,82 @@
 !>      @item{mupar_test,    UNKNOWN, shared_data::mupar_test}
 !>  @end_table
 !>
+!>  @section siesta_namelist_exam_sec Example Files
+!>  @subsection siesta_namelist_exam_sec Fixed Boundary
+!>  This example runs a 2 field period stellarator symmetric fixed boundary run
+!>  where the perturbation is applied to m=2 modes.
+!>
+!>  @code
+!>  &SIESTA_INFO
+!>    LCOLSCALE     = T
+!>    LADD_PERT     = T
+!>    LRESTART      = F
+!>    NITER         = 1000
+!>    MPOLIN        = 3
+!>    NTORIN        = 3
+!>    NFPIN         = 2
+!>    FTOL          = 1.0E-20
+!>    levmarq_param = 1.0E-1
+!>    WOUT_FILE     = 'wout_example.vmec.nc'
+!>    RESTART_EXT   = 'restart_example'
+!>    MRES          = 2,
+!>    HELPERT       = 5.0E-4
+!>  /
+!>  @endcode
+!>
+!>  @subsection siesta_namelist_exam_sparse_sec Fixed Boundary Sparse modes
+!>  This example uses sparse modes.
+!>
+!>  @code
+!>  &SIESTA_INFO
+!>    LCOLSCALE      = T
+!>    LADD_PERT      = T
+!>    LRESTART       = F
+!>    NITER          = 1000
+!>    MPOLIN         = 3
+!>    NTORIN         = 4
+!>    NFPIN          = 1
+!>    ntor_type      = 'sparse'
+!>    ntor_modes(0)  = 0
+!>    ntor_modes(-1) = -1
+!>    ntor_modes(1)  = 1
+!>    ntor_modes(-2) = -2
+!>    ntor_modes(2)  = 2
+!>    ntor_modes(-3) = -4
+!>    ntor_modes(3)  = 4
+!>    FTOL           = 1.0E-20
+!>    levmarq_param  = 1.0E-1
+!>    WOUT_FILE      = 'wout_example.vmec.nc'
+!>    RESTART_EXT    = 'restart_example'
+!>    MRES           = 2,
+!>    HELPERT        = 5.0E-4
+!>  /
+!>  @endcode
+!>
+!>  @subsection siesta_namelist_exam_free_sec Free Boundary
+!>  This example for a free boundary equilibrium.
+!>
+!>  @code
+!>  &SIESTA_INFO
+!>    LCOLSCALE      = T
+!>    LADD_PERT      = T
+!>    LRESTART       = F
+!>    NITER          = 1000
+!>    MPOLIN         = 3
+!>    NTORIN         = 3
+!>    NFPIN          = 2
+!>    FTOL           = 1.0E-20
+!>    levmarq_param  = 1.0E-1
+!>    WOUT_FILE      = 'wout_example.vmec.nc'
+!>    RESTART_EXT    = 'restart_example'
+!>    MRES           = 2,
+!>    HELPERT        = 5.0E-4
+!>    l_vessel       = T
+!>    vessel_file    = /path/to/vessel/file
+!>    mgrid_file     = /path/to/mgrid/file
+!>  /
+!>  @endcode
+!>
 !>  @section siesta_namelist_prog_ref_sec Programmers Reference
 !>  Reference material for the coding to implement this namelist is found in the
 !>  @ref siesta_namelist module.
