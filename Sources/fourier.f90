@@ -751,13 +751,7 @@
       xmn(:,:) = 0
       IF (parity .eq. f_cos) THEN
          DO j = 1, SIZE(this%cosnv, 1) !  nzeta
-            workcos = this%workmj1(m0,j)*this%cosnv(j,n0)
-            worksin = this%workmj2(m0,j)*this%sinnv(j,n0)
-
-            xmn(m0 + moff,n0 + noff) = xmn(m0 + moff,n0 + noff)                &
-                                     + workcos - worksin
-
-            DO m = m1, UBOUND(this%cosmu, 2) ! mpol
+            DO m = m0, UBOUND(this%cosmu, 2) ! mpol
                workcos = this%workmj1(m,j)*this%cosnv(j,n0)
                worksin = this%workmj2(m,j)*this%sinnv(j,n0)
 
@@ -788,13 +782,7 @@
          xmn(m0 + moff,:-n1 + noff) = zero
       ELSE
          DO j = 1, SIZE(this%cosnv, 1) !  nzeta
-            workcos = this%workmj2(m0,j)*this%cosnv(j,n0)
-            worksin = this%workmj1(m0,j)*this%sinnv(j,n0)
-
-            xmn(m0 + moff,n0 + noff) = xmn(m0 + moff,n0 + noff)                &
-                                     + workcos + worksin
-
-            DO m = m1, UBOUND(this%cosmu, 2) ! mpol
+            DO m = m0, UBOUND(this%cosmu, 2) ! mpol
                workcos = this%workmj2(m,j)*this%cosnv(j,n0)
                worksin = this%workmj1(m,j)*this%sinnv(j,n0)
 
