@@ -76,7 +76,7 @@
 !>        @item{bsupsmnsh_m_n_r_, B^s component sine parity.,   }
 !>        @item{bsupumnch_m_n_r_, B^u component cosine parity., }
 !>        @item{bsupvmnch_m_n_r_, B^v component cosine parity., }
-!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Magnetic fields.}
+!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Magnetic fields asymmetric.}
 !>        @item{bsubsmnch_m_n_r_, B_s component cosine parity., }
 !>        @item{bsubumnsh_m_n_r_, B_u component sine parity.,   }
 !>        @item{bsubvmnsh_m_n_r_, B_v component sine parity.,   }
@@ -85,22 +85,30 @@
 !>        @item{bsupvmnsh_m_n_r_, B^v component sine parity.,   }
 !>     @table_subsection{siesta_restart_pres_arrays_sec, Pressure.}
 !>        @item{pmnch_m_n_r_, Pressure cosine parity., }
-!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Magnetic fields.}
+!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Pressure fields asymmetric.}
 !>        @item{pmnsh_m_n_r_, Pressure sine parity., }
-!>     @table_subsection{siesta_restart_mag_arrays_sec, Magnetic fields.}
+!>     @table_subsection{siesta_restart_mag_arrays_sec, Forces.}
 !>        @item{fsubsmnsh_m_n_r_, F_s component sine parity.,   quantities::fsubsmnsf}
 !>        @item{fsubumnch_m_n_r_, F_u component cosine parity., quantities::fsubumncf}
 !>        @item{fsubvmnch_m_n_r_, F_v component cosine parity., quantities::fsubvmncf}
 !>        @item{fsupsmnsh_m_n_r_, F^s component sine parity.,   quantities::fsupsmncf}
 !>        @item{fsupumnch_m_n_r_, F^u component cosine parity., quantities::fsupumnsf}
 !>        @item{fsupvmnch_m_n_r_, F^v component cosine parity., quantities::fsupvmnsf}
-!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Magnetic fields.}
-!>        @item{fsubsmnch_m_n_r_, F_s component cosine parity., quantities::fsubsmncf}
-!>        @item{fsubumnsh_m_n_r_, F_u component sine parity.,   quantities::fsubumnsf}
-!>        @item{fsubvmnsh_m_n_r_, F_v component sine parity.,   quantities::fsubvmnsf}
+!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Forces asymmetric.}
+!>        @item{fsubsmnsh_m_n_r_, F_s component sine parity.,   quantities::fsubsmnsf}
+!>        @item{fsubumnch_m_n_r_, F_u component cosine parity., quantities::fsubumncf}
+!>        @item{fsubvmnch_m_n_r_, F_v component cosine parity., quantities::fsubvmncf}
 !>        @item{fsupsmnch_m_n_r_, F^s component cosine parity., quantities::fsupsmncf}
 !>        @item{bsupumnsh_m_n_r_, F^u component sine parity.,   quantities::fsupumnsf}
 !>        @item{bsupvmnsh_m_n_r_, F^v component sine parity.,   quantities::fsupvmnsf}
+!>     @table_subsection{siesta_restart_freeboundary_arrays_sec, Vector potential arrays}
+!>        @item{asubsmnsf_m_n_r_, A_s component sine parity.,   shared_data::asubsmnsf}
+!>        @item{asubumncf_m_n_r_, A_u component cosine parity., shared_data::asubumncf}
+!>        @item{asubvmncf_m_n_r_, A_v component cosine parity., shared_data::asubvmncf}
+!>     @table_subsection{siesta_restart_freeboundary_arrays_asym_sec, Vector potential asymmetric arrays}
+!>        @item{asubsmncf_m_n_r_, A_s component cosine parity., shared_data::asubsmncf}
+!>        @item{asubumnsf_m_n_r_, A_u component sine parity.,   shared_data::asubumnsf}
+!>        @item{asubvmnsf_m_n_r_, A_v component sine parity.,   shared_data::asubvmnsf}
 !>  @end_table
 !>
 !>  @section siesta_restart_prog_ref_sec Programmers Reference
@@ -255,6 +263,18 @@
       CHARACTER (len=*), PARAMETER :: vn_fsubvmns = 'fsubvmnsf_m_n_r_'
 !>  Name for the restart file fsubvmnc.
       CHARACTER (len=*), PARAMETER :: vn_fsubvmnc = 'fsubvmncf_m_n_r_'
+!>  Name for the restart file asubsmns.
+      CHARACTER (len=*), PARAMETER :: vn_asubsmns = 'asubsmnsf_m_n_r_'
+!>  Name for the restart file asubumnc.
+      CHARACTER (len=*), PARAMETER :: vn_asubumnc = 'asubumncf_m_n_r_'
+!>  Name for the restart file asubumnc.
+      CHARACTER (len=*), PARAMETER :: vn_asubvmnc = 'asubvmncf_m_n_r_'
+!>  Name for the restart file fsubumns.
+      CHARACTER (len=*), PARAMETER :: vn_asubsmnc = 'asubumncf_m_n_r_'
+!>  Name for the restart file fsubumnc.
+      CHARACTER (len=*), PARAMETER :: vn_asubumns = 'asubumnsf_m_n_r_'
+!>  Name for the restart file fsubvmns.
+      CHARACTER (len=*), PARAMETER :: vn_asubvmns = 'asubvmnsf_m_n_r_'
 
 !>  Name for the restart file lmns.
       CHARACTER (len=*), PARAMETER :: vn_lmns = 'lmns_m_n_r_'
@@ -511,6 +531,103 @@
 1000  FORMAT(/,' RESTARTED FROM RUN PARAMETERS M: ',i3,' N: ',i3,' NS: ', i3,/)
 
       END FUNCTION
+
+!-------------------------------------------------------------------------------
+!>  @brief Write the free boundary information.
+!>
+!>  The way the restart file is created not it's easier to write this to a
+!>  separate restart file.
+!>
+!>  FIXME: Marge this into the current restart file. This will involve
+!>         refactoring the restart so it doesn't overwrite the extire file every
+!>         time it updates.
+!>
+!>
+!>  @param[in] restart_ext Restart file extension.
+!-------------------------------------------------------------------------------
+      SUBROUTINE restart_write_free(restart_ext)
+      USE shared_data, ONLY: asubsmnsf, asubumncf, asubvmncf,                  &
+                             asubsmncf, asubumnsf, asubvmnsf
+      USE island_params, ONLY: mpol=>mpol_i, ntor=>ntor_i, ns=>ns_i,           &
+                               nfp => nfp_i, fourier_context
+      USE stel_constants, ONLY: one
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      CHARACTER (len=*), INTENT(in)            :: restart_ext
+
+!  Local Variables
+      INTEGER                                  :: flags
+      INTEGER                                  :: ncid
+      INTEGER                                  :: s
+      INTEGER                                  :: m
+      INTEGER                                  :: n
+      INTEGER                                  :: status
+      REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: tempmn_w
+
+!  Start of executable code.
+      CALL cdf_open(ncid, 'siesta_' // TRIM(restart_ext) // '_free.nc', 'w', status)
+      CALL assert_eq(0, status, 'Failed to write restart file.')
+
+      IF (lasym) THEN
+         flags = IBSET(flags, restart_lasym)
+      END IF
+
+      ALLOCATE(tempmn_w(0:mpol,-ntor:ntor,ns))
+
+      CALL cdf_define(ncid, vn_flags, flags)
+      CALL cdf_define(ncid, vn_nsin, ns)
+      CALL cdf_define(ncid, vn_mpolin, mpol)
+      CALL cdf_define(ncid, vn_ntorin, ntor)
+      CALL cdf_define(ncid, vn_nfpin, nfp)
+
+      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes)
+
+      CALL cdf_define(ncid, vn_asubsmns, tempmn_w, dimname=restart_dims)
+      CALL cdf_define(ncid, vn_asubumnc, tempmn_w, dimname=restart_dims)
+      CALL cdf_define(ncid, vn_asubvmnc, tempmn_w, dimname=restart_dims)
+      IF (lasym) THEN
+         CALL cdf_define(ncid, vn_asubsmnc, tempmn_w, dimname=restart_dims)
+         CALL cdf_define(ncid, vn_asubumns, tempmn_w, dimname=restart_dims)
+         CALL cdf_define(ncid, vn_asubvmns, tempmn_w, dimname=restart_dims)
+      END IF
+
+      CALL cdf_write(ncid, vn_flags, flags)
+      CALL cdf_write(ncid, vn_nsin, ns)
+      CALL cdf_write(ncid, vn_mpolin, mpol)
+      CALL cdf_write(ncid, vn_ntorin, ntor)
+      CALL cdf_write(ncid, vn_nfpin, nfp)
+
+      CALL cdf_write(ncid, vn_tor_modes, fourier_context%tor_modes)
+
+      tempmn_w = asubsmnsf
+      CALL restart_denormalize(tempmn_w, one)
+      CALL cdf_write(ncid, vn_asubsmns, tempmn_w)
+      tempmn_w = asubumncf
+      CALL restart_denormalize(tempmn_w, one)
+      CALL cdf_write(ncid, vn_asubumnc, tempmn_w)
+      tempmn_w = asubvmncf
+      CALL restart_denormalize(tempmn_w, one)
+      CALL cdf_write(ncid, vn_asubvmnc, tempmn_w)
+
+      IF (lasym) THEN
+         tempmn_w = asubsmncf
+         CALL restart_denormalize(tempmn_w, one)
+         CALL cdf_write(ncid, vn_asubsmnc, tempmn_w)
+         tempmn_w = asubumnsf
+         CALL restart_denormalize(tempmn_w, one)
+         CALL cdf_write(ncid, vn_asubumns, tempmn_w)
+         tempmn_w = asubvmnsf
+         CALL restart_denormalize(tempmn_w, one)
+         CALL cdf_write(ncid, vn_asubvmns, tempmn_w)
+      END IF
+
+      DEALLOCATE(tempmn_w)
+
+      CALL cdf_close(ncid)
+
+      END SUBROUTINE
 
 !-------------------------------------------------------------------------------
 !>  @brief Write the restart file.
@@ -1014,7 +1131,12 @@
 !  Only some of the toroidal modes will match if nfp_new and nfp_old are
 !  different.
          DO i_n = -ntor_old, ntor_old
-            n = tor_modes_old(i_n)/nfp_old
+            IF (ntor_new .eq. 1) THEN
+               n = tor_modes_old(i_n)*nfp_old
+            ELSE
+!  FIXME: Check if this branch is really needed. Leaving it in for now.
+               n = tor_modes_old(i_n)/nfp_old
+            END IF
             IF (.not.fourier_context%get_index(n)) THEN
                CYCLE
             END IF
