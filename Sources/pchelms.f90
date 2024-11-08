@@ -888,10 +888,11 @@ REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: divf
       SUBROUTINE DUMP_B(js, iunit)
       USE metrics, ONLY: r1_i, chipf_i, phipf_i
       USE hessian, ONLY: gather_array
-      USE siesta_namelist, ONLY: nsin
+      USE siesta_namelist, ONLY: nsin, restart_ext
       USE vmec_info
       USE shared_data, ONLY: lasym
       USE island_params, ONLY: fourier_context
+      USE restart_mod, ONLY: restart_write_free
 
       IMPLICIT NONE
 
@@ -1069,6 +1070,8 @@ REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: divf
          CALL Compare_Current(Fsupsmncf, Fsupumnsf, Fsupvmnsf,                 &
                               jcurrumns, jcurrvmns)
       END IF
+
+      CALL restart_write_free(restart_ext)
 
 1000  FORMAT(' EDGE VALUES OF jB^X FOR ALL M,N',/,                             &
              '   M   N   jB^s      jB^u      jB^v')
