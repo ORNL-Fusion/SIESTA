@@ -606,7 +606,7 @@
       INTEGER, INTENT(in)                         :: nsmax
 
 !  Local Variables
-      INTEGER                                     :: js
+      INTEGER                                     :: js            , i
       INTEGER                                     :: m
       INTEGER                                     :: n
       INTEGER                                     :: n_mode
@@ -818,7 +818,7 @@
 
       IF (lasym) THEN
 !  Half mesh quantities (harmonics), B^s (sine), B^u (cosine), B^v (cosine)
-         IF (.not.ALLOCATED(jbsupsmnsh)) THEN
+         IF (.not.ALLOCATED(jbsupsmnch)) THEN
             ALLOCATE(jbsupsmnch(0:mpol,-ntor:ntor,ns),                         &
                      jbsupumnsh(0:mpol,-ntor:ntor,ns),                         &
                      jbsupvmnsh(0:mpol,-ntor:ntor,ns),                         &
