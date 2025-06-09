@@ -436,8 +436,6 @@ LOGICAL :: test
 
       CALL set_bndy_fouier_m0(jbsupsmnh, jbsupumnh, jbsupvmnh, parity)
 
-!test = test_div(jbsupsmnh, jbsupumnh, jbsupvmnh, parity, nsmin, nsmax)
-
       END SUBROUTINE
 
 !  FIXME: Move to a new curl module.
@@ -928,8 +926,9 @@ USE descriptor_mod, ONLY: iam
       CALL GradientFull(divmnf, jbsupsmnh)
       CALL set_bndy_half_to_full_ds(jbsupsmnh, divmnf, nsmin, fours, f_none)
 
-      ALLOCATE(jbsupumnf(0:mpol,-ntor:ntor,nsmin:nsmax))
-      ALLOCATE(jbsupvmnf(0:mpol,-ntor:ntor,nsmin:nsmax))
+      n_mode = MIN(nsmax + 1, ns)
+      ALLOCATE(jbsupumnf(0:mpol,-ntor:ntor,nsmin:n_mode))
+      ALLOCATE(jbsupvmnf(0:mpol,-ntor:ntor,nsmin:n_mode))
 
       CALL to_full_mesh(jbsupumnh, jbsupumnf)
       CALL to_full_mesh(jbsupvmnh, jbsupvmnf)
