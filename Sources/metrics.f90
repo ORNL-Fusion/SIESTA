@@ -677,9 +677,10 @@
       INTEGER :: istat
 
 !  Start executable code.
-      DEALLOCATE(gss, gsu, gsv, guu, guv, gvv,                           &
-                 hss, hsu, hsv, huu, huv, hvv,                           &
-                 phipf_i, chipf_i, presf_i, stat=istat)
+      DEALLOCATE(gss, gsu, gsv, guu, guv, gvv,                                 &
+                 hss, hsu, hsv, huu, huv, hvv,                                 &
+                 phipf_i, chipf_i, presf_i,                                    &
+                 chif_i, phif_i, stat=istat)
       
       DEALLOCATE (r1_i, z1_i, ru_i, zu_i, rv_i, zv_i)
 

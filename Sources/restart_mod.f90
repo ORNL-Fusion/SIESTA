@@ -46,6 +46,8 @@
 !>  @table_section{siesta_restart_1D_arrays_sec, 1D profiles.}
 !>     @item{chipf_r_, Radial derivative of the poloidal flux., island_params::chipf_i}
 !>     @item{phipf_r_, Radial derivative of the toroidal flux., island_params::phipf_i}
+!>     @item{chif_r_,  Poloidal flux profile.,                  island_params::chif_i}
+!>     @item{phif_r_,  Toroidal flux profile.,                  island_params::phif_i}
 !>  @end_table
 !>
 !>  @table_sections{siesta_restart_2D_arrays_sec, 3D arrays.}
@@ -195,9 +197,13 @@
       CHARACTER (len=*), PARAMETER :: vn_zmns = 'zmns_m_n_r_'
 
 !>  Name for the restart file chipf.
-      CHARACTER (len=*), PARAMETER :: vn_chipf = 'chipf(r)'
+      CHARACTER (len=*), PARAMETER :: vn_chipf = 'chipf_r_'
 !>  Name for the restart file phipf.
-      CHARACTER (len=*), PARAMETER :: vn_phipf = 'phipf(r)'
+      CHARACTER (len=*), PARAMETER :: vn_phipf = 'phipf_r_'
+!>  Name for the restart file chif.
+      CHARACTER (len=*), PARAMETER :: vn_chif = 'chif_r_'
+!>  Name for the restart file phif.
+      CHARACTER (len=*), PARAMETER :: vn_phif = 'phif_r_'
 
 !>  Name for the restart file bsupsmns.
       CHARACTER (len=*), PARAMETER :: vn_bsupsmns = 'bsupsmnsh_m_n_r_'
@@ -652,7 +658,8 @@
                                phipf => phipf_i, wb => wb_i, wp => wp_i,       &
                                rmajor => rmajor_i, fourier_context,            &
                                mpol=>mpol_i, ntor=>ntor_i, ns=>ns_i,           &
-                               ntheta=>nu_i, nzeta=>nv_i
+                               ntheta=>nu_i, nzeta=>nv_i, phif=>phif_i,        &
+                               chif=>chif_i
       USE utilities, ONLY: curl_htof
       USE stel_constants, ONLY: one
       USE vmec_info, ONLY: rmnc => rmnc_i, zmns => zmns_i,                     &
@@ -723,6 +730,8 @@
 
       CALL cdf_define(ncid, vn_chipf, chipf, dimname=radial_dim)
       CALL cdf_define(ncid, vn_phipf, phipf, dimname=radial_dim)
+      CALL cdf_define(ncid, vn_chif, chipf, dimname=radial_dim)
+      CALL cdf_define(ncid, vn_phif, phipf, dimname=radial_dim)
 
       CALL cdf_define(ncid, vn_wb, wb)
       CALL cdf_define(ncid, vn_wp, wp)
@@ -799,6 +808,8 @@
 
       CALL cdf_write(ncid, vn_chipf, chipf)
       CALL cdf_write(ncid, vn_phipf, phipf)
+      CALL cdf_write(ncid, vn_chif, chif)
+      CALL cdf_write(ncid, vn_phif, phif)
 
       tempmn_w = rmnc
       CALL restart_denormalize(tempmn_w, one)

@@ -68,6 +68,10 @@
       REAL(dp), ALLOCATABLE, DIMENSION(:) :: phipf_i
 !>  Radial poloidal flux derivative.
       REAL(dp), ALLOCATABLE, DIMENSION(:) :: chipf_i
+!>  Radial toroidal flux.
+      REAL(dp), ALLOCATABLE, DIMENSION(:) :: phif_i
+!>  Radial poloidal flux.
+      REAL(dp), ALLOCATABLE, DIMENSION(:) :: chif_i
 !>  Radial pressure. FIXME: Check if this is really needed.
       REAL(dp), ALLOCATABLE, DIMENSION(:) :: presf_i
 !>  Volume of a radial grid surface.
