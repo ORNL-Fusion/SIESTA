@@ -50,7 +50,7 @@
 !>     @item{phif_r_,  Toroidal flux profile.,                  island_params::phif_i}
 !>  @end_table
 !>
-!>  @table_sections{siesta_restart_2D_arrays_sec, 3D arrays.}
+!>  @table_section{siesta_restart_2D_arrays_sec, 3D arrays.}
 !>     @table_subsection{siesta_restart_internal_arrays_sec, Internal arrays}
 !>        @item{JBsupssh_m_n_r_, Normalized JB^s component sine parity.,   quantities::jbsupsmnsh}
 !>        @item{JBsupuch_m_n_r_, Normalized JB^u component cosine parity., quantities::jbsupumnch}
