@@ -330,6 +330,10 @@
       CALL vmec_info_spline_oned_array(phi_vmec, phif_i, istat)
       CALL vmec_info_spline_oned_array(mu0*presf_vmec, presf_i, istat)
 
+!  Set boundary condition. Flux is zero at the axis.
+      chif_i(1) = 0.0
+      phif_i(1) = 0.0
+
 !  Pessure should never be negative.
       WHERE (presf_i .lt. 0)
          presf_i = 0
