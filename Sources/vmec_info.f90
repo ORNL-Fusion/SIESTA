@@ -17,7 +17,7 @@
                          wb_vmec=>wb, wp_vmec=>wp, gamma_vmec=>gamma,          &
                          volume_vmec=>volume, raxis_vmec=>raxis,               &
                          lasym_vmec=>lasym, iasym_vmec=>iasym,                 &
-                         vmec_curtor=>Itor
+                         vmec_curtor=>Itor, chi_vmec=>chi, phi_vmec=>phi
       USE fourier, ONLY: f_cos, f_sin
 
       IMPLICIT NONE
@@ -322,9 +322,12 @@
 
 !  Spline 1-D arrays: careful -> convert phipf VMEC and multiply by
 !  ds-vmec/ds-island, since phipf_i = d(PHI)/ds-island
-      ALLOCATE(phipf_i(ns), chipf_i(ns), presf_i(ns), stat=istat)
+      ALLOCATE(phipf_i(ns), chipf_i(ns), chif_i(ns), phif_i(ns),               &
+               presf_i(ns), stat=istat)
       CALL vmec_info_spline_oned_array(chipf_vmec, chipf_i, istat)
       CALL vmec_info_spline_oned_array(phipf_vmec, phipf_i, istat)
+      CALL vmec_info_spline_oned_array(chi_vmec, chif_i, istat)
+      CALL vmec_info_spline_oned_array(phi_vmec, phif_i, istat)
       CALL vmec_info_spline_oned_array(mu0*presf_vmec, presf_i, istat)
 
 !  Pessure should never be negative.
