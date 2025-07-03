@@ -344,6 +344,8 @@
                                              chip0/phip0, p_width_min
                      END IF
                   END DO
+
+                  fourier_context%found_modes(mres0, nres0) = .true.
                   CALL FLUSH(unit_out)
                END IF
          

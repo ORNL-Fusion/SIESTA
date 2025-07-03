@@ -48,13 +48,18 @@
 !>  @end_table
 !>
 !>  @table_section{siesta_restart_1D_arrays_sec, 1D profiles.}
-!>     @item{chipf_r_, Radial derivative of the poloidal flux., island_params::chipf_i}
-!>     @item{phipf_r_, Radial derivative of the toroidal flux., island_params::phipf_i}
-!>     @item{chif_r_,  Poloidal flux profile.,                  island_params::chif_i}
-!>     @item{phif_r_,  Toroidal flux profile.,                  island_params::phif_i}
+!>     @item{chipf_r_,  Radial derivative of the poloidal flux., island_params::chipf_i}
+!>     @item{phipf_r_,  Radial derivative of the toroidal flux., island_params::phipf_i}
+!>     @item{chif_r_,   Poloidal flux profile.,                  island_params::chif_i}
+!>     @item{phif_r_,   Toroidal flux profile.,                  island_params::phif_i}
+!>     @item{tor_modes, Toroidal mode array.,                    fourier::tor_modes}
 !>  @end_table
 !>
-!>  @table_section{siesta_restart_2D_arrays_sec, 3D arrays.}
+!>  @table_section{siesta_restart_2D_arrays_sec, 2D arrays.}
+!>     @item{found_modes, List of found resonances., fourier::found_modes}
+!>  @end_table
+!>
+!>  @table_section{siesta_restart_3D_arrays_sec, 3D arrays.}
 !>     @table_subsection{siesta_restart_internal_arrays_sec, Internal arrays}
 !>        @item{JBsupssh_m_n_r_, Normalized JB^s component sine parity.,   quantities::jbsupsmnsh}
 !>        @item{JBsupuch_m_n_r_, Normalized JB^u component cosine parity., quantities::jbsupumnch}
@@ -64,7 +69,7 @@
 !>        @item{JBsupsch_m_n_r_, Normalized JB^s component cosine parity., quantities::jbsupsmnch}
 !>        @item{JBsupush_m_n_r_, Normalized JB^u component sine parity.,   quantities::jbsupumnsh}
 !>        @item{JBsupvsh_m_n_r_, Normalized JB^v component sine parity.,   quantities::jbsupvmnsh}
-!>        @item{jpressh_m_n_r_,  Normalized JB^v component sine parity.,   quantities::jpmnsh}
+!>        @item{jpressh_m_n_r_,  Normalized JP   component sine parity.,   quantities::jpmnsh}
 !>     @table_subsection{siesta_restart_grid_arrays_sec, Grid arrays}
 !>        @item{rmnc_m_n_r_, R cosine parity., vmec_info::rmnc_i}
 !>        @item{zmns_m_n_r_, Z sine parity.,   vmec_info::zmns_i}
@@ -155,9 +160,15 @@
 !>  Radial Dimension names.
       CHARACTER (LEN=*), DIMENSION(1), PARAMETER ::                            &
      &   radial_dim = (/ 'radius' /)
+!>  Toroidal mode dimension.
+      CHARACTER (len=*), DIMENSION(1), PARAMETER ::                            &
+     &   ntor_dim = (/ 'n-mode' /)
+!>  Found mode dimension.
+      CHARACTER (len=*), DIMENSION(2), PARAMETER ::                            &
+     &   found_dim = (/ 'm-mode', ntor_dim(1) /)
 !>  Fourier Dimension names.
       CHARACTER (LEN=*), DIMENSION(3), PARAMETER ::                            &
-     &   restart_dims = (/ 'm-mode', 'n-mode', radial_dim(1) /)
+     &   restart_dims = (/ found_dim(1), found_dim(2), radial_dim(1) /)
 
 !>  Name for the restart file number of radial points.
       CHARACTER (len=*), PARAMETER :: vn_nsin = 'nrad'
@@ -173,6 +184,8 @@
       CHARACTER (len=*), PARAMETER :: vn_flags = 'state_flags'
 !>  Name for the restart file toroidal modes array.
       CHARACTER (len=*), PARAMETER :: vn_tor_modes = 'tor_modes'
+!>  Name for the restart file found modes array.
+      CHARACTER (len=*), PARAMETER :: vn_found_modes = 'found_modes'
 
 !>  Name for the restart file jbsupss.
       CHARACTER (len=*), PARAMETER :: vn_jbsupss = 'JBsupssh_m_n_r_'
@@ -598,7 +611,8 @@
       CALL cdf_define(ncid, vn_ntorin, ntor)
       CALL cdf_define(ncid, vn_nfpin, nfp)
 
-      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes)
+      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes,           &
+     &                dimname=ntor_dim)
 
       CALL cdf_define(ncid, vn_asubsmns, tempmn_w, dimname=restart_dims)
       CALL cdf_define(ncid, vn_asubumnc, tempmn_w, dimname=restart_dims)
@@ -729,7 +743,10 @@
       CALL cdf_define(ncid, vn_wtotal0, wtotal0)
       CALL cdf_define(ncid, vn_wtotal, wtotal)
 
-      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes)
+      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes,           &
+     &                dimname=ntor_dim)
+      CALL cdf_define(ncid, vn_found_modes, fourier_context%found_modes,       &
+     &                dimname=found_dim)
 
       CALL cdf_define(ncid, vn_jbsupss, jbsupsmnsh, dimname=restart_dims)
       CALL cdf_define(ncid, vn_jbsupuc, jbsupumnch, dimname=restart_dims)
@@ -814,6 +831,7 @@
       CALL cdf_write(ncid, vn_wtotal, wtotal)
 
       CALL cdf_write(ncid, vn_tor_modes, fourier_context%tor_modes)
+      CALL cdf_write(ncid, vn_found_modes, fourier_context%found_modes)
 
       CALL cdf_write(ncid, vn_jbsupss, jbsupsmnsh)
       CALL cdf_write(ncid, vn_jbsupuc, jbsupumnch)
