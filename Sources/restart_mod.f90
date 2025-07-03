@@ -35,12 +35,16 @@
 !>  @end_table
 !>
 !>  @table_section{siesta_restart_scalar_sec, Scalar quantities.}
-!>     @item{curtor, The toroidal current.,                shared_data::siesta_curtor}
-!>     @item{p_max,  Maximum pressure.,                    }
-!>     @item{p_min,  Minimum pressure.,                    }
-!>     @item{rmajor, Major radius.,                        island_params::rmajor_i}
-!>     @item{wb,     Energy stored in the magnetid field., quantities::wb}
-!>     @item{wp,     Energy stored in the pressure.,       quantities::wb}
+!>     @item{curtor,  The toroidal current.,                       shared_data::siesta_curtor}
+!>     @item{p_max,   Maximum pressure.,                           }
+!>     @item{p_min,   Minimum pressure.,                           }
+!>     @item{rmajor,  Major radius.,                               island_params::rmajor_i}
+!>     @item{wb0,     Inital Energy stored in the magnetid field., island_params::wb_i}
+!>     @item{wp0,     Inital Energy stored in the pressure.,       island_params::wb_i}
+!>     @item{wb,      Energy stored in the magnetid field.,        quantities::wb}
+!>     @item{wp,      Energy stored in the pressure.,              quantities::wb}
+!>     @item{wtotal0, Inital total energy.,                        shared_data::wtotal0}
+!>     @item{wtotal,  Total energy.,                               shared_data::wtotal}
 !>  @end_table
 !>
 !>  @table_section{siesta_restart_1D_arrays_sec, 1D profiles.}
@@ -131,7 +135,7 @@
       USE stel_kinds
       USE metrics, ONLY: tolowerh
       USE descriptor_mod, ONLY: iam
-      USE shared_data, ONLY: lasym, unit_out, wtotal0
+      USE shared_data, ONLY: lasym, unit_out, wtotal0, wtotal
       USE v3_utilities, ONLY: assert_eq
       USE stel_constants, ONLY: mu0
 
@@ -291,9 +295,13 @@
       CHARACTER (len=*), PARAMETER :: vn_p_factor = 'p_factor'
 !>  Name for the restart file b_factor.
       CHARACTER (len=*), PARAMETER :: vn_b_factor = 'b_factor'
-!>  Name for the restart file wb.
+!>  Name for the restart file inital wb.
+      CHARACTER (len=*), PARAMETER :: vn_wb0 = 'wb0'
+!>  Name for the restart file inital wp.
+      CHARACTER (len=*), PARAMETER :: vn_wp0 = 'wp0'
+!>  Name for the restart file stored wb.
       CHARACTER (len=*), PARAMETER :: vn_wb = 'wb'
-!>  Name for the restart file wb.
+!>  Name for the restart file stored wp.
       CHARACTER (len=*), PARAMETER :: vn_wp = 'wp'
 !>  Name for the restart file rmajor.
       CHARACTER (len=*), PARAMETER :: vn_rmajor = 'rmajor'
@@ -307,6 +315,8 @@
 
 !>  Inital stored energy.
       CHARACTER (len=*), PARAMETER :: vn_wtotal0 = 'wtotal0'
+!>  Stored energy.
+      CHARACTER (len=*), PARAMETER :: vn_wtotal = 'wtotal'
 
       CONTAINS
 
@@ -336,7 +346,7 @@
                             b_factor, p_factor, alloc_quantities,              &
                             dealloc_quantities
       USE island_params, ONLY: chipf => chipf_i, phipf => phipf_i,             &
-     &                         wb => wb_i, wp => wp_i, nfp_i, gamma,           &
+     &                         wb0 => wb_i, wp0 => wp_i, nfp_i, gamma,         &
      &                         gnorm => gnorm_i, rmajor => rmajor_i,           &
      &                         fourier_context, nu_i, nv_i
       USE vmec_info, ONLY: rmnc => rmnc_i, zmns => zmns_i,                     &
@@ -506,8 +516,10 @@
       END IF
 
 !  Read normalization factors.
-      CALL cdf_read(ncid, vn_wb, wb)
-      CALL cdf_read(ncid, vn_wp, wp)
+      CALL cdf_read(ncid, vn_wb0, wb0)
+      CALL cdf_read(ncid, vn_wp0, wp0)
+      CALL cdf_read(ncid, vn_p_factor, p_factor)
+      CALL cdf_read(ncid, vn_b_factor, b_factor)
       CALL cdf_read(ncid, vn_rmajor, rmajor)
 
       CALL cdf_close(ncid)
@@ -526,9 +538,7 @@
       DEALLOCATE(temp_modes)
 
 !  Init quantities.
-      p_factor = 1.0/ABS(wb)
-      b_factor = SQRT(p_factor)
-      gnorm = ABS(wb)/(wb + wp/(gamma - 1.0))
+      gnorm = ABS(wb0)/(wb0 + wp0/(gamma - 1.0))
 
       WRITE (unit_out, 1000) mpol, ntor, ns
 
@@ -652,10 +662,10 @@
                             fsubsmnsf, fsubumncf, fsubvmncf,                   &
                             fsupsmncf, fsupumnsf, fsupvmnsf,                   &
                             fsupsmnsf, fsupumncf, fsupvmncf,                   &
-                            b_factor,   p_factor, jacobh
+                            b_factor,   p_factor, jacobh, wp, wb
       USE fourier, ONLY: f_cos, f_sin, f_sum, f_none, n0, m0
       USE island_params, ONLY: nfp => nfp_i, chipf => chipf_i,                 &
-                               phipf => phipf_i, wb => wb_i, wp => wp_i,       &
+                               phipf => phipf_i, wb0 => wb_i, wp0 => wp_i,     &
                                rmajor => rmajor_i, fourier_context,            &
                                mpol=>mpol_i, ntor=>ntor_i, ns=>ns_i,           &
                                ntheta=>nu_i, nzeta=>nv_i, phif=>phif_i,        &
@@ -717,6 +727,7 @@
       CALL cdf_define(ncid, vn_wout, wout_file)
 
       CALL cdf_define(ncid, vn_wtotal0, wtotal0)
+      CALL cdf_define(ncid, vn_wtotal, wtotal)
 
       CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes)
 
@@ -733,6 +744,8 @@
       CALL cdf_define(ncid, vn_chif, chipf, dimname=radial_dim)
       CALL cdf_define(ncid, vn_phif, phipf, dimname=radial_dim)
 
+      CALL cdf_define(ncid, vn_wb0, wb0)
+      CALL cdf_define(ncid, vn_wp0, wp0)
       CALL cdf_define(ncid, vn_wb, wb)
       CALL cdf_define(ncid, vn_wp, wp)
 
@@ -798,6 +811,7 @@
       CALL cdf_write(ncid, vn_wout, wout_file)
 
       CALL cdf_write(ncid, vn_wtotal0, wtotal0)
+      CALL cdf_write(ncid, vn_wtotal, wtotal)
 
       CALL cdf_write(ncid, vn_tor_modes, fourier_context%tor_modes)
 
@@ -832,6 +846,8 @@
          CALL cdf_write(ncid, vn_zmnc, tempmn_w)
       END IF
 
+      CALL cdf_write(ncid, vn_wb0, wb0)
+      CALL cdf_write(ncid, vn_wp0, wp0)
       CALL cdf_write(ncid, vn_wb, wb)
       CALL cdf_write(ncid, vn_wp, wp)
       CALL cdf_write(ncid, vn_rmajor, rmajor)

@@ -36,8 +36,6 @@
       REAL (dp) :: wp
 !>  Energy due to the magnetic field.
       REAL (dp) :: wb
-!>  Initial pressure.
-      REAL (dp) :: wp0
 
 !>  Fouier amplitudes of the contravariant magnetic field and jacobian for
 !>  stellarator symmetric parity in the s direction.

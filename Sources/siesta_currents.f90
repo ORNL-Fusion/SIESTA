@@ -100,6 +100,9 @@
       REAL (dp), ALLOCATABLE, DIMENSION(:,:,:)                :: bu_filter
       REAL (dp), ALLOCATABLE, DIMENSION(:,:,:)                :: bv_filter
       REAL (dp)                                               :: edge_cur
+#if defined(MPI_OPT)
+      INTEGER, DIMENSION(MPI_STATUS_SIZE)                     :: status
+#endif
 
 !  Start of executable code
       CALL second0(ton)
@@ -155,9 +158,9 @@
 
 !  Calculate BsubXmnh and KsupXmnf harmonics. Deallocated in calling routine.
       IF (l_update_state) THEN
-         ALLOCATE(bs_filter(ntheta,nzeta,nsmin:nsmax),                         &
-                  bu_filter(ntheta,nzeta,nsmin:nsmax),                         &
-                  bv_filter(ntheta,nzeta,nsmin:nsmax), stat=istat)
+         ALLOCATE(bs_filter(ntheta,nzeta,nmin:nmax),                           &
+                  bu_filter(ntheta,nzeta,nmin:nmax),                           &
+                  bv_filter(ntheta,nzeta,nmin:nmax), stat=istat)
          CALL assert_eq(0, istat, 'Allocation2 failed in CURLB')
       END IF
 
@@ -215,13 +218,20 @@
             IF (tmp .ne. zero) THEN
                tmp = SQRT(edge_cur/tmp)
             END IF
-         END IF
 #if defined(MPI_OPT)
-         IF (PARSOLVER) THEN
-            CALL MPI_BCAST(tmp, 1, MPI_REAL8, nranks - 1, SIESTA_COMM, MPI_ERR)
-         END IF
+            IF (PARSOLVER) THEN
+               CALL MPI_SEND(tmp, 1, MPI_REAL8, 0, 0, SIESTA_COMM, MPI_ERR)
+            END IF
 #endif
+         END IF
+
          IF (iam .EQ. 0) THEN
+#if defined(MPI_OPT)
+            IF (PARSOLVER) THEN
+               CALL MPI_RECV(tmp, 1, MPI_REAL8, nranks - 1, 0, SIESTA_COMM,    &
+        &                    status, MPI_ERR)
+            END IF
+#endif
             IF (lverbose) THEN
                WRITE (*, 1001) tmp
             END IF
@@ -230,23 +240,17 @@
          END IF
 
          temp(1) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bs_filter(:,:,nmin:nmax) -                             &
-                        bsubsijh(:,:,nmin:nmax))**2)
+                       (bs_filter - bsubsijh(:,:,nmin:nmax))**2)
          temp(2) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bs_filter(:,:,nmin:nmax) +                             &
-                        bsubsijh(:,:,nmin:nmax))**2)
+                       (bs_filter + bsubsijh(:,:,nmin:nmax))**2)
          temp(3) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bu_filter(:,:,nmin:nmax) -                             &
-                        bsubuijh(:,:,nmin:nmax))**2)
+                       (bu_filter - bsubuijh(:,:,nmin:nmax))**2)
          temp(4) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bu_filter(:,:,nmin:nmax) +                             &
-                        bsubuijh(:,:,nmin:nmax))**2)
+                       (bu_filter + bsubuijh(:,:,nmin:nmax))**2)
          temp(5) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bv_filter(:,:,nmin:nmax) -                             &
-                        bsubvijh(:,:,nmin:nmax))**2)
+                       (bv_filter - bsubvijh(:,:,nmin:nmax))**2)
          temp(6) = SUM(wint(:,:,nmin:nmax) *                                   &
-                       (bv_filter(:,:,nmin:nmax) +                             &
-                        bsubvijh(:,:,nmin:nmax))**2)
+                       (bv_filter + bsubvijh(:,:,nmin:nmax))**2)
 #if defined(MPI_OPT)
          IF (PARSOLVER) THEN
             CALL MPI_ALLREDUCE(MPI_IN_PLACE, temp, 6, MPI_REAL8, MPI_SUM,      &
