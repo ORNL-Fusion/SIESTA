@@ -359,6 +359,7 @@
                             b_factor, p_factor, alloc_quantities,              &
                             dealloc_quantities
       USE island_params, ONLY: chipf => chipf_i, phipf => phipf_i,             &
+     &                         chif => chif_i, phif => phif_i,                 &
      &                         wb0 => wb_i, wp0 => wp_i, nfp_i, gamma,         &
      &                         gnorm => gnorm_i, rmajor => rmajor_i,           &
      &                         fourier_context, nu_i, nv_i
@@ -453,6 +454,18 @@
       CALL cdf_read(ncid, vn_phipf, temp_r)
       CALL interpit_1d(temp_r, phipf, ns, nsin, .false., 1)
 
+      IF (.not.ALLOCATED(chif)) THEN
+         ALLOCATE(chif(nsin))
+      END IF
+      CALL cdf_read(ncid, vn_chif, temp_r)
+      CALL interpit_1d(temp_r, chif, ns, nsin, .false., 1)
+
+      IF (.not.ALLOCATED(phif)) THEN
+         ALLOCATE(phif(nsin))
+      END IF
+      CALL cdf_read(ncid, vn_phif, temp_r)
+      CALL interpit_1d(temp_r, phif, ns, nsin, .false., 1)
+
       CALL cdf_read(ncid, vn_jbsupss, tempmn_r)
       jbsupsmnsh(:,:,1) = 0
       CALL interpit(tempmn_r, jbsupsmnsh, ns, nsin, mpol, mpolin,              &
@@ -488,7 +501,6 @@
      &              .false.)
 
       IF (BTEST(flags, restart_lasym) .and. lasym) THEN
-         jbsupsmnch(:,:,1) = 0
          CALL cdf_read(ncid, vn_jbsupsc, tempmn_r)
          CALL interpit(tempmn_r, jbsupsmnch, ns, nsin, mpol, mpolin,           &
      &                 ntor, ntorin, nfp, nfp_i, temp_modes, tor_modesin,      &
@@ -514,7 +526,7 @@
      &                 ntor, ntorin, nfp, nfp_i, temp_modes, tor_modesin,      &
      &                 .false.)
 
-         CALL cdf_read(ncid, vn_zmns, tempmn_r)
+         CALL cdf_read(ncid, vn_zmnc, tempmn_r)
          CALL interpit(tempmn_r, zmnc, ns, nsin, mpol, mpolin,                 &
      &                 ntor, ntorin, nfp, nfp_i, temp_modes, tor_modesin,      &
      &                 .false.)

@@ -438,10 +438,7 @@
         jpmnch(:,:,1) = 0
         jpmnch(m0,:,1) = jpmnch(m0,:,2)
         IF (lasym) THEN
-           CALL fourier_context%tomnsp(presih(:,:,nsmin:nsmax),                &
-                                       jpmnsh(:,:,nsmin:nsmax), f_sin)
-           jpmnsh(:,:,1) = 0
-           jpmnsh(m0,:,1) = jpmnsh(m0,:,2)
+           jpmnsh = 0
         END IF
 
         DEALLOCATE(presif, presih, stat=istat)
