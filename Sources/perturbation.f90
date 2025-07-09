@@ -127,10 +127,9 @@
                             time0(1:2), time0(3:4), time0(5:6)
 
       DO istat = 1, SIZE(HelPert)
-         IF (HelPert(istat)  .ne. zero .or.                                    &
-             HelPertA(istat) .ne. zero) THEN
+         IF (HelPert(istat)  .ne. zero) THEN
             WRITE (unit_out, 1005) istat, mres(istat), HelPert(istat),         &
-                                   HelPertA(istat)
+                                   HelPhase(istat)
          END IF
       END DO
 
@@ -145,7 +144,7 @@
 1002  FORMAT('CASE: ',a)
 1003  FORMAT('OUTPUT FILE (SCREEN DUMP): output_',a,'.txt')
 1004  FORMAT(' DATE = ',a3,' ',a2,',',a4,' ',' TIME = ',2(a2,':'),a2,/)
-1005  FORMAT(i2,' mres: ',i4,' HelPert: ',1pe9.2,' HelPertA: ',1pe9.2)
+1005  FORMAT(i2,' mres: ',i4,' HelPert: ',1pe9.2,' HelPhase: ',1pe9.2)
 1006  FORMAT(/,' ngmres_type: ', i4,' iOrtho: ', i4, ' lColScale: ', l2)
 
 2000  FORMAT(i2)
@@ -161,8 +160,9 @@
       SUBROUTINE add_perturb(xc, getwmhd)
       USE siesta_error
       USE fourier, ONLY: f_cos, f_sin, f_none
-      USE siesta_namelist, ONLY: HelPert, HelPertA, eta_factor, lresistive, mres
+      USE siesta_namelist, ONLY: HelPert, HelPhase, eta_factor, lresistive, mres
       USE island_params, ONLY: fourier_context
+      USE stel_constants
 
       IMPLICIT NONE
 
@@ -209,17 +209,13 @@
 #if defined(JDOTB_PERT)
       REAL(dp), ALLOCATABLE, DIMENSION(:,:,:) :: jdotb
 #endif
-
-!  Local Parameters
-      INTEGER, PARAMETER                      :: ipert_sign = 2
+      INTEGER                                 :: ipert_sign
 
 !  Start of executable code.
 
 !  Add helical RESISTIVE flux perturbation on full mesh. Approximate nonideal
 !  E_sub ~ f(mu+nv) B_sub in update_bfield (E ~ B).
-      IF (ntor .eq. 0 .or.                                                     &
-          (ALL(HelPert  .eq. zero) .and.                                       &
-           ALL(HelPertA .eq. zero))) THEN
+      IF (ntor .eq. 0 .or. (ALL(HelPert  .eq. zero))) THEN
          RETURN
       END IF
 
@@ -275,12 +271,18 @@
       normal = hs_i*hs_i
 
       DO icount = 1, SIZE(HelPert)
-         HelPert0 = ABS(HelPert(icount)/normal)
-         HelPert0A= ABS(HelPertA(icount)/normal)
          mres0 = ABS(mres(icount))
-         IF ((HelPert0  .eq. zero .and. HelPert0A .eq. zero) .or.              &
-             mres0 .gt. mpol) THEN
+         IF (HelPert(icount) .eq. zero .or. mres0 .gt. mpol) THEN
             CYCLE
+         END IF
+         IF (lasym) THEN
+            ipert_sign = 1
+            HelPert0 =  ABS(HelPert(icount)/normal)*COS(HelPhase(icount)*pi/180.0)
+            HelPert0A= -ABS(HelPert(icount)/normal)*SIN(HelPhase(icount)*pi/180.0)
+         ELSE
+            ipert_sign = 2
+            HelPert0 = ABS(HelPert(icount)/normal)
+            HelPert0A = 0
          END IF
 
 !  Scan in radius to determine primary resonance.
@@ -301,7 +303,7 @@
                imin(1) = 1
                imin(2) = 1
 
-               DO isign1 = 1, 2
+               DO isign1 = 1, ipert_sign
 !  NOTE: in update_bfield, where perturbed b-field is computed, this is
 !  multiplied by eta_prof = rho*(1 - rho) so it vanishes at both ends. Multiply
 !  again here by that factor to assure radial derivatives entering in dB also
@@ -345,7 +347,7 @@
                      END IF
                   END DO
 
-                  fourier_context%found_modes(mres0, nres0) = .true.
+                  fourier_context%found_modes(mres0, n) = .true.
                   CALL FLUSH(unit_out)
                END IF
          
@@ -516,7 +518,7 @@
       REAL (dp)                                :: HelP_local
       REAL (dp)                                :: HelPA_local
       REAL (dp)                                :: locrad
-      REAL (dp), DIMENSION(:,:), ALLOCATABLE   :: bmn_res
+      REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: bmn_res
 #if defined(JDOTB_PERT)
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: temp_res
 #endif
@@ -581,23 +583,18 @@
 
       DEALLOCATE(temp_res, stat=istat)
 #else
-      ALLOCATE(bmn_res(0:mpol,-ntor:ntor), stat=istat)
+      ALLOCATE(bmn_res(0:mpol,-ntor:ntor,nsmin:nsmax), stat=istat)
       CALL ASSERT(istat .eq. 0, 'ISTAT != 0 IN GETRESPERT')
       bmn_res = 0
       buv_res = 0
 
-      bmn_res(mres0, nres0) = HelP_local
-      CALL fourier_context%toijsp(bmn_res, buv_res(:,:,nsmin), f_none, f_cos)
+      bmn_res(mres0,nres0,:) = HelP_local*pert_prof(:)
+      CALL fourier_context%toijsp(bmn_res, buv_res, f_none, f_cos)
       
-      IF (lasym) THEN
-         bmn_res(mres0, nres0) = HelPA_local
-         CALL fourier_context%toijsp(bmn_res, buv_res(:,:,nsmin), f_sum, f_sin)
+      IF (lasym .and. HelPA_local .ne. 0.0) THEN
+         bmn_res(mres0,nres0,:) = HelPA_local*pert_prof(:)
+         CALL fourier_context%toijsp(bmn_res, buv_res, f_sum, f_sin)
       END IF
-
-      DO js = nsmin + 1, nsmax
-         buv_res(:,:,js) = buv_res(:,:,nsmin)*pert_prof(js)
-      END DO
-      buv_res(:,:,nsmin) = buv_res(:,:,nsmin)*pert_prof(nsmin)
       
       DEALLOCATE(bmn_res, stat=istat)
 #endif

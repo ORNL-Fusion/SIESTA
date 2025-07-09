@@ -38,6 +38,7 @@
       USE descriptor_mod, ONLY: INHESSIAN
       USE siesta_namelist, ONLY: lresistive, eta_factor
       USE shared_data, ONLY: lasym, fsq_res, fsq_total, buv_res
+USE utilities
 
       IMPLICIT NONE
 
@@ -58,6 +59,7 @@
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: esubsijf
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: esubuijf
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: esubvijf
+      REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: TEMP
       REAL (dp), DIMENSION(:,:,:), POINTER     :: esubsmnf
       REAL (dp), DIMENSION(:,:,:), POINTER     :: esubumnf
       REAL (dp), DIMENSION(:,:,:), POINTER     :: esubvmnf
