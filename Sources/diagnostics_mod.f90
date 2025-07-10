@@ -399,7 +399,7 @@ INTEGER                 :: s,m,n
       INTEGER  :: n, m, js
       INTEGER  :: mnmax
       REAL(dp) :: sj, rms_value
-      CHARACTER (LEN=35) :: p_format
+      CHARACTER (LEN=36) :: p_format
       INTEGER, DIMENSION(:,:), ALLOCATABLE :: m_array
       INTEGER, DIMENSION(:,:), ALLOCATABLE :: n_array
 !-----------------------------------------------
