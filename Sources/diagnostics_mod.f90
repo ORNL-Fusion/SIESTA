@@ -434,7 +434,7 @@ INTEGER                 :: s,m,n
       DEALLOCATE(m_array, n_array)
 
 1000  FORMAT('(a,8x,a,6x,a,',i3,'(2x,i12))')
-1002  FORMAT('(f6.3,2x,es12.5,14x',i4,'(2x,es12.5))')
+1002  FORMAT('(f6.3,2x,es12.5,14x,',i4,'(2x,es12.5))')
 
       END SUBROUTINE SIESTA_PROFILES
 
