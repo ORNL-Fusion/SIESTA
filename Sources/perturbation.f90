@@ -185,10 +185,9 @@
       INTEGER                                 :: mres0
       INTEGER                                 :: nres0
       INTEGER                                 :: n
-      INTEGER                                 :: isign1
       INTEGER                                 :: icount
       INTEGER                                 :: irscale
-      INTEGER, DIMENSION(2)                   :: imin
+      INTEGER                                 :: imin
       INTEGER                                 :: jstart
       INTEGER                                 :: istat
       INTEGER                                 :: jsave
@@ -200,7 +199,6 @@
       REAL (dp)                               :: normal
       REAL (dp)                               :: HelPert0
       REAL (dp)                               :: HelPert0A
-      REAL (dp)                               :: HP
       REAL (dp)                               :: rad
       REAL (dp)                               :: chip0
       REAL (dp)                               :: phip0
@@ -209,7 +207,6 @@
 #if defined(JDOTB_PERT)
       REAL(dp), ALLOCATABLE, DIMENSION(:,:,:) :: jdotb
 #endif
-      INTEGER                                 :: ipert_sign
 
 !  Start of executable code.
 
@@ -276,13 +273,14 @@
             CYCLE
          END IF
          IF (lasym) THEN
-            ipert_sign = 1
             HelPert0 =  ABS(HelPert(icount)/normal)*COS(HelPhase(icount)*pi/180.0)
             HelPert0A= -ABS(HelPert(icount)/normal)*SIN(HelPhase(icount)*pi/180.0)
          ELSE
-            ipert_sign = 2
             HelPert0 = ABS(HelPert(icount)/normal)
             HelPert0A = 0
+            IF (HelPhase(icount) .eq. 180.0) THEN
+               HelPert0 = HelPert0
+            END IF
          END IF
 
 !  Scan in radius to determine primary resonance.
@@ -300,47 +298,36 @@
                END IF
 
                w1 = 2*w0
-               imin(1) = 1
-               imin(2) = 1
+               imin = 1
 
-               DO isign1 = 1, ipert_sign
 !  NOTE: in update_bfield, where perturbed b-field is computed, this is
 !  multiplied by eta_prof = rho*(1 - rho) so it vanishes at both ends. Multiply
 !  again here by that factor to assure radial derivatives entering in dB also
 !  vanish at endpoints s=0,1
  
-                  DO irscale = 1, irad_scale
-                     CALL GetResPert(irscale, isign1, mres0, n, rad,           &
-                                     HelPert0, HelPert0A, chip0, phip0,        &
-                                     p_width)
-                     xc = 0
+               DO irscale = 1, irad_scale
+                  CALL GetResPert(irscale, mres0, n, rad, HelPert0, HelPert0A, &
+                                  chip0, phip0, p_width)
+                  xc = 0
 !  FIXME: Why call this again with the same inputs?
-                     wmhd = getwmhd(xc)
-                     IF (wmhd .lt. w1) THEN
-                        imin(1) = irscale
-                        imin(2) = isign1
-                        w1 = wmhd
-                        p_width_min = p_width
-                     END IF
-                  END DO
+                  wmhd = getwmhd(xc)
+                  IF (wmhd .lt. w1) THEN
+                     imin = irscale
+                     w1 = wmhd
+                     p_width_min = p_width
+                  END IF
                END DO
 
 !  Make sure energy decreases.
                wmhd = w1
 !  Recompute perturbation buv_res here.
-               irscale = imin(1)
-               isign1  = imin(2)
+               irscale = imin
          
                IF (iam .eq. 0) THEN
-                  HP = HelPert0
-                  IF (isign1 .eq. 2) THEN
-                     HP = -HP
-                  END IF
-
                   DO iprint = 6, unit_out, unit_out - 6
                      IF (lverbose .or. iprint .ne. 6) THEN
                         WRITE (iprint, 1001) 10**6*(wmhd - w0), mres0, nres0,  &
-                                             HP*normal, rad,                   &
+                                             HelPert0*normal, rad,             &
                                              ABS(mres0*chip0 +                 &
                                                  nres0*nfp*phip0),             &
                                              chip0/phip0, p_width_min
@@ -351,8 +338,8 @@
                   CALL FLUSH(unit_out)
                END IF
          
-               CALL GetResPert(irscale, isign1, mres0, n, rad,                 &
-                               HelPert0, HelPert0A, chip0, phip0, p_width)
+               CALL GetResPert(irscale, mres0, n, rad, HelPert0, HelPert0A,    &
+                               chip0, phip0, p_width)
 
                wmhd = getwmhd(xc)
                IF (ABS(wmhd - w1) .gt. 1.E-12_dp) THEN
@@ -479,7 +466,6 @@
 !>  @brief Get the resonant perturbation.
 !>
 !>  @param[in]  irscale
-!>  @param[in]  isign1
 !>  @param[in]  mres0     Poloidal mode number for resonace.
 !>  @param[in]  nres0     Toroidal mode number for resonace.
 !>  @param[in]  HelPert0  Helical pertubation amplitude.
@@ -488,8 +474,8 @@
 !>  @param[out] phip0     Toroidal flux derivative at resonance.
 !>  @param[out] p_width   With of perturbation.
 !-------------------------------------------------------------------------------
-      SUBROUTINE GetResPert(irscale, isign1, mres0, nres0, rad,                &
-                            HelPert0, HelPert0A, chip0, phip0, p_width)
+      SUBROUTINE GetResPert(irscale, mres0, nres0, rad, HelPert0, HelPert0A,   &
+     &                      chip0, phip0, p_width)
       USE fourier, ONLY: f_cos, f_sin, f_sum, f_none
       USE siesta_namelist, ONLY: mpolin, ntorin
       USE island_params, ONLY: fourier_context
@@ -498,7 +484,6 @@
 
 !  Declare Arguments
       INTEGER, INTENT(in)                      :: irscale
-      INTEGER, INTENT(in)                      :: isign1
       INTEGER, INTENT(in)                      :: mres0
       INTEGER, INTENT(in)                      :: nres0
       REAL(dp), INTENT(in)                     :: rad
@@ -515,8 +500,6 @@
       REAL (dp)                                :: rho
       REAL (dp)                                :: rhores
       REAL (dp), DIMENSION(:), ALLOCATABLE     :: pert_prof
-      REAL (dp)                                :: HelP_local
-      REAL (dp)                                :: HelPA_local
       REAL (dp)                                :: locrad
       REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: bmn_res
 #if defined(JDOTB_PERT)
@@ -526,13 +509,6 @@
 !  Start of executable code.
       IF (mres0 .gt. mpolin .or. ABS(nres0) .gt. ntorin) THEN
          RETURN
-      END IF
-
-      HelP_local = HelPert0
-      HelPA_local = HelPert0A
-      IF (isign1 .eq. 2) THEN
-         HelP_local = -HelPert0
-         HelPA_local = -HelPert0A
       END IF
 
 !  Compute radial form factor (window-function)
@@ -564,11 +540,11 @@
                 MAXVAL(ABS(bmns_res(mres0,nres0,:))))
 
       temp_res = 0
-      temp_res(mres0,nres0,:) = HelP_local*bmnc_res(mres0,nres0,:)
+      temp_res(mres0,nres0,:) = HelPert0*bmnc_res(mres0,nres0,:)
       CALL fourier_context%toijsp(temp_res, buv_res, f_none, f_cos)
       
       IF (lasym) THEN
-         temp_res(mres0,nres0,:) = HelPA_local*bmns_res(mres0,nres0,:)
+         temp_res(mres0,nres0,:) = HelPert0A*bmns_res(mres0,nres0,:)
          CALL fourier_context%toijsp(temp_res, buv_res, f_sum, f_sin)
       END IF
       
@@ -588,11 +564,13 @@
       bmn_res = 0
       buv_res = 0
 
-      bmn_res(mres0,nres0,:) = HelP_local*pert_prof(:)
-      CALL fourier_context%toijsp(bmn_res, buv_res, f_none, f_cos)
-      
-      IF (lasym .and. HelPA_local .ne. 0.0) THEN
-         bmn_res(mres0,nres0,:) = HelPA_local*pert_prof(:)
+      IF (HelPert0 .ne. 0.0) THEN
+         bmn_res(mres0,nres0,:) = HelPert0*pert_prof(:)
+         CALL fourier_context%toijsp(bmn_res, buv_res, f_none, f_cos)
+      END IF
+
+      IF (lasym .and. HelPert0A .ne. 0.0) THEN
+         bmn_res(mres0,nres0,:) = HelPert0A*pert_prof(:)
          CALL fourier_context%toijsp(bmn_res, buv_res, f_sum, f_sin)
       END IF
       

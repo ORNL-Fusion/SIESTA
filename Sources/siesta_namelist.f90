@@ -371,6 +371,12 @@
          END DO
       END IF
 
+!  The helical phase can only be 0 or 180 when lasym = false.
+      IF (.not.lasym) THEN
+         CALL assert(ALL(HelPhase .eq. 0.0 .or. HelPhase .eq. 180.0),          &
+     &               "When lasym is true helphase can only be 0 or 180.")
+      END IF
+
       END SUBROUTINE
 
 !-------------------------------------------------------------------------------
