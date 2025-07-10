@@ -430,6 +430,9 @@
             levmarq_param = levmarq_param0
          END IF
          fsq_last = fsq_total1
+      ELSE
+         levmarq_param = levmarq_param0
+         fsq_last = fsq_total1
       END IF
 
 #if 0

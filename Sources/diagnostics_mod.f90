@@ -399,7 +399,7 @@ INTEGER                 :: s,m,n
       INTEGER  :: n, m, js
       INTEGER  :: mnmax
       REAL(dp) :: sj, rms_value
-      CHARACTER (LEN=35) :: p_format
+      CHARACTER (LEN=36) :: p_format
       INTEGER, DIMENSION(:,:), ALLOCATABLE :: m_array
       INTEGER, DIMENSION(:,:), ALLOCATABLE :: n_array
 !-----------------------------------------------
@@ -434,7 +434,7 @@ INTEGER                 :: s,m,n
       DEALLOCATE(m_array, n_array)
 
 1000  FORMAT('(a,8x,a,6x,a,',i3,'(2x,i12))')
-1002  FORMAT('(f6.3,2x,es12.5,14x',i4,'(2x,es12.5))')
+1002  FORMAT('(f6.3,2x,es12.5,14x,',i4,'(2x,es12.5))')
 
       END SUBROUTINE SIESTA_PROFILES
 
@@ -671,8 +671,11 @@ INTEGER                 :: s,m,n
 !
 !   Compute B*J in the half mesh.
 !        
-        IF (ALLOCATED(bdotjmnch) .AND. SIZE(bdotjmnch,3).NE. ns)        &
-            DEALLOCATE(bdotjmnch)
+        IF (ALLOCATED(bdotjmnch)) THEN
+           IF (SIZE(bdotjmnch,3).NE. ns) THEN
+              DEALLOCATE(bdotjmnch)
+           END IF
+        END IF
         IF (.NOT. ALLOCATED(bdotjmnch)) THEN                             ! Should already be allocated in QUANTITIES       
           ALLOCATE(bdotjmnch(0:mpol,-ntor:ntor,ns), stat=istat)          ! Otherwise, allocate first time called
           CALL ASSERT(istat.EQ.0,'Allocation #5 failed in BDOTJ')
@@ -852,8 +855,11 @@ INTEGER                 :: s,m,n
 !
 !   Compute B*J in the half mesh.
 !      
-        IF (ALLOCATED(bdotjmnch) .AND. SIZE(bdotjmnch,3).NE.ns_span)    &
-            DEALLOCATE(bdotjmnch)
+        IF (ALLOCATED(bdotjmnch)) THEN
+           IF (SIZE(bdotjmnch,3).NE.ns_span) THEN
+              DEALLOCATE(bdotjmnch)
+           END IF
+        END IF
         IF (.NOT. ALLOCATED(bdotjmnch)) THEN                            
           ALLOCATE(bdotjmnch(0:mpol,-ntor:ntor,nsmin:nsmax), stat=istat)
           CALL ASSERT(istat.EQ.0,'Allocation #5A failed in BDOTJ_PAR')

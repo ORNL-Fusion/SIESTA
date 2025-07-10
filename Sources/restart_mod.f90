@@ -35,22 +35,31 @@
 !>  @end_table
 !>
 !>  @table_section{siesta_restart_scalar_sec, Scalar quantities.}
-!>     @item{curtor, The toroidal current.,                shared_data::siesta_curtor}
-!>     @item{p_max,  Maximum pressure.,                    }
-!>     @item{p_min,  Minimum pressure.,                    }
-!>     @item{rmajor, Major radius.,                        island_params::rmajor_i}
-!>     @item{wb,     Energy stored in the magnetid field., quantities::wb}
-!>     @item{wp,     Energy stored in the pressure.,       quantities::wb}
+!>     @item{curtor,  The toroidal current.,                       shared_data::siesta_curtor}
+!>     @item{p_max,   Maximum pressure.,                           }
+!>     @item{p_min,   Minimum pressure.,                           }
+!>     @item{rmajor,  Major radius.,                               island_params::rmajor_i}
+!>     @item{wb0,     Inital Energy stored in the magnetid field., island_params::wb_i}
+!>     @item{wp0,     Inital Energy stored in the pressure.,       island_params::wb_i}
+!>     @item{wb,      Energy stored in the magnetid field.,        quantities::wb}
+!>     @item{wp,      Energy stored in the pressure.,              quantities::wb}
+!>     @item{wtotal0, Inital total energy.,                        shared_data::wtotal0}
+!>     @item{wtotal,  Total energy.,                               shared_data::wtotal}
 !>  @end_table
 !>
 !>  @table_section{siesta_restart_1D_arrays_sec, 1D profiles.}
-!>     @item{chipf_r_, Radial derivative of the poloidal flux., island_params::chipf_i}
-!>     @item{phipf_r_, Radial derivative of the toroidal flux., island_params::phipf_i}
-!>     @item{chif_r_,  Poloidal flux profile.,                  island_params::chif_i}
-!>     @item{phif_r_,  Toroidal flux profile.,                  island_params::phif_i}
+!>     @item{chipf_r_,  Radial derivative of the poloidal flux., island_params::chipf_i}
+!>     @item{phipf_r_,  Radial derivative of the toroidal flux., island_params::phipf_i}
+!>     @item{chif_r_,   Poloidal flux profile.,                  island_params::chif_i}
+!>     @item{phif_r_,   Toroidal flux profile.,                  island_params::phif_i}
+!>     @item{tor_modes, Toroidal mode array.,                    fourier::tor_modes}
 !>  @end_table
 !>
-!>  @table_section{siesta_restart_2D_arrays_sec, 3D arrays.}
+!>  @table_section{siesta_restart_2D_arrays_sec, 2D arrays.}
+!>     @item{found_modes, List of found resonances., fourier::found_modes}
+!>  @end_table
+!>
+!>  @table_section{siesta_restart_3D_arrays_sec, 3D arrays.}
 !>     @table_subsection{siesta_restart_internal_arrays_sec, Internal arrays}
 !>        @item{JBsupssh_m_n_r_, Normalized JB^s component sine parity.,   quantities::jbsupsmnsh}
 !>        @item{JBsupuch_m_n_r_, Normalized JB^u component cosine parity., quantities::jbsupumnch}
@@ -60,7 +69,7 @@
 !>        @item{JBsupsch_m_n_r_, Normalized JB^s component cosine parity., quantities::jbsupsmnch}
 !>        @item{JBsupush_m_n_r_, Normalized JB^u component sine parity.,   quantities::jbsupumnsh}
 !>        @item{JBsupvsh_m_n_r_, Normalized JB^v component sine parity.,   quantities::jbsupvmnsh}
-!>        @item{jpressh_m_n_r_,  Normalized JB^v component sine parity.,   quantities::jpmnsh}
+!>        @item{jpressh_m_n_r_,  Normalized JP   component sine parity.,   quantities::jpmnsh}
 !>     @table_subsection{siesta_restart_grid_arrays_sec, Grid arrays}
 !>        @item{rmnc_m_n_r_, R cosine parity., vmec_info::rmnc_i}
 !>        @item{zmns_m_n_r_, Z sine parity.,   vmec_info::zmns_i}
@@ -131,7 +140,7 @@
       USE stel_kinds
       USE metrics, ONLY: tolowerh
       USE descriptor_mod, ONLY: iam
-      USE shared_data, ONLY: lasym, unit_out, wtotal0
+      USE shared_data, ONLY: lasym, unit_out, wtotal0, wtotal
       USE v3_utilities, ONLY: assert_eq
       USE stel_constants, ONLY: mu0
 
@@ -151,9 +160,15 @@
 !>  Radial Dimension names.
       CHARACTER (LEN=*), DIMENSION(1), PARAMETER ::                            &
      &   radial_dim = (/ 'radius' /)
+!>  Toroidal mode dimension.
+      CHARACTER (len=*), DIMENSION(1), PARAMETER ::                            &
+     &   ntor_dim = (/ 'n-mode' /)
+!>  Found mode dimension.
+      CHARACTER (len=*), DIMENSION(2), PARAMETER ::                            &
+     &   found_dim = (/ 'm-mode', ntor_dim(1) /)
 !>  Fourier Dimension names.
       CHARACTER (LEN=*), DIMENSION(3), PARAMETER ::                            &
-     &   restart_dims = (/ 'm-mode', 'n-mode', radial_dim(1) /)
+     &   restart_dims = (/ found_dim(1), found_dim(2), radial_dim(1) /)
 
 !>  Name for the restart file number of radial points.
       CHARACTER (len=*), PARAMETER :: vn_nsin = 'nrad'
@@ -169,6 +184,8 @@
       CHARACTER (len=*), PARAMETER :: vn_flags = 'state_flags'
 !>  Name for the restart file toroidal modes array.
       CHARACTER (len=*), PARAMETER :: vn_tor_modes = 'tor_modes'
+!>  Name for the restart file found modes array.
+      CHARACTER (len=*), PARAMETER :: vn_found_modes = 'found_modes'
 
 !>  Name for the restart file jbsupss.
       CHARACTER (len=*), PARAMETER :: vn_jbsupss = 'JBsupssh_m_n_r_'
@@ -291,9 +308,13 @@
       CHARACTER (len=*), PARAMETER :: vn_p_factor = 'p_factor'
 !>  Name for the restart file b_factor.
       CHARACTER (len=*), PARAMETER :: vn_b_factor = 'b_factor'
-!>  Name for the restart file wb.
+!>  Name for the restart file inital wb.
+      CHARACTER (len=*), PARAMETER :: vn_wb0 = 'wb0'
+!>  Name for the restart file inital wp.
+      CHARACTER (len=*), PARAMETER :: vn_wp0 = 'wp0'
+!>  Name for the restart file stored wb.
       CHARACTER (len=*), PARAMETER :: vn_wb = 'wb'
-!>  Name for the restart file wb.
+!>  Name for the restart file stored wp.
       CHARACTER (len=*), PARAMETER :: vn_wp = 'wp'
 !>  Name for the restart file rmajor.
       CHARACTER (len=*), PARAMETER :: vn_rmajor = 'rmajor'
@@ -307,6 +328,8 @@
 
 !>  Inital stored energy.
       CHARACTER (len=*), PARAMETER :: vn_wtotal0 = 'wtotal0'
+!>  Stored energy.
+      CHARACTER (len=*), PARAMETER :: vn_wtotal = 'wtotal'
 
       CONTAINS
 
@@ -336,7 +359,8 @@
                             b_factor, p_factor, alloc_quantities,              &
                             dealloc_quantities
       USE island_params, ONLY: chipf => chipf_i, phipf => phipf_i,             &
-     &                         wb => wb_i, wp => wp_i, nfp_i, gamma,           &
+     &                         chif => chif_i, phif => phif_i,                 &
+     &                         wb0 => wb_i, wp0 => wp_i, nfp_i, gamma,         &
      &                         gnorm => gnorm_i, rmajor => rmajor_i,           &
      &                         fourier_context, nu_i, nv_i
       USE vmec_info, ONLY: rmnc => rmnc_i, zmns => zmns_i,                     &
@@ -430,6 +454,18 @@
       CALL cdf_read(ncid, vn_phipf, temp_r)
       CALL interpit_1d(temp_r, phipf, ns, nsin, .false., 1)
 
+      IF (.not.ALLOCATED(chif)) THEN
+         ALLOCATE(chif(nsin))
+      END IF
+      CALL cdf_read(ncid, vn_chif, temp_r)
+      CALL interpit_1d(temp_r, chif, ns, nsin, .false., 1)
+
+      IF (.not.ALLOCATED(phif)) THEN
+         ALLOCATE(phif(nsin))
+      END IF
+      CALL cdf_read(ncid, vn_phif, temp_r)
+      CALL interpit_1d(temp_r, phif, ns, nsin, .false., 1)
+
       CALL cdf_read(ncid, vn_jbsupss, tempmn_r)
       jbsupsmnsh(:,:,1) = 0
       CALL interpit(tempmn_r, jbsupsmnsh, ns, nsin, mpol, mpolin,              &
@@ -465,7 +501,6 @@
      &              .false.)
 
       IF (BTEST(flags, restart_lasym) .and. lasym) THEN
-         jbsupsmnch(:,:,1) = 0
          CALL cdf_read(ncid, vn_jbsupsc, tempmn_r)
          CALL interpit(tempmn_r, jbsupsmnch, ns, nsin, mpol, mpolin,           &
      &                 ntor, ntorin, nfp, nfp_i, temp_modes, tor_modesin,      &
@@ -491,7 +526,7 @@
      &                 ntor, ntorin, nfp, nfp_i, temp_modes, tor_modesin,      &
      &                 .false.)
 
-         CALL cdf_read(ncid, vn_zmns, tempmn_r)
+         CALL cdf_read(ncid, vn_zmnc, tempmn_r)
          CALL interpit(tempmn_r, zmnc, ns, nsin, mpol, mpolin,                 &
      &                 ntor, ntorin, nfp, nfp_i, temp_modes, tor_modesin,      &
      &                 .false.)
@@ -506,8 +541,10 @@
       END IF
 
 !  Read normalization factors.
-      CALL cdf_read(ncid, vn_wb, wb)
-      CALL cdf_read(ncid, vn_wp, wp)
+      CALL cdf_read(ncid, vn_wb0, wb0)
+      CALL cdf_read(ncid, vn_wp0, wp0)
+      CALL cdf_read(ncid, vn_p_factor, p_factor)
+      CALL cdf_read(ncid, vn_b_factor, b_factor)
       CALL cdf_read(ncid, vn_rmajor, rmajor)
 
       CALL cdf_close(ncid)
@@ -526,9 +563,7 @@
       DEALLOCATE(temp_modes)
 
 !  Init quantities.
-      p_factor = 1.0/ABS(wb)
-      b_factor = SQRT(p_factor)
-      gnorm = ABS(wb)/(wb + wp/(gamma - 1.0))
+      gnorm = ABS(wb0)/(wb0 + wp0/(gamma - 1.0))
 
       WRITE (unit_out, 1000) mpol, ntor, ns
 
@@ -588,7 +623,8 @@
       CALL cdf_define(ncid, vn_ntorin, ntor)
       CALL cdf_define(ncid, vn_nfpin, nfp)
 
-      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes)
+      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes,           &
+     &                dimname=ntor_dim)
 
       CALL cdf_define(ncid, vn_asubsmns, tempmn_w, dimname=restart_dims)
       CALL cdf_define(ncid, vn_asubumnc, tempmn_w, dimname=restart_dims)
@@ -652,10 +688,10 @@
                             fsubsmnsf, fsubumncf, fsubvmncf,                   &
                             fsupsmncf, fsupumnsf, fsupvmnsf,                   &
                             fsupsmnsf, fsupumncf, fsupvmncf,                   &
-                            b_factor,   p_factor, jacobh
+                            b_factor,   p_factor, jacobh, wp, wb
       USE fourier, ONLY: f_cos, f_sin, f_sum, f_none, n0, m0
       USE island_params, ONLY: nfp => nfp_i, chipf => chipf_i,                 &
-                               phipf => phipf_i, wb => wb_i, wp => wp_i,       &
+                               phipf => phipf_i, wb0 => wb_i, wp0 => wp_i,     &
                                rmajor => rmajor_i, fourier_context,            &
                                mpol=>mpol_i, ntor=>ntor_i, ns=>ns_i,           &
                                ntheta=>nu_i, nzeta=>nv_i, phif=>phif_i,        &
@@ -717,8 +753,12 @@
       CALL cdf_define(ncid, vn_wout, wout_file)
 
       CALL cdf_define(ncid, vn_wtotal0, wtotal0)
+      CALL cdf_define(ncid, vn_wtotal, wtotal)
 
-      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes)
+      CALL cdf_define(ncid, vn_tor_modes, fourier_context%tor_modes,           &
+     &                dimname=ntor_dim)
+      CALL cdf_define(ncid, vn_found_modes, fourier_context%found_modes,       &
+     &                dimname=found_dim)
 
       CALL cdf_define(ncid, vn_jbsupss, jbsupsmnsh, dimname=restart_dims)
       CALL cdf_define(ncid, vn_jbsupuc, jbsupumnch, dimname=restart_dims)
@@ -733,6 +773,8 @@
       CALL cdf_define(ncid, vn_chif, chipf, dimname=radial_dim)
       CALL cdf_define(ncid, vn_phif, phipf, dimname=radial_dim)
 
+      CALL cdf_define(ncid, vn_wb0, wb0)
+      CALL cdf_define(ncid, vn_wp0, wp0)
       CALL cdf_define(ncid, vn_wb, wb)
       CALL cdf_define(ncid, vn_wp, wp)
 
@@ -798,8 +840,10 @@
       CALL cdf_write(ncid, vn_wout, wout_file)
 
       CALL cdf_write(ncid, vn_wtotal0, wtotal0)
+      CALL cdf_write(ncid, vn_wtotal, wtotal)
 
       CALL cdf_write(ncid, vn_tor_modes, fourier_context%tor_modes)
+      CALL cdf_write(ncid, vn_found_modes, fourier_context%found_modes)
 
       CALL cdf_write(ncid, vn_jbsupss, jbsupsmnsh)
       CALL cdf_write(ncid, vn_jbsupuc, jbsupumnch)
@@ -832,6 +876,8 @@
          CALL cdf_write(ncid, vn_zmnc, tempmn_w)
       END IF
 
+      CALL cdf_write(ncid, vn_wb0, wb0)
+      CALL cdf_write(ncid, vn_wp0, wp0)
       CALL cdf_write(ncid, vn_wb, wb)
       CALL cdf_write(ncid, vn_wp, wp)
       CALL cdf_write(ncid, vn_rmajor, rmajor)
