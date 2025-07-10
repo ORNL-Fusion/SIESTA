@@ -115,6 +115,8 @@
          REAL (dp), DIMENSION(:,:), POINTER :: workin2 => null()
 !>  Toroidal mode numbers.
          INTEGER, DIMENSION(:), POINTER     :: tor_modes => null()
+!>  Found modes resonances.
+         LOGICAL, DIMENSION(:,:), POINTER   :: found_modes => null()
       CONTAINS
          PROCEDURE, PASS :: toijsp_2d => fourier_toijsp_2d
          PROCEDURE, PASS :: toijsp_3d => fourier_toijsp_3d
@@ -298,8 +300,10 @@
       ALLOCATE(fourier_construct%workin1(ntheta,-ntor:ntor))
       ALLOCATE(fourier_construct%workin2(ntheta,-ntor:ntor))
       ALLOCATE(fourier_construct%tor_modes(-ntor:ntor))
-      
+      ALLOCATE(fourier_construct%found_modes(0:mpol,-ntor:ntor))
+
       fourier_construct%tor_modes(-ntor:ntor) = tor_modes(-ntor:ntor)
+      fourier_construct%found_modes = .false.
 
       END FUNCTION
 
@@ -399,6 +403,11 @@
       IF (ASSOCIATED(this%tor_modes)) THEN
          DEALLOCATE(this%tor_modes)
          this%tor_modes => null()
+      END IF
+
+      IF (ASSOCIATED(this%found_modes)) THEN
+         DEALLOCATE(this%found_modes)
+         this%found_modes => null()
       END IF
 
       END SUBROUTINE

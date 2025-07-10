@@ -47,6 +47,8 @@
          PROCEDURE :: set_restart => siesta_run_set_restart
          PROCEDURE :: set_1d => siesta_run_set_1d
          GENERIC   :: set => set_1d
+         PROCEDURE :: get_1d => siesta_run_get_1d
+         GENERIC   :: get => get_1d
          PROCEDURE :: converge => siesta_run_converge
          PROCEDURE :: sync => siesta_run_sync
          FINAL     :: siesta_run_destruct
@@ -514,7 +516,7 @@
 !>  @param[in]    index      Array index of to set the value to.
 !-------------------------------------------------------------------------------
       SUBROUTINE siesta_run_set_1d(this, param_name, value, index)
-      USE siesta_namelist, ONLY: helpert
+      USE siesta_namelist, ONLY: helpert, helphase
       USE siesta_error
 
       IMPLICIT NONE
@@ -530,6 +532,11 @@
 
          CASE ('helpert')
             helpert(index) = value
+            this%control_state = IBSET(this%control_state,                     &
+                                       siesta_run_sync_namelist)
+
+         CASE ('helphase')
+            helphase(index) = value
             this%control_state = IBSET(this%control_state,                     &
                                        siesta_run_sync_namelist)
 
@@ -554,7 +561,7 @@
 !>  @returns Value of the parameter at the index.
 !-------------------------------------------------------------------------------
       FUNCTION siesta_run_get_1d(this, param_name, index)
-      USE siesta_namelist, ONLY: helpert
+      USE siesta_namelist, ONLY: helpert, helphase
 
       IMPLICIT NONE
 
@@ -568,6 +575,9 @@
       SELECT CASE (TRIM(param_name))
 
          CASE ('helpert')
+            siesta_run_get_1d = helpert(index)
+
+         CASE ('helphase')
             siesta_run_get_1d = helpert(index)
 
          CASE DEFAULT
@@ -633,7 +643,7 @@
 !>  @param[inout] this A @ref siesta_run_class instance.
 !-------------------------------------------------------------------------------
       SUBROUTINE siesta_run_sync(this)
-      USE siesta_namelist, ONLY: helpert
+      USE siesta_namelist, ONLY: helpert, helphase
       USE nscalingtools, ONLY: SIESTA_COMM, MPI_ERR
 #if defined(MPI_OPT)
       USE mpi_inc
@@ -650,6 +660,8 @@
                      MPI_ERR)
       IF (BTEST(this%control_state, siesta_run_sync_namelist)) THEN
          CALL MPI_BCAST(helpert, SIZE(helpert), MPI_REAL8, 0, SIESTA_COMM,     &
+                        MPI_ERR)
+         CALL MPI_BCAST(helphase, SIZE(helphase), MPI_REAL8, 0, SIESTA_COMM,   &
                         MPI_ERR)
          this%control_state = IBCLR(this%control_state,                        &
                                     siesta_run_sync_namelist)

@@ -249,7 +249,7 @@
                              ndims
       USE shared_functions, ONLY: funct_island
       USE quantities, ONLY: fsubsmncf, fsubumnsf, fsubvmnsf,            &
-                            mpol, ntor, ns, wp0, hs_i
+                            mpol, ntor, ns, hs_i
       USE hessian, ONLY: l_Compute_Hessian
       USE nscalingtools, ONLY: startglobrow, endglobrow
       USE v3_utilities, ONLY: assert

@@ -51,8 +51,9 @@
 !>  @end_table
 !>
 !>  @table_section{siesta_island_sec, Island Parameters}
-!>     @item{mres,    M numbers of island resonances.,    siesta_namelist::mres}
-!>     @item{helpert, Sizes of the helical perturbation., siesta_namelist::helpert}
+!>     @item{mres,     M numbers of island resonances.,               siesta_namelist::mres}
+!>     @item{helpert,  Sizes of the helical perturbation.,            siesta_namelist::helpert}
+!>     @item{helphase, Phase of the helical perturbation in degrees., siesta_namelist::helphase}
 !>  @end_table
 !>
 !>  @table_section{siesta_grid_size_sec, Grid Sizes}
@@ -241,10 +242,10 @@
 !  Island parameters
 !>  Sizes of the helical perturbation.
       INTEGER, DIMENSION(20)  :: mres = 0
-!>  Sizes of the helical perturbation.
+!>  Size of the helical perturbation.
       REAL(dp), DIMENSION(20) :: HelPert = 0.0
-!>  Sizes of the helical perturbation.
-      REAL(dp), DIMENSION(20) :: HelPertA = 0.0
+!>  Phase of the helical perturbation in degrees.
+      REAL(dp), DIMENSION(20) :: HelPhase = 0.0
 
 !  Grid Sizes
 !>  Radial size of the plasma grid.
@@ -297,7 +298,7 @@
         niter, ftol, mupar, levmarq_param, eta_factor, nprecon,                &
         ngmres_type, iortho,                                                   &
 !  Island parameters Island Parameters
-        mres, HelPert, HelPertA,                                               &
+        mres, HelPert, HelPhase,                                               &
 !  Input grid sizes
         nsin, nsin_ext, ntor_type, mpolin, ntorin, nfpin, ntor_modes,          &
 !  Output grid sizes
@@ -340,7 +341,7 @@
       niter         = 10
       mres          = 0
       HelPert       = 0
-      HelPertA      = 0
+      HelPhase      = 0
       lcolscale     = .TRUE.
       mupar_test    = 0
       ntor_type     = 'dense'
@@ -368,6 +369,12 @@
             ntor_modes(i) = i
             ntor_modes(-i) = -i
          END DO
+      END IF
+
+!  The helical phase can only be 0 or 180 when lasym = false.
+      IF (.not.lasym) THEN
+         CALL assert(ALL(HelPhase .eq. 0.0 .or. HelPhase .eq. 180.0),          &
+     &               "When lasym is true helphase can only be 0 or 180.")
       END IF
 
       END SUBROUTINE
