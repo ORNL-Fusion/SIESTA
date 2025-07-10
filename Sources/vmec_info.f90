@@ -159,17 +159,20 @@
       jcurrumnc = 0
       jcurrvmnc = 0
 
+!  This is an asymmetric quantity but it is passed to ReCompute_Lambda so 
+!  allocate it anyway.
+      ALLOCATE(lmnc_i(0:mpol,-ntor:ntor,ns + 1))
+      lmnc_i = 0
+
 !  Asymmetric quantities.
       IF (is_asym) THEN
          ALLOCATE(rmns_i(0:mpol,-ntor:ntor,ns))
          ALLOCATE(zmnc_i(0:mpol,-ntor:ntor,ns))
-         ALLOCATE(lmnc_i(0:mpol,-ntor:ntor,ns + 1))
          ALLOCATE(jcurrumns(0:mpol,-ntor:ntor,ns))
          ALLOCATE(jcurrvmns(0:mpol,-ntor:ntor,ns))
 
          rmns_i = 0
          zmnc_i = 0
-         lmnc_i = 0
          jcurrumns = 0
          jcurrvmns = 0
       END IF
@@ -226,13 +229,16 @@
          DEALLOCATE(lmns_i)
          DEALLOCATE(jcurrumnc)
          DEALLOCATE(jcurrvmnc)
+
+!  This is an asymmetric quantity but it is passed to ReCompute_Lambda so
+!  deallocate it here.
+         DEALLOCATE(lmnc_i)
       END IF
 
 !  Asymmetric quantities.
       IF (ALLOCATED(rmns_i)) THEN
          DEALLOCATE(rmns_i)
          DEALLOCATE(zmnc_i)
-         DEALLOCATE(lmnc_i)
          DEALLOCATE(jcurrumns)
          DEALLOCATE(jcurrvmns)
       END IF
