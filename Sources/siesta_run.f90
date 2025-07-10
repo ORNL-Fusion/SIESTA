@@ -643,7 +643,7 @@
 !>  @param[inout] this A @ref siesta_run_class instance.
 !-------------------------------------------------------------------------------
       SUBROUTINE siesta_run_sync(this)
-      USE siesta_namelist, ONLY: helpert
+      USE siesta_namelist, ONLY: helpert, helphase
       USE nscalingtools, ONLY: SIESTA_COMM, MPI_ERR
 #if defined(MPI_OPT)
       USE mpi_inc
@@ -660,6 +660,8 @@
                      MPI_ERR)
       IF (BTEST(this%control_state, siesta_run_sync_namelist)) THEN
          CALL MPI_BCAST(helpert, SIZE(helpert), MPI_REAL8, 0, SIESTA_COMM,     &
+                        MPI_ERR)
+         CALL MPI_BCAST(helphase, SIZE(helphase), MPI_REAL8, 0, SIESTA_COMM,   &
                         MPI_ERR)
          this%control_state = IBCLR(this%control_state,                        &
                                     siesta_run_sync_namelist)
