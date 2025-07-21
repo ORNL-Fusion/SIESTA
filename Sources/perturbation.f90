@@ -279,7 +279,7 @@
             HelPert0 = ABS(HelPert(icount)/normal)
             HelPert0A = 0
             IF (HelPhase(icount) .eq. 180.0) THEN
-               HelPert0 = HelPert0
+               HelPert0 = -HelPert0
             END IF
          END IF
 

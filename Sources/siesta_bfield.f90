@@ -199,8 +199,8 @@ USE utilities
 !  local variables
       INTEGER                                                 :: fours
       INTEGER                                                 :: fouruv
-      REAL (dp)                                               :: sparity
-      REAL (dp)                                               :: r12
+!      REAL (dp)                                               :: sparity
+!      REAL (dp)                                               :: r12
       REAL (dp), DIMENSION(:,:,:), POINTER                    :: esubsmnf
       REAL (dp), DIMENSION(:,:,:), POINTER                    :: esubumnf
       REAL (dp), DIMENSION(:,:,:), POINTER                    :: esubvmnf
@@ -210,12 +210,12 @@ USE utilities
 !  e_s (sin), e_u (cos), e_v (cos)
          fours = f_sin
          fouruv = f_cos
-         sparity = 1
+!         sparity = 1
       ELSE
 !  e_s (cos), e_u (sin), e_v (sin)
          fours = f_cos
          fouruv = f_sin
-         sparity = -1
+!         sparity = -1
       END IF
 
 !  Allocate working arrays used in Faraday. FIXME: Move to inside faraday.
