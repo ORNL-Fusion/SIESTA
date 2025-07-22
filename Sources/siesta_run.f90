@@ -578,7 +578,7 @@
             siesta_run_get_1d = helpert(index)
 
          CASE ('helphase')
-            siesta_run_get_1d = helpert(index)
+            siesta_run_get_1d = helphase(index)
 
          CASE DEFAULT
             siesta_run_get_1d = 0.0
