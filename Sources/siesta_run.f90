@@ -26,8 +26,10 @@
       INTEGER, PARAMETER :: siesta_run_control_mpi = 1
 !>  Bit position to close the wout file.
       INTEGER, PARAMETER :: siesta_run_control_wout = 2
-!>  Bit position to sycn the namelist inputs.
+!>  Bit position to sync the namelist inputs.
       INTEGER, PARAMETER :: siesta_run_sync_namelist = 3
+!>  Bit position to write diagnostics outputs.
+      INTEGER, PARAMETER :: siesta_run_write_profiles = 4
 
 !*******************************************************************************
 !  DERIVED-TYPE DECLARATIONSf
@@ -47,6 +49,9 @@
          PROCEDURE :: set_restart => siesta_run_set_restart
          PROCEDURE :: set_1d => siesta_run_set_1d
          GENERIC   :: set => set_1d
+         PROCEDURE :: set_control_state => siesta_run_set_control_state
+         PROCEDURE :: is_state_set => siesta_run_is_state_set
+         PROCEDURE :: clear_state => siesta_run_clear_state
          PROCEDURE :: get_1d => siesta_run_get_1d
          GENERIC   :: get => get_1d
          PROCEDURE :: converge => siesta_run_converge
@@ -122,14 +127,13 @@
 
       siesta_run_construct%control_state = siesta_run_control_clear
 
+      CALL siesta_run_construct%set_control_state(siesta_run_write_profiles)
       IF (init_mpi) THEN
-         siesta_run_construct%control_state =                                  &
-            IBSET(siesta_run_construct%control_state, siesta_run_control_mpi)
+         CALL siesta_run_construct%set_control_state(siesta_run_control_mpi)
       END IF
 
       IF (close_wout) THEN
-         siesta_run_construct%control_state =                                  &
-            IBSET(siesta_run_construct%control_state, siesta_run_control_wout)
+         CALL siesta_run_construct%set_control_state(siesta_run_control_wout)
       END IF
 
       CALL siesta_error_clear_all
@@ -308,8 +312,10 @@
  102  FORMAT(a,i5)
  
       CALL write_output(wout_file, niter,                                      &
-                        BTEST(this%control_state, siesta_run_control_wout))
-      CALL write_profiles(fsq_total1)  ! SPH: write pmn, bsupXmn, ksubXmn, jvsupXmn profiles
+                        this%is_state_set(siesta_run_control_wout))
+      IF (this%is_state_set(siesta_run_write_profiles)) THEN
+         CALL write_profiles(fsq_total1)  ! SPH: write pmn, bsupXmn, ksubXmn, jvsupXmn profiles
+      END IF
       IF (iam .EQ. 0) THEN
          IF (lverbose) PRINT *,' Writing output to "siesta_profiles.txt" is finished!'
          CLOSE (UNIT=unit_out)
@@ -330,7 +336,7 @@
          CALL blacs_barrier(icontxt, 'All')
          CALL blacs_gridexit(icontxt)
 
-         CALL blacs_exit(.not.BTEST(this%control_state, siesta_run_control_mpi))
+         CALL blacs_exit(.not.this%is_state_set(siesta_run_control_mpi))
          IF ((myrow.EQ.0) .AND. (mycol.EQ.0)) THEN
             CALL profstat
          END IF
@@ -341,7 +347,7 @@
             FLUSH(TOFU)
          END IF
          CALL finalizeRemap
-         CALL Finalize(BTEST(this%control_state, siesta_run_control_mpi))
+         CALL Finalize(this%is_state_set(siesta_run_control_mpi))
 
       END IF
 #endif
@@ -510,7 +516,7 @@
 !-------------------------------------------------------------------------------
 !>  @brief Set 1D parameter value.
 !>
-!>  @param[inout] this        @ref siesta_run_class instance.
+!>  @param[inout] this       @ref siesta_run_class instance.
 !>  @param[in]    param_name Name of the parameter to set.
 !>  @param[in]    value      Value to set the parameter to.
 !>  @param[in]    index      Array index of to set the value to.
@@ -532,13 +538,11 @@
 
          CASE ('helpert')
             helpert(index) = value
-            this%control_state = IBSET(this%control_state,                     &
-                                       siesta_run_sync_namelist)
+            CALL this%set_control_state(siesta_run_sync_namelist)
 
          CASE ('helphase')
             helphase(index) = value
-            this%control_state = IBSET(this%control_state,                     &
-                                       siesta_run_sync_namelist)
+            CALL this%set_control_state(siesta_run_sync_namelist)
 
          CASE DEFAULT
             CALL siesta_error_set_error(siesta_error_param,                    &
@@ -549,13 +553,32 @@
 
       END SUBROUTINE
 
+!-------------------------------------------------------------------------------
+!>  @brief Set a control state.
+!>
+!>  @param[inout] this  @ref siesta_run_class instance.
+!>  @param[in]    state State bit to set.
+!-------------------------------------------------------------------------------
+      SUBROUTINE siesta_run_set_control_state(this, state)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      CLASS (siesta_run_class), INTENT(inout) :: this
+      INTEGER, INTENT(in)                     :: state
+
+!  Start of executable code.
+      this%control_state = IBSET(this%control_state, state)
+
+      END SUBROUTINE
+
 !*******************************************************************************
 !  GETTER SUBROUTINES
 !*******************************************************************************
 !-------------------------------------------------------------------------------
 !>  @brief Get 1D parameter value.
 !>
-!>  @param[inout] this        @ref siesta_run_class instance.
+!>  @param[inout] this       @ref siesta_run_class instance.
 !>  @param[in]    param_name Name of the parameter to set.
 !>  @param[in]    index      Array index of to set the value to.
 !>  @returns Value of the parameter at the index.
@@ -588,8 +611,51 @@
       END FUNCTION
 
 !*******************************************************************************
+!  QUERY SUBROUTINES
+!*******************************************************************************
+!-------------------------------------------------------------------------------
+!>  @brief Query if state is set.
+!>
+!>  @param[in] this  @ref siesta_run_class instance.
+!>  @param[in] state State bit to query.
+!>  @returns True if the state is set.
+!-------------------------------------------------------------------------------
+      FUNCTION siesta_run_is_state_set(this, state)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      LOGICAL                              :: siesta_run_is_state_set
+      CLASS (siesta_run_class), INTENT(in) :: this
+      INTEGER, INTENT(in)                  :: state
+
+!  Start of executable code.
+      siesta_run_is_state_set = BTEST(this%control_state, state)
+
+      END FUNCTION
+
+!*******************************************************************************
 !  UTILITY SUBROUTINES
 !*******************************************************************************
+!-------------------------------------------------------------------------------
+!>  @brief Clear state bit.
+!>
+!>  @param[in] this  @ref siesta_run_class instance.
+!>  @param[in] state State bit to query.
+!-------------------------------------------------------------------------------
+      SUBROUTINE siesta_run_clear_state(this, state)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      CLASS (siesta_run_class), INTENT(inout) :: this
+      INTEGER, INTENT(in)                     :: state
+
+!  Start of executable code.
+      this%control_state = IBCLR(this%control_state, state)
+
+      END SUBROUTINE
+
 !-------------------------------------------------------------------------------
 !>  @brief Solves the SIESTA equilibrium.
 !>
@@ -658,13 +724,12 @@
 #if defined(MPI_OPT)
       CALL MPI_BCAST(this%control_state, 1, MPI_INTEGER, 0, SIESTA_COMM,       &
                      MPI_ERR)
-      IF (BTEST(this%control_state, siesta_run_sync_namelist)) THEN
+      IF (this%is_state_set(siesta_run_sync_namelist)) THEN
          CALL MPI_BCAST(helpert, SIZE(helpert), MPI_REAL8, 0, SIESTA_COMM,     &
                         MPI_ERR)
          CALL MPI_BCAST(helphase, SIZE(helphase), MPI_REAL8, 0, SIESTA_COMM,   &
                         MPI_ERR)
-         this%control_state = IBCLR(this%control_state,                        &
-                                    siesta_run_sync_namelist)
+         CALL this%clear_state(siesta_run_sync_namelist)
       END IF
 #endif
 
