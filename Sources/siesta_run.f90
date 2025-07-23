@@ -311,9 +311,9 @@
  101  FORMAT(a,1p,e10.3)
  102  FORMAT(a,i5)
  
-      CALL write_output(wout_file, niter,                                      &
-                        this%is_state_set(siesta_run_control_wout))
       IF (this%is_state_set(siesta_run_write_profiles)) THEN
+         CALL write_output(wout_file, niter,                                   &
+                           this%is_state_set(siesta_run_control_wout))
          CALL write_profiles(fsq_total1)  ! SPH: write pmn, bsupXmn, ksubXmn, jvsupXmn profiles
       END IF
       IF (iam .EQ. 0) THEN
