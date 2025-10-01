@@ -315,7 +315,6 @@
       IF (this%is_state_set(siesta_run_write_profiles)) THEN
          CALL write_output(wout_file, niter,                                   &
                            this%is_state_set(siesta_run_control_wout))
-         CALL init_state(.false., .false.)
          CALL write_profiles(fsq_total1)  ! SPH: write pmn, bsupXmn, ksubXmn, jvsupXmn profiles
       END IF
       IF (iam .EQ. 0) THEN
