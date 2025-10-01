@@ -619,8 +619,6 @@
          if (PARSOLVER) THEN
             CALL MPI_BCAST(siesta_curtor, 1, MPI_REAL8, nprocs - 1,            &
                            SIESTA_COMM, MPI_ERR)
-!            CALL MPI_ALLREDUCE(MPI_IN_PLACE, siesta_curtor, 1, MPI_REAL8,      &
-!                               MPI_SUM, SIESTA_COMM, MPI_ERR)
          END IF
 #endif
 
