@@ -235,6 +235,7 @@
       USE siesta_namelist, ONLY: wout_file
       USE island_params, ONLY: ns_i
       USE metrics, ONLY: cleanup_metric_elements, dealloc_full_lower_metrics
+      USE siesta_init, ONLY: init_state
 #if defined(MPI_OPT)
       USE prof_mod, ONLY: profstat
 #endif
@@ -314,6 +315,7 @@
       IF (this%is_state_set(siesta_run_write_profiles)) THEN
          CALL write_output(wout_file, niter,                                   &
                            this%is_state_set(siesta_run_control_wout))
+         CALL init_state(.false., .false.)
          CALL write_profiles(fsq_total1)  ! SPH: write pmn, bsupXmn, ksubXmn, jvsupXmn profiles
       END IF
       IF (iam .EQ. 0) THEN
