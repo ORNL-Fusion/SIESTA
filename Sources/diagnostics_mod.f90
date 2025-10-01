@@ -216,6 +216,7 @@ INTEGER                 :: s,m,n
         SUBROUTINE WRITE_PROFILES(fsq_total)
         USE safe_open_mod
         USE siesta_init, ONLY: init_state
+        USE siesta_namelist, ONLY: lrestart
 !-----------------------------------------------
 !   D u m m y   A r g u m e n t s
 !-----------------------------------------------
@@ -232,7 +233,7 @@ INTEGER                 :: s,m,n
 !       IT IS ASSUMED COMING IN HERE THAT THE PROFILES HAVE BEEN PREVIOUSLY
 !       GATHERED (IN UPDATE_STATE) AND PREPARE_QUANTITIES HAS BEEN CALLED
 !
-        IF (iam .NE. 0) RETURN
+        IF (iam .NE. 0 .or. lrestart) RETURN
         
         ALLOCATE (pijh(ntheta,nzeta,ns),                                &
                   pmnh(0:mpol,-ntor:ntor,ns), stat=istat)      

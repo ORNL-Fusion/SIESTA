@@ -157,7 +157,9 @@
 !  SPH11-3-16 preserve s=1 as iso-pressure contour
       IF (nsmax .eq. ns .and. l_pedge .and. .not.l_vessel) THEN
          pijf0(:,:,ns) = pedge
-         pijf0_ds(:,:,ns) = 0
+         IF (UBOUND(pijf0_ds, 3) .eq. ns) THEN
+            pijf0_ds(:,:,ns) = 0
+         END IF
       END IF
 
 !   Fourier filter (Nyquist) check
