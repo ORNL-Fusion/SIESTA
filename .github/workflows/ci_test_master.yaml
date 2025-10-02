@@ -57,6 +57,11 @@ jobs:
               shell: bash
               working-directory: ${{runner.workspace}}/Stellarator-Tools/build
               run: make -j VERBOSE=1
+            - name: Test Mac
+              if: ${{matrix.os == 'macos-latest'}}
+              shell: bash
+              working-directory: ${{runner.workspace}}/Stellarator-Tools/build
+              run: make test ARGS=-j3
             - name: Test Linux
               if: ${{matrix.os == 'ubuntu-latest'}}
               shell: bash
