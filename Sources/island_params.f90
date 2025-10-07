@@ -16,29 +16,29 @@
 !*******************************************************************************
 !  island_params module variables
 !*******************************************************************************
-!  Number of radial grid points.
+!>  Number of radial grid points.
 	  INTEGER                             :: ns_i
-!  Number of polodial grid points. FIXME: This should go in the fourier_class
+!>  Number of polodial grid points. FIXME: This should go in the fourier_class
       INTEGER                             :: nu_i
-!  Number of toroidal grid points. FIXME: This should go in the fourier_class
+!>  Number of toroidal grid points. FIXME: This should go in the fourier_class
       INTEGER                             :: nv_i
-!  Number of polodial and toroidal grid points. FIXME: Is this really needed?
+!>  Number of polodial and toroidal grid points. FIXME: Is this really needed?
       INTEGER                             :: nuv_i
-!  Number of poloidal modes. FIXME: This should go in the fourier_class
+!>  Number of poloidal modes. FIXME: This should go in the fourier_class
       INTEGER                             :: mpol_i
-!  Number of toroidal modes. FIXME: This should go in the fourier_class
+!>  Number of toroidal modes. FIXME: This should go in the fourier_class
       INTEGER                             :: ntor_i
-!  Number of radial grid vmec grid points. FIXME: This should be in vmec_info
+!>  Number of radial grid vmec grid points. FIXME: This should be in vmec_info
       INTEGER                             :: ns_v
-!  Number of poloidal vmec modes. FIXME: This should be in vmec_info
+!>  Number of poloidal vmec modes. FIXME: This should be in vmec_info
       INTEGER                             :: mpol_v
-!  Number of toroidal vmec modes. FIXME: This should be in vmec_info
+!>  Number of toroidal vmec modes. FIXME: This should be in vmec_info
       INTEGER                             :: ntor_v
-!  Number of field periods.  FIXME: This should go in the fourier_class
+!>  Number of field periods.  FIXME: This should go in the fourier_class
       INTEGER                             :: nfp_i
-!  Number of total toroidal and poloidal vmec modes. FIXME: This should be in vmec_info
+!>  Number of total toroidal and poloidal vmec modes. FIXME: This should be in vmec_info
       INTEGER                             :: mnmax_i
-!  Number of radial points on the half mesh. FIXME: is this really needed?
+!>  Number of radial points on the half mesh. FIXME: is this really needed?
       INTEGER                             :: nsh
 !  FIXME: These don't get used. Delete them.
 !      INTEGER, ALLOCATABLE                :: irefu(:)
