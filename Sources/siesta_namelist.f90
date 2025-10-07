@@ -90,7 +90,7 @@
 !>  @end_table
 !>
 !>  @section siesta_namelist_exam_sec Example Files
-!>  @subsection siesta_namelist_exam_sec Fixed Boundary
+!>  @subsection siesta_namelist_exam_fixed_sec Fixed Boundary
 !>  This example runs a 2 field period stellarator symmetric fixed boundary run
 !>  where the perturbation is applied to m=2 modes.
 !>

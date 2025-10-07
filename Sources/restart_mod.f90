@@ -40,11 +40,12 @@
 !>     @item{p_min,   Minimum pressure.,                           }
 !>     @item{rmajor,  Major radius.,                               island_params::rmajor_i}
 !>     @item{wb0,     Inital Energy stored in the magnetid field., island_params::wb_i}
-!>     @item{wp0,     Inital Energy stored in the pressure.,       island_params::wb_i}
+!>     @item{wp0,     Inital Energy stored in the pressure.,       island_params::wp_i}
 !>     @item{wb,      Energy stored in the magnetid field.,        quantities::wb}
-!>     @item{wp,      Energy stored in the pressure.,              quantities::wb}
+!>     @item{wp,      Energy stored in the pressure.,              quantities::wp}
 !>     @item{wtotal0, Inital total energy.,                        shared_data::wtotal0}
 !>     @item{wtotal,  Total energy.,                               shared_data::wtotal}
+!>     @item{fsq,     Volumne averaged force residule fsub.fsup.,  shared_data::fsq_total1}
 !>  @end_table
 !>
 !>  @table_section{siesta_restart_1D_arrays_sec, 1D profiles.}
@@ -52,11 +53,11 @@
 !>     @item{phipf_r_,  Radial derivative of the toroidal flux., island_params::phipf_i}
 !>     @item{chif_r_,   Poloidal flux profile.,                  island_params::chif_i}
 !>     @item{phif_r_,   Toroidal flux profile.,                  island_params::phif_i}
-!>     @item{tor_modes, Toroidal mode array.,                    fourier::tor_modes}
+!>     @item{tor_modes, Toroidal mode array.,                    fourier::fourier_class::tor_modes}
 !>  @end_table
 !>
 !>  @table_section{siesta_restart_2D_arrays_sec, 2D arrays.}
-!>     @item{found_modes, List of found resonances., fourier::found_modes}
+!>     @item{found_modes, List of found resonances., fourier::fourier_class::found_modes}
 !>  @end_table
 !>
 !>  @table_section{siesta_restart_3D_arrays_sec, 3D arrays.}
@@ -96,16 +97,16 @@
 !>        @item{bsupvmnsh_m_n_r_, B^v component sine parity.,   }
 !>     @table_subsection{siesta_restart_pres_arrays_sec, Pressure.}
 !>        @item{pmnch_m_n_r_, Pressure cosine parity., }
-!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Pressure fields asymmetric.}
+!>     @table_subsection{siesta_restart_pres_arrays_asym_sec, Pressure fields asymmetric.}
 !>        @item{pmnsh_m_n_r_, Pressure sine parity., }
-!>     @table_subsection{siesta_restart_mag_arrays_sec, Forces.}
+!>     @table_subsection{siesta_restart_force_arrays_sec, Forces.}
 !>        @item{fsubsmnsh_m_n_r_, F_s component sine parity.,   quantities::fsubsmnsf}
 !>        @item{fsubumnch_m_n_r_, F_u component cosine parity., quantities::fsubumncf}
 !>        @item{fsubvmnch_m_n_r_, F_v component cosine parity., quantities::fsubvmncf}
 !>        @item{fsupsmnsh_m_n_r_, F^s component sine parity.,   quantities::fsupsmncf}
 !>        @item{fsupumnch_m_n_r_, F^u component cosine parity., quantities::fsupumnsf}
 !>        @item{fsupvmnch_m_n_r_, F^v component cosine parity., quantities::fsupvmnsf}
-!>     @table_subsection{siesta_restart_mag_arrays_asym_sec, Forces asymmetric.}
+!>     @table_subsection{siesta_restart_force_arrays_asym_sec, Forces asymmetric.}
 !>        @item{fsubsmnsh_m_n_r_, F_s component sine parity.,   quantities::fsubsmnsf}
 !>        @item{fsubumnch_m_n_r_, F_u component cosine parity., quantities::fsubumncf}
 !>        @item{fsubvmnch_m_n_r_, F_v component cosine parity., quantities::fsubvmncf}
@@ -140,7 +141,7 @@
       USE stel_kinds
       USE metrics, ONLY: tolowerh
       USE descriptor_mod, ONLY: iam
-      USE shared_data, ONLY: lasym, unit_out, wtotal0, wtotal
+      USE shared_data, ONLY: lasym, unit_out, wtotal0, wtotal, fsq_total1
       USE v3_utilities, ONLY: assert_eq
       USE stel_constants, ONLY: mu0
 
@@ -320,6 +321,8 @@
       CHARACTER (len=*), PARAMETER :: vn_rmajor = 'rmajor'
 !>  Name for the restart file total toroidal current.
       CHARACTER (len=*), PARAMETER :: vn_curtor = 'curtor'
+!>  Name for the restart file volume averaged force residule fsub.fsup.
+      CHARACTER (len=*), PARAMETER :: vn_fsq = 'fsq'
 
 !>  Name for the restart file p_max.
       CHARACTER (len=*), PARAMETER :: vn_p_max = 'p_max'
@@ -777,6 +780,7 @@
       CALL cdf_define(ncid, vn_wp0, wp0)
       CALL cdf_define(ncid, vn_wb, wb)
       CALL cdf_define(ncid, vn_wp, wp)
+      CALL cdf_define(ncid, vn_fsq, fsq_total1)
 
 !  Using variable with jacobian only for the dimension sizes and types. Before
 !  writting, the jacobian normalization will be removed.
@@ -881,6 +885,7 @@
       CALL cdf_write(ncid, vn_wb, wb)
       CALL cdf_write(ncid, vn_wp, wp)
       CALL cdf_write(ncid, vn_rmajor, rmajor)
+      CALL cdf_write(ncid, vn_fsq, fsq_total1)
 
       CALL cdf_write(ncid, vn_p_factor, p_factor)
       CALL cdf_write(ncid, vn_b_factor, b_factor)

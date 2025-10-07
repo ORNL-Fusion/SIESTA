@@ -1,6 +1,6 @@
 !*******************************************************************************
-!>  @file utilities.f90
-!>  @brief Contains module @ref utilities.
+!>  @file quantities.f90
+!>  @brief Contains module @ref quantities.
 !
 !  Note separating the Doxygen comment block here so detailed decription is
 !  found in the Module not the file.
@@ -12,8 +12,8 @@
       USE stel_kinds
       USE stel_constants      
       USE v3_utilities, ONLY: assert, assert_eq
-      USE island_params, ns=>ns_i, ntheta=>nu_i, nzeta=>nv_i,           &
-          mpol=>mpol_i, ntor=>ntor_i, nuv=>nuv_i, mnmax=>mnmax_i,       &
+      USE island_params, ns=>ns_i, ntheta=>nu_i, nzeta=>nv_i,                  &
+          mpol=>mpol_i, ntor=>ntor_i, nuv=>nuv_i, mnmax=>mnmax_i,              &
           nfp=>nfp_i
       USE descriptor_mod, ONLY: iam, nprocs, SIESTA_COMM
       USE shared_data, ONLY: lasym, lverbose
@@ -367,88 +367,88 @@
 !>  Fields are gathered to all processors at the end. Only called if lrestart is
 !>  false otherwise data is read directly from the restart file.
 !-------------------------------------------------------------------------------
-        SUBROUTINE Init_Fields
-        USE island_params, ONLY: fourier_context
-        USE fourier, ONLY: f_sin, f_cos, m0, m1
-        USE vmec_info, ONLY: lmns_i, lmnc_i, iflipj
-        USE metrics, ONLY: sqrtg
+      SUBROUTINE Init_Fields
+      USE island_params, ONLY: fourier_context
+      USE fourier, ONLY: f_sin, f_cos, m0, m1
+      USE vmec_info, ONLY: lmns_i, lmnc_i, iflipj
+      USE metrics, ONLY: sqrtg
 
-        IMPLICIT NONE
+      IMPLICIT NONE
 
 !  Local variables.
-        INTEGER                                 :: istat
-        INTEGER                                 :: nsmin
-        INTEGER                                 :: nsmax
-        INTEGER                                 :: nloc
-        INTEGER                                 :: js
-        REAL(dp), DIMENSION(:), ALLOCATABLE     :: phiph
-        REAL(dp), DIMENSION(:), ALLOCATABLE     :: chiph
-        REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: presif
-        REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: presih
+      INTEGER                                 :: istat
+      INTEGER                                 :: nsmin
+      INTEGER                                 :: nsmax
+      INTEGER                                 :: nloc
+      INTEGER                                 :: js
+      REAL(dp), DIMENSION(:), ALLOCATABLE     :: phiph
+      REAL(dp), DIMENSION(:), ALLOCATABLE     :: chiph
+      REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: presif
+      REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: presih
 
 !  Start of executable code.
-        nsmin = MAX(1, startglobrow)
-        nsmax = MIN(endglobrow, ns)
+      nsmin = MAX(1, startglobrow)
+      nsmax = MIN(endglobrow, ns)
 
-        ALLOCATE(phiph(ns), chiph(ns))
+      ALLOCATE(phiph(ns), chiph(ns))
 
-        phipf_i = signjac*iflipj*phipf_i
-        chipf_i = signjac*iflipj*chipf_i
+      phipf_i = signjac*iflipj*phipf_i
+      chipf_i = signjac*iflipj*chipf_i
 
-        phiph(2:ns) = (phipf_i(2:ns) + phipf_i(1:nsh))/2
-        chiph(2:ns) = (chipf_i(2:ns) + chipf_i(1:nsh))/2
-        phiph(1) = 0
-        chiph(1) = 0
+      phiph(2:ns) = (phipf_i(2:ns) + phipf_i(1:nsh))/2
+      chiph(2:ns) = (chipf_i(2:ns) + chipf_i(1:nsh))/2
+      phiph(1) = 0
+      chiph(1) = 0
 
-        IF (.not.l_vessel .and. l_lambda) THEN
-           CALL ReCompute_Lambda(lmns_i, lmnc_i, jacobh,                       &
-                                 fourier_context%orthonorm, phiph, chiph,      &
-                                 nsmin, nsmax)
-        END IF
+      IF (.not.l_vessel .and. l_lambda) THEN
+         CALL ReCompute_Lambda(lmns_i, lmnc_i, jacobh,                         &
+                               fourier_context%orthonorm, phiph, chiph,        &
+                               nsmin, nsmax)
+      END IF
          
-  		CALL Init_Bfield(jbsupsmnsh, jbsupumnch, jbsupvmnch,                   &
-                         lmns_i, phiph, chiph, nsmin, nsmax, f_sin)
-		IF (lasym) THEN
-           CALL Init_Bfield(jbsupsmnch, jbsupumnsh, jbsupvmnsh,                &
-                            lmnc_i, phiph, chiph, nsmin, nsmax, f_cos)
-        END IF
+      CALL Init_Bfield(jbsupsmnsh, jbsupumnch, jbsupvmnch,                     &
+                       lmns_i, phiph, chiph, nsmin, nsmax, f_sin)
+      IF (lasym) THEN
+         CALL Init_Bfield(jbsupsmnch, jbsupumnsh, jbsupvmnsh,                  &
+                          lmnc_i, phiph, chiph, nsmin, nsmax, f_cos)
+      END IF
 
-        DEALLOCATE (phiph, chiph, stat=istat)
-        CALL ASSERT(istat.EQ.0,'Deallocate error #1 in init_fields')
+      DEALLOCATE (phiph, chiph, stat=istat)
+      CALL ASSERT(istat.EQ.0,'Deallocate error #1 in init_fields')
 
 !  Initialize half mesh pressure
-        nloc = MAX(1, startglobrow - 1)
-        ALLOCATE(presih(ntheta,nzeta,nloc:nsmax),                              &
-                 presif(ntheta,nzeta,nloc:nsmax), stat=istat)
-        CALL ASSERT(istat.EQ.0, 'Allocate error #1 in init_fields')
+      nloc = MAX(1, startglobrow - 1)
+      ALLOCATE(presih(ntheta,nzeta,nloc:nsmax),                                &
+               presif(ntheta,nzeta,nloc:nsmax), stat=istat)
+      CALL ASSERT(istat.EQ.0, 'Allocate error #1 in init_fields')
 
-        DO js = nloc, nsmax
-           presif(:,:,js) = p_factor*presf_i(js)
-        END DO
+      DO js = nloc, nsmax
+         presif(:,:,js) = p_factor*presf_i(js)
+      END DO
 
-        CALL to_half_mesh(presif, presih)
+      CALL to_half_mesh(presif, presih)
 
 !  Initialize (internally) jacob*(real pressure), which is evolved
-        presih(:,:,nsmin:nsmax) =                                              &
-       &   presih(:,:,nsmin:nsmax)*jacobh(:,:,nsmin:nsmax)
+      presih(:,:,nsmin:nsmax) =                                                &
+     &   presih(:,:,nsmin:nsmax)*jacobh(:,:,nsmin:nsmax)
 
 !  Initialize internal pressure harmonics (half mesh)
-        CALL fourier_context%tomnsp(presih(:,:,nsmin:nsmax),                   &
-                                    jpmnch(:,:,nsmin:nsmax), f_cos)
-        jpmnch(:,:,1) = 0
-        jpmnch(m0,:,1) = jpmnch(m0,:,2)
-        IF (lasym) THEN
-           jpmnsh = 0
-        END IF
+      CALL fourier_context%tomnsp(presih(:,:,nsmin:nsmax),                     &
+                                  jpmnch(:,:,nsmin:nsmax), f_cos)
+      jpmnch(:,:,1) = 0
+      jpmnch(m0,:,1) = jpmnch(m0,:,2)
+      IF (lasym) THEN
+         jpmnsh = 0
+      END IF
 
-        DEALLOCATE(presif, presih, stat=istat)
-        CALL assert_eq(istat, 0, 'Deallocate error #2 in init_fields')
+      DEALLOCATE(presif, presih, stat=istat)
+      CALL assert_eq(istat, 0, 'Deallocate error #2 in init_fields')
 
 !  Gather jbsupmnX's, jpmn onto all processors. This same as in update_state but
 !  for initial values.
-        CALL GatherFields
+      CALL GatherFields
 
-        END SUBROUTINE
+      END SUBROUTINE
 
 !-------------------------------------------------------------------------------
 !>  @brief Initialized magnetic field.
@@ -601,7 +601,7 @@
       INTEGER, INTENT(in)                         :: nsmax
 
 !  Local Variables
-      INTEGER                                     :: js            , i
+      INTEGER                                     :: js
       INTEGER                                     :: m
       INTEGER                                     :: n
       INTEGER                                     :: n_mode
