@@ -1,8 +1,8 @@
-!>  \brief updates resistive contribution to B with resistive currents
+!>  @brief updates resistive contribution to B with resistive currents
       SUBROUTINE add_resistive_E
       USE stel_kinds
-      USE shared_data, ONLY: l_getfsq, l_init_state, lverbose,          &
-                             l_update_state, unit_out, nprecon,         &
+      USE shared_data, ONLY: l_getfsq, l_init_state, lverbose,                 &
+                             l_update_state, unit_out, nprecon,                &
                              fsq_total1, xc, gc
       USE shared_functions, ONLY: funct_island
       USE siesta_namelist, ONLY: ftol, eta_factor
@@ -44,14 +44,20 @@
 !     Diffuse B-field (eta*j) from last update_state call
       DO itime=1,nits
 
-         CALL init_state (lcurrent_only)                                 !Use new B-field to get KsubXij currents
-         CALL update_bfield (.TRUE.)                                     !Resistive update to B-field
-         CALL update_state (.FALSE., zero, zero)                         !Updates B-field with resistive piece
+!  Use new B-field to get KsubXij currents
+         CALL init_state (lcurrent_only)
+!  Resistive update to B-field
+         CALL update_bfield (.TRUE.)
+!  Updates B-field with resistive piece
+         CALL update_state (.FALSE., zero, zero)
 
       END DO
 
       nCheck = nCheck+1
-      IF (nCheck .EQ. 0) CALL CheckForces(xc, gc)                        !set iteration value > 0 at which force check is done
+!set iteration value > 0 at which force check is done
+      IF (nCheck .EQ. 0) THEN
+         CALL CheckForces(xc, gc)
+      END IF
 
       l_getfsq = .TRUE.
       l_init_state = .TRUE.
@@ -65,8 +71,8 @@
          DO j = 6, unit_out, unit_out-6
          IF (.NOT.lverbose .AND. j.EQ.6) CYCLE
             WRITE (j,'(/,a,i3)') ' UPDATING RESISTIVE E-FIELD: ITERATIONS=',nits
-            WRITE (j, '(a,1p2e12.3)')                                   &
-          ' JUMP IN FSQ DUE TO RESISTIVE DIFFUSION: ', fmhd, fsq_total1
+            WRITE (j, '(a,1p2e12.3)')                                          &
+            ' JUMP IN FSQ DUE TO RESISTIVE DIFFUSION: ', fmhd, fsq_total1
          END DO
       END IF
 

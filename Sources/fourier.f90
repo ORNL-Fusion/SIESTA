@@ -57,7 +57,7 @@
       INTEGER, PARAMETER   :: b_sum  = 3
 !>  Bit position of the @ref f_jac flag.
       INTEGER, PARAMETER   :: b_jac  = 4
-!>  Bit position of the @ref f_co flag.
+!>  Bit position of the @ref b_con flag.
       INTEGER, PARAMETER   :: b_con  = 5
 
 !  Special Fourier modes.
