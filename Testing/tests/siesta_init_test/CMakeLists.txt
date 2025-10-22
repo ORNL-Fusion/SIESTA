@@ -1,7 +1,7 @@
 #  Copy input file from the source to the build directory.
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/siesta.jcf
                 ${CMAKE_CURRENT_BINARY_DIR}/siesta.jcf
-                COPYONLY)
+                @ONLY)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/input.test.vmec
                 ${CMAKE_CURRENT_BINARY_DIR}/input.test.vmec
                 COPYONLY)
