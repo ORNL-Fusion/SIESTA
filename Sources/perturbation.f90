@@ -90,14 +90,19 @@
 
 !  Separate out the name form the wout file name. Wout files sould have the form
 !  of wout_name.nc. Remove the leading wout_ and trailing .nc.
-      IF ((wout_file(1:5) .ne. 'WOUT_' .and.                                   &
-           wout_file(1:5) .ne. 'wout_') .or.                                   &
+
+!  The woutfile could be a full path so search for a file separator first. This
+!  assumes a unix file name.
+      index1 = INDEX(wout_file, '/', BACK=.TRUE.)
+
+      IF ((wout_file(1 + index1:5 + index1) .ne. 'WOUT_' .and.                 &
+           wout_file(1 + index1:5 + index1) .ne. 'wout_') .or.                 &
           wout_file(LEN_TRIM(wout_file) - 2:LEN_TRIM(wout_file)) .ne.          &
           '.nc') THEN
          CALL assert(.false., 'ERROR: ' // TRIM(wout_file) //                  &
      &                        ' is not a valid wout file name.')
       ELSE
-         temp = wout_file(6:LEN_TRIM(wout_file) - 3)
+         temp = wout_file(index1 + 6:LEN_TRIM(wout_file) - 3)
       END IF
 
       istat = 0
