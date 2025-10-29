@@ -425,10 +425,20 @@
          f2 = (fsq_max*levmarq_min - MAX(ftol, ftol_min)*levmarq_param0)       &
      &      / (fsq_max - MAX(ftol, ftol_min))
          levmarq_param = f1*fsq_total1 + f2
-
+		! Changes are below. Using new counter_g to keep track of number of iterations
+		! the solver is unable to improve the force residual. After a set number of 
+		! failed attempts it will adjust the input LM parameter and reset the counter
          IF (fsq_last .le. fsq_total1) THEN
-            levmarq_param = levmarq_param0
+            IF (counter_g .eq. 3) THEN
+				levmarq_param0 = levmarq_param0*3
+				counter_g =0
+			END IF
+			levmarq_param = levmarq_param0
+			counter_g = counter_g + 1	
+		 ELSE
+			counter_g = 0
          END IF
+		! Changes end here 
          fsq_last = fsq_total1
       ELSE
          levmarq_param = levmarq_param0

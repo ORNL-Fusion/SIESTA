@@ -56,7 +56,7 @@
                            mupar, mupar0, maxeigen, mindiag
       LOGICAL, PUBLIC   :: l_Compute_Hessian, l_Diagonal_Only
       LOGICAL, PUBLIC, PARAMETER :: l_Hess_sym=.FALSE.                     !<forces symmetrization of Hessian if TRUE (only implemented for Thomas, 1 proc)
-      INTEGER, PUBLIC :: HESSPASS=0
+      INTEGER, PUBLIC :: HESSPASS=0, counter_g=0
       PUBLIC  :: apply_precond, dealloc_hessian, InitHess,              &
                  Compute_Hessian_Blocks, apply_colscale
 
