@@ -391,6 +391,7 @@
       REAL (dp)                          :: v2tot
       REAL (dp)                          :: f1
       REAL (dp)                          :: f2
+	  REAL (dp)                          :: relative_change
       REAL (dp)                          :: t1
       REAL (dp)                          :: t2
       REAL (dp)                          :: lm0
@@ -403,6 +404,8 @@
 !  Local Parameters
       REAL (dp), DIMENSION(1), PARAMETER :: levscan = (/ 0.25_dp /)
       REAL (dp), PARAMETER               :: levmarq_min = 1.0E-10_dp
+	  REAL (dp), PARAMETER               :: levmarq_max = 1.0E10_dp
+	  REAL (dp), PARAMETER               :: levmarq_epsilon = 1.0E-4_dp
       REAL (dp), PARAMETER               :: fsq_max = 1.E-6_dp
       REAL (dp), PARAMETER               :: ftol_min = 1.0E-20_dp
 
@@ -418,6 +421,22 @@
 !  Turns off conjugate gradient always.
       l_Gmres = .true.
 
+!  Attempting new LM algorithm with a more standard approach.
+!  First calculate relative change.
+	  relative_change = ABS(fsq_total1-fsq_last)/fsq_last
+!  Now check the change. If it is greater than the set epsilon then reduce the
+!  LM parameter. Otherwise increase it. In both cases there is a max and 
+!  min value the LM parameter can take.
+	  IF (relative_change .gt. levmarq_epsilon) THEN
+		 levmarq_param = MAX(levmarq_param/9,levmarq_min)
+		 fsq_last = fsq_total1
+	  ELSE
+		 levmarq_param = MIN(levmarq_param*11,levmarq_max)
+		 fsq_last = fsq_total1
+	  END IF
+		 
+
+#if 0
 !  Determine levenberg parameter by a linear scale on how far away from the
 !  desired force tolarance we are.
       IF (fsq_total1 .lt. fsq_max) THEN
@@ -444,6 +463,7 @@
          levmarq_param = levmarq_param0
          fsq_last = fsq_total1
       END IF
+#endif
 
 #if 0
 !  Determine levenberg and mu|| parameter guesses based on ||F||.
