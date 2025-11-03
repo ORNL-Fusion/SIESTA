@@ -13,6 +13,7 @@
 !>  @author R. Sanchez
 !>  @author Sudip Seal
 !>  @author Mark Cianciosa
+!>  @author Gabriel Woodbury Saudeau
 !>
 !>  The theory behind SIESTA is outlined in
 !>     S.P. Hirshman et. al. https://doi.org/10.1063/1.3597155
