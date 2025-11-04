@@ -405,7 +405,7 @@
       REAL (dp), DIMENSION(1), PARAMETER :: levscan = (/ 0.25_dp /)
       REAL (dp), PARAMETER               :: levmarq_min = 1.0E-10_dp
 	  REAL (dp), PARAMETER               :: levmarq_max = 1.0E10_dp
-	  REAL (dp), PARAMETER               :: levmarq_epsilon = 1.0E-3_dp
+	  REAL (dp), PARAMETER               :: levmarq_epsilon = 8.0E-3_dp
       REAL (dp), PARAMETER               :: fsq_max = 1.E-6_dp
       REAL (dp), PARAMETER               :: ftol_min = 1.0E-20_dp
 
@@ -429,12 +429,11 @@
 !  Determine levenberg parameter by a linear scale on how far away from the
 !  desired force tolarance we are.
       IF (fsq_total1 .lt. fsq_max) THEN
-		 If (failed_min_count .lt. 2) THEN
+		 If (niter .lt. 2) THEN
 			 f1 = (levmarq_param0 - levmarq_min)/(fsq_max - MAX(ftol, ftol_min))
 			 f2 = (fsq_max*levmarq_min - MAX(ftol, ftol_min)*levmarq_param0)       &
 		 &      / (fsq_max - MAX(ftol, ftol_min))
 			 levmarq_param = f1*fsq_total1 + f2
-			 failed_min_count = failed_min_count + 1
 		 END IF
 !  Now check the change. If it is greater than the set epsilon then reduce the
 !  LM parameter. Otherwise increase it. In both cases there is a max and 
@@ -443,7 +442,7 @@
 			 levmarq_param = MAX(levmarq_param/2,levmarq_min)
 			 fsq_last = fsq_total1
 		 ELSE
-			 levmarq_param = MIN(levmarq_param*3,levmarq_max)
+			 levmarq_param = MIN(levmarq_param*5,levmarq_max)
 			 fsq_last = fsq_total1
 		 END IF
 ! Using new failed_min_count to keep track of number of iterations the solver 
