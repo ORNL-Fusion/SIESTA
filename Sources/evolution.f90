@@ -425,14 +425,17 @@
 !  First calculate relative change.
 	  relative_change = ABS(fsq_total1-fsq_last)/fsq_last
 
+	  
 !  Determine levenberg parameter by a linear scale on how far away from the
 !  desired force tolarance we are.
       IF (fsq_total1 .lt. fsq_max) THEN
-         f1 = (levmarq_param0 - levmarq_min)/(fsq_max - MAX(ftol, ftol_min))
-         f2 = (fsq_max*levmarq_min - MAX(ftol, ftol_min)*levmarq_param0)       &
-     &      / (fsq_max - MAX(ftol, ftol_min))
-         levmarq_param = f1*fsq_total1 + f2
-		 
+		 If (failed_min_count .eq. 0) THEN
+			 f1 = (levmarq_param0 - levmarq_min)/(fsq_max - MAX(ftol, ftol_min))
+			 f2 = (fsq_max*levmarq_min - MAX(ftol, ftol_min)*levmarq_param0)       &
+		 &      / (fsq_max - MAX(ftol, ftol_min))
+			 levmarq_param = f1*fsq_total1 + f2
+			 failed_min_count = failed_min_count + 1
+		 END IF
 !  Now check the change. If it is greater than the set epsilon then reduce the
 !  LM parameter. Otherwise increase it. In both cases there is a max and 
 !  min value the LM parameter can take.
@@ -440,7 +443,7 @@
 			 levmarq_param = MAX(levmarq_param/9,levmarq_min)
 			 fsq_last = fsq_total1
 		 ELSE
-			 levmarq_param = MIN(levmarq_param*18,levmarq_max)
+			 levmarq_param = MIN(levmarq_param*11,levmarq_max)
 			 fsq_last = fsq_total1
 		 END IF
 ! Using new failed_min_count to keep track of number of iterations the solver 
