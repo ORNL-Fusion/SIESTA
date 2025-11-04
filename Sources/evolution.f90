@@ -429,7 +429,7 @@
 !  Determine levenberg parameter by a linear scale on how far away from the
 !  desired force tolarance we are.
       IF (fsq_total1 .lt. fsq_max) THEN
-		 If (failed_min_count .eq. 0) THEN
+		 If (failed_min_count .lt. 2) THEN
 			 f1 = (levmarq_param0 - levmarq_min)/(fsq_max - MAX(ftol, ftol_min))
 			 f2 = (fsq_max*levmarq_min - MAX(ftol, ftol_min)*levmarq_param0)       &
 		 &      / (fsq_max - MAX(ftol, ftol_min))
