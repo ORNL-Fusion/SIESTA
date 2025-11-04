@@ -404,8 +404,8 @@
 !  Local Parameters
       REAL (dp), DIMENSION(1), PARAMETER :: levscan = (/ 0.25_dp /)
       REAL (dp), PARAMETER               :: levmarq_min = 1.0E-10_dp
-	  REAL (dp), PARAMETER               :: levmarq_max = 1.0E10_dp
-	  REAL (dp), PARAMETER               :: levmarq_epsilon = 9.0E-3_dp
+	  REAL (dp), PARAMETER               :: levmarq_max = 1.0E9_dp
+	  REAL (dp), PARAMETER               :: levmarq_epsilon = 5.0E-3_dp
       REAL (dp), PARAMETER               :: fsq_max = 1.E-6_dp
       REAL (dp), PARAMETER               :: ftol_min = 1.0E-20_dp
 
@@ -437,10 +437,7 @@
 !  Now check the change. If it is greater than the set epsilon then reduce the
 !  LM parameter. Otherwise increase it. In both cases there is a max and 
 !  min value the LM parameter can take.
-		 IF (relative_change .gt. levmarq_epsilon) THEN
-			 levmarq_param = MAX(levmarq_param/2,levmarq_min)
-			 !fsq_last = fsq_total1
-		 ELSE
+		 IF (relative_change .lt. levmarq_epsilon) THEN
 			 levmarq_param = MIN(levmarq_param*20,levmarq_max)
 			 !fsq_last = fsq_total1
 		 END IF
@@ -450,7 +447,7 @@
          IF (fsq_last .le. fsq_total1) THEN
 			 failed_min_count = failed_min_count + 1	
              IF (failed_min_count .eq. 3) THEN
-				 levmarq_param0 = levmarq_param0*3
+				 levmarq_param0 = MAX(levmarq_param0*3,levmarq_max)
 				 failed_min_count =0
 			 END IF
 			 levmarq_param = levmarq_param0
