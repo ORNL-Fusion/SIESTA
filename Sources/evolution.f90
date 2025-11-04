@@ -440,10 +440,10 @@
 !  LM parameter. Otherwise increase it. In both cases there is a max and 
 !  min value the LM parameter can take.
 		 IF (relative_change .gt. levmarq_epsilon) THEN
-			 levmarq_param = MAX(levmarq_param/9,levmarq_min)
+			 levmarq_param = MAX(levmarq_param/2,levmarq_min)
 			 fsq_last = fsq_total1
 		 ELSE
-			 levmarq_param = MIN(levmarq_param*11,levmarq_max)
+			 levmarq_param = MIN(levmarq_param*3,levmarq_max)
 			 fsq_last = fsq_total1
 		 END IF
 ! Using new failed_min_count to keep track of number of iterations the solver 
