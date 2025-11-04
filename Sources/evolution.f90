@@ -405,7 +405,7 @@
       REAL (dp), DIMENSION(1), PARAMETER :: levscan = (/ 0.25_dp /)
       REAL (dp), PARAMETER               :: levmarq_min = 1.0E-10_dp
 	  REAL (dp), PARAMETER               :: levmarq_max = 1.0E10_dp
-	  REAL (dp), PARAMETER               :: levmarq_epsilon = 1.0E-4_dp
+	  REAL (dp), PARAMETER               :: levmarq_epsilon = 1.0E-3_dp
       REAL (dp), PARAMETER               :: fsq_max = 1.E-6_dp
       REAL (dp), PARAMETER               :: ftol_min = 1.0E-20_dp
 
@@ -440,7 +440,7 @@
 			 levmarq_param = MAX(levmarq_param/9,levmarq_min)
 			 fsq_last = fsq_total1
 		 ELSE
-			 levmarq_param = MIN(levmarq_param*11,levmarq_max)
+			 levmarq_param = MIN(levmarq_param*18,levmarq_max)
 			 fsq_last = fsq_total1
 		 END IF
 ! Using new failed_min_count to keep track of number of iterations the solver 
