@@ -421,16 +421,18 @@
 !  Turns off conjugate gradient always.
       l_Gmres = .true.
 
-
-		 
-
+!  Attempting new LM algorithm with a more standard approach.
+!  First calculate relative change.
+	  relative_change = ABS(fsq_total1-fsq_last)/fsq_last
 
 !  Determine levenberg parameter by a linear scale on how far away from the
 !  desired force tolarance we are.
       IF (fsq_total1 .lt. fsq_max) THEN
-!  Attempting new LM algorithm with a more standard approach.
-!  First calculate relative change.
-		 relative_change = ABS(fsq_total1-fsq_last)/fsq_last
+         f1 = (levmarq_param0 - levmarq_min)/(fsq_max - MAX(ftol, ftol_min))
+         f2 = (fsq_max*levmarq_min - MAX(ftol, ftol_min)*levmarq_param0)       &
+     &      / (fsq_max - MAX(ftol, ftol_min))
+         levmarq_param = f1*fsq_total1 + f2
+		 
 !  Now check the change. If it is greater than the set epsilon then reduce the
 !  LM parameter. Otherwise increase it. In both cases there is a max and 
 !  min value the LM parameter can take.
@@ -441,6 +443,20 @@
 			 levmarq_param = MIN(levmarq_param*11,levmarq_max)
 			 fsq_last = fsq_total1
 		 END IF
+! Using new failed_min_count to keep track of number of iterations the solver 
+! is unable to decrease the force residual. After a set number of failed 
+! attempts it will adjust the input LM parameter and reset the counter
+         IF (fsq_last .le. fsq_total1) THEN
+			 failed_min_count = failed_min_count + 1	
+             IF (failed_min_count .eq. 3) THEN
+				 levmarq_param0 = levmarq_param0*3
+				 failed_min_count =0
+			 END IF
+			 levmarq_param = levmarq_param0
+			
+		 ELSE
+			 failed_min_count = 0
+         END IF
  
          fsq_last = fsq_total1
       ELSE
