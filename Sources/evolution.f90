@@ -439,10 +439,10 @@
 !  min value the LM parameter can take.
 		 IF (relative_change .gt. levmarq_epsilon) THEN
 			 levmarq_param = MAX(levmarq_param/2,levmarq_min)
-			 fsq_last = fsq_total1
+			 !fsq_last = fsq_total1
 		 ELSE
 			 levmarq_param = MIN(levmarq_param*20,levmarq_max)
-			 fsq_last = fsq_total1
+			 !fsq_last = fsq_total1
 		 END IF
 ! Using new failed_min_count to keep track of number of iterations the solver 
 ! is unable to decrease the force residual. After a set number of failed 
