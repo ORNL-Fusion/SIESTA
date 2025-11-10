@@ -433,7 +433,7 @@
 			failed_min_count = failed_min_count + 1	
             IF (failed_min_count .eq. 3) THEN
 				levmarq_param0 = MAX(levmarq_param0*3,levmarq_max)
-				failed_min_count =0
+				failed_min_count = 0
 ! TODO: Implement a check in which if the LM parameter has reached the max
 ! value keep a counter, and when said counter has reached a certain number,
 ! say 3, then stop itterating and write out all data to restart file with 
@@ -449,6 +449,17 @@
          fsq_last = fsq_total1
       ELSE
          levmarq_param = levmarq_param0
+		 IF (fsq_last .le. fsq_total1) THEN
+			failed_min_count = failed_min_count + 1	
+            IF (failed_min_count .eq. 3) THEN
+				levmarq_param0 = MAX(levmarq_param0*3,levmarq_max)
+				failed_min_count = 0
+			END IF
+			levmarq_param = levmarq_param0
+			
+		 ELSE
+			failed_min_count = 0
+         END IF
          fsq_last = fsq_total1
       END IF
 
