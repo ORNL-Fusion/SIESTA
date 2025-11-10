@@ -59,6 +59,8 @@
       INTEGER, PUBLIC :: HESSPASS=0
 !>  Counter for the number of consecutive iterations where the force residual failed to decrease.
       INTEGER, PUBLIC :: failed_min_count=0
+!>  Counter for the number of consecutive iterations where the force residual failed to improve significantly
+	  INTEGER, PUBLIC :: poor_progress_count=0
       PUBLIC  :: apply_precond, dealloc_hessian, InitHess,              &
                  Compute_Hessian_Blocks, apply_colscale
 

@@ -425,7 +425,6 @@
 !  First calculate relative change.
 	  relative_change = ABS(fsq_total1-fsq_last)/fsq_last
 
-	  
 !  Determine levenberg parameter by a linear scale on how far away from the
 !  desired force tolarance we are.
       IF (fsq_total1 .lt. fsq_max) THEN
@@ -434,31 +433,45 @@
 	 &      / (fsq_max - MAX(ftol, ftol_min))
 		 levmarq_param = f1*fsq_total1 + f2
 		
-!  Now check the change. If it is greater than the set epsilon then reduce the
-!  LM parameter. Otherwise increase it. In both cases there is a max and 
-!  min value the LM parameter can take.
+!  Now check the change. If it is less than the set epsilon increase the
+!  LM parameter. The poor_progess_count will increment for each consecutive
+!  step where the fsq has not improved sufficiently. Otherwise it will reset
+!  to zero.
 		 IF (relative_change .lt. levmarq_epsilon) THEN
-			 levmarq_param = MIN(levmarq_param*20,levmarq_max)
-			 !fsq_last = fsq_total1
+			 poor_progress_count = poor_progress_count + 1
+			 levmarq_param = MIN(levmarq_param*(poor_progress_count+1),levmarq_max)
+		 ELSE 
+			 poor_progress_count = 0
 		 END IF
-! Using new failed_min_count to keep track of number of iterations the solver 
-! is unable to decrease the force residual. After a set number of failed 
-! attempts it will adjust the input LM parameter and reset the counter
+!  Using new failed_min_count to keep track of number of iterations the solver 
+!  is unable to decrease the force residual. After a set number of failed 
+!  attempts it will adjust the input LM parameter and reset the counter
          IF (fsq_last .le. fsq_total1) THEN
 			 failed_min_count = failed_min_count + 1	
              IF (failed_min_count .eq. 3) THEN
 				 levmarq_param0 = MAX(levmarq_param0*3,levmarq_max)
-				 failed_min_count =0
+				 failed_min_count = 0
 			 END IF
 			 levmarq_param = levmarq_param0
 			
 		 ELSE
 			 failed_min_count = 0
-        END IF
+         END IF
  
         fsq_last = fsq_total1
       ELSE
          levmarq_param = levmarq_param0
+		 IF (fsq_last .le. fsq_total1) THEN
+			 failed_min_count = failed_min_count + 1	
+             IF (failed_min_count .eq. 3) THEN
+				 levmarq_param0 = MAX(levmarq_param0*3,levmarq_max)
+				 failed_min_count = 0
+			 END IF
+			 levmarq_param = levmarq_param0
+			
+		 ELSE
+			 failed_min_count = 0
+         END IF
          fsq_last = fsq_total1
       END IF
 
