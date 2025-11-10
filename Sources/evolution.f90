@@ -403,6 +403,7 @@
 !  Local Parameters
       REAL (dp), DIMENSION(1), PARAMETER :: levscan = (/ 0.25_dp /)
       REAL (dp), PARAMETER               :: levmarq_min = 1.0E-10_dp
+	  REAL (dp), PARAMETER               :: levmarq_max = 1.0E9_dp
       REAL (dp), PARAMETER               :: fsq_max = 1.E-6_dp
       REAL (dp), PARAMETER               :: ftol_min = 1.0E-20_dp
 
@@ -425,13 +426,40 @@
          f2 = (fsq_max*levmarq_min - MAX(ftol, ftol_min)*levmarq_param0)       &
      &      / (fsq_max - MAX(ftol, ftol_min))
          levmarq_param = f1*fsq_total1 + f2
-
+! Using new failed_min_count to keep track of number of iterations the solver 
+! is unable to decrease the force residual. After a set number of failed 
+! attempts it will adjust the input LM parameter and reset the counter
          IF (fsq_last .le. fsq_total1) THEN
-            levmarq_param = levmarq_param0
+			failed_min_count = failed_min_count + 1	
+            IF (failed_min_count .eq. 3) THEN
+				levmarq_param0 = MAX(levmarq_param0*3,levmarq_max)
+				failed_min_count = 0
+! TODO: Implement a check in which if the LM parameter has reached the max
+! value keep a counter, and when said counter has reached a certain number,
+! say 3, then stop itterating and write out all data to restart file with 
+! a note how the fsq would not lower any further. I am unsure how to do this
+! last part. -GWS
+			END IF
+			levmarq_param = levmarq_param0
+			
+		 ELSE
+			failed_min_count = 0
          END IF
+ 
          fsq_last = fsq_total1
       ELSE
          levmarq_param = levmarq_param0
+		 IF (fsq_last .le. fsq_total1) THEN
+			failed_min_count = failed_min_count + 1	
+            IF (failed_min_count .eq. 3) THEN
+				levmarq_param0 = MAX(levmarq_param0*3,levmarq_max)
+				failed_min_count = 0
+			END IF
+			levmarq_param = levmarq_param0
+			
+		 ELSE
+			failed_min_count = 0
+         END IF
          fsq_last = fsq_total1
       END IF
 
