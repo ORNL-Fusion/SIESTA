@@ -81,6 +81,10 @@
 !>        @item{lmns_m_n_r_, Lambda sine parity.,   vmec_info::lmns_i}
 !>     @table_subsection{siesta_restart_vmec_arrays_asym_sec, VMEC arrays asym.}
 !>        @item{lmnc_m_n_r_, Lambda cosine parity., vmec_info::lmnc_i}
+!>     @table_subsection{siesta_restart_jac_arrays_sec, Jacobian arrays.}
+!>        @item{jmnc_m_n_r_, Lambda cosine parity., quantities::lmns_i}
+!>     @table_subsection{siesta_restart_jac_arrays_asym_sec, Jacobian arrays asym.}
+!>        @item{jmns_m_n_r_, Lambda sine parity.,   quantities::lmnc_i}
 !>     @table_subsection{siesta_restart_mag_arrays_sec, Magnetic fields.}
 !>        @item{bsubsmnsh_m_n_r_, B_s component sine parity.,   }
 !>        @item{bsubumnch_m_n_r_, B_u component cosine parity., }
@@ -304,6 +308,11 @@
       CHARACTER (len=*), PARAMETER :: vn_lmns = 'lmns_m_n_r_'
 !>  Name for the restart file lmnc.
       CHARACTER (len=*), PARAMETER :: vn_lmnc = 'lmnc_m_n_r_'
+
+!>  Name for the restart file jmnc.
+      CHARACTER (len=*), PARAMETER :: vn_jmnc = 'jmnc_m_n_r_'
+!>  Name for the restart file jmns.
+      CHARACTER (len=*), PARAMETER :: vn_jmns = 'jmns_m_n_r_'
 
 !>  Name for the restart file p_factor.
       CHARACTER (len=*), PARAMETER :: vn_p_factor = 'p_factor'
@@ -691,7 +700,8 @@
                             fsubsmnsf, fsubumncf, fsubvmncf,                   &
                             fsupsmncf, fsupumnsf, fsupvmnsf,                   &
                             fsupsmnsf, fsupumncf, fsupvmncf,                   &
-                            b_factor,   p_factor, jacobh, wp, wb
+                            b_factor,   p_factor, jacobh, wp, wb,              &
+                            jmnc, jmns
       USE fourier, ONLY: f_cos, f_sin, f_sum, f_none, n0, m0
       USE island_params, ONLY: nfp => nfp_i, chipf => chipf_i,                 &
                                phipf => phipf_i, wb0 => wb_i, wp0 => wp_i,     &
@@ -800,6 +810,7 @@
       CALL cdf_define(ncid, vn_fsubumns,  jbsupumnch, dimname=restart_dims)
       CALL cdf_define(ncid, vn_fsubvmns,  jbsupvmnch, dimname=restart_dims)
       CALL cdf_define(ncid, vn_lmns,      lmns,       dimname=restart_dims)
+      CALL cdf_define(ncid, vn_jmnc,      jmnc,       dimname=restart_dims)
       CALL cdf_define(ncid, vn_pmnc,      jpmnch,     dimname=restart_dims)
       CALL cdf_define(ncid, vn_b_factor,  b_factor)
       CALL cdf_define(ncid, vn_p_factor,  p_factor)
@@ -833,6 +844,7 @@
          CALL cdf_define(ncid, vn_fsubumnc,  jbsupumnch, dimname=restart_dims)
          CALL cdf_define(ncid, vn_fsubvmnc,  jbsupvmnch, dimname=restart_dims)
          CALL cdf_define(ncid, vn_lmnc,      lmnc,       dimname=restart_dims)
+         CALL cdf_define(ncid, vn_jmns,      jmns,       dimname=restart_dims)
          CALL cdf_define(ncid, vn_pmns, jpmnsh, dimname=restart_dims)
       END IF
 
@@ -971,6 +983,10 @@
       CALL restart_denormalize(tempmn_w, 1.0_dp)
       CALL cdf_write(ncid, vn_lmns, tempmn_w)
 
+      tempmn_w = jmnc
+      CALL restart_denormalize(tempmn_w, 1.0_dp)
+      CALL cdf_write(ncid, vn_jmnc, tempmn_w)
+
 !  Remove the orthonorm and p_factor so this quantity can be directly summed.
       CALL fourier_context%tomnsp(pijh, tempmn_w, f_cos)
       CALL restart_denormalize(tempmn_w, p_factor*mu0)
@@ -1063,6 +1079,10 @@
          tempmn_w = lmnc
          CALL restart_denormalize(tempmn_w, 1.0_dp)
          CALL cdf_write(ncid, vn_lmnc, tempmn_w)
+
+         tempmn_w = jmns
+         CALL restart_denormalize(tempmn_w, 1.0_dp)
+         CALL cdf_write(ncid, vn_jmns, tempmn_w)
 
 !  Remove the orthonorm and p_factor so this quantity can be directly summed.
          CALL fourier_context%tomnsp(pijh, tempmn_w, f_sin)
