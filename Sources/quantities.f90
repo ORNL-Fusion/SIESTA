@@ -174,6 +174,10 @@
       REAL (dp), ALLOCATABLE, DIMENSION(:,:,:) :: jvsupvijf
 !>  Real space jacobian on the half grid.
       REAL (dp), ALLOCATABLE, DIMENSION(:,:,:) :: jacobh
+!>  Fourier space jacobian for symmetric terms half grid.
+      REAL (dp), ALLOCATABLE, DIMENSION(:,:,:) :: jmnc
+!>  Fourier space jacobian for asymmetric terms half grid.
+      REAL (dp), ALLOCATABLE, DIMENSION(:,:,:) :: jmns
 !>  Real space jacobian on the full grid.
       REAL (dp), ALLOCATABLE, DIMENSION(:,:,:) :: jacobf
 !>  Volumn integration element.
@@ -274,8 +278,6 @@
       INTEGER                                  :: istat
       INTEGER                                  :: l
       REAL (dp)                                :: sum1
-      REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: tempmn_sym
-      REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: tempmn_asym
 
 !  Start of executable code.
       IF (PARSOLVER) THEN
@@ -308,18 +310,14 @@
 
 !  Filter jacobian ro preserve the unperturbed (constant in s) part of the
 !  pressure.
-      ALLOCATE(tempmn_sym(0:mpol,-ntor:ntor,SIZE(jacobh,3)))
-      CALL fourier_context%tomnsp(jacobh, tempmn_sym, f_cos)
+      CALL fourier_context%tomnsp(jacobh, jmnc, f_cos)
       IF (lasym) THEN
-         ALLOCATE(tempmn_asym(0:mpol,-ntor:ntor,SIZE(jacobh,3)))
-         CALL fourier_context%tomnsp(jacobh, tempmn_asym, f_sin)
+         CALL fourier_context%tomnsp(jacobh, jmns, f_sin)
       END IF
 
-      CALL fourier_context%toijsp(tempmn_sym, jacobh, f_none, f_cos)
-      DEALLOCATE(tempmn_sym)
+      CALL fourier_context%toijsp(jmnc, jacobh, f_none, f_cos)
       IF (lasym) THEN
-         CALL fourier_context%toijsp(tempmn_asym, jacobh, f_sum, f_sin)
-         DEALLOCATE(tempmn_asym)
+         CALL fourier_context%toijsp(jmns, jacobh, f_sum, f_sin)
       END IF
 
       CALL assert(ALL(jacobh*signjac .gt. 0), 'FILTERED JACOBIAN CHANGED SIGN!')
@@ -805,6 +803,11 @@
       jbsupvmnch = zero
       jpmnch = zero
 
+      IF (.not.ALLOCATED(jmnc)) THEN
+         ALLOCATE(jmnc(0:mpol,-ntor:ntor,ns))
+      END IF
+      jmnc = zero
+
       IF (.not.ALLOCATED(pwr_spec_s)) THEN
          ALLOCATE(pwr_spec_s(0:mpol,-ntor:ntor,ns,4),                          &
                   pwr_spec_a(0:mpol,-ntor:ntor,ns,4), stat=istat)
@@ -825,6 +828,11 @@
          jbsupumnsh = zero
          jbsupvmnsh = zero
          jpmnsh = zero
+
+         IF (.not.ALLOCATED(jmns)) THEN
+            ALLOCATE(jmns(0:mpol,-ntor:ntor,ns))
+         END IF
+         jmns = zero
       END IF
 
       IF (.not.ALLOCATED(bsq)) THEN
@@ -853,6 +861,9 @@
       END IF
       IF (ALLOCATED(pwr_spec_s)) THEN
          DEALLOCATE(pwr_spec_s, pwr_spec_a)
+      END IF
+      IF (ALLOCATED(jmnc)) THEN
+         DEALLOCATE(jmnc)
       END IF
 
 !  Other quantities
@@ -895,6 +906,9 @@
          IF (ALLOCATED(djpmnsh)) THEN
             DEALLOCATE(djpmnsh, djbsupsmnch, djbsupumnsh, djbsupvmnsh,         &
                        ksupsmncf, ksupumnsf, ksupvmnsf)
+         END IF
+         IF (ALLOCATED(jmnc)) THEN
+            DEALLOCATE(jmnc)
          END IF
       END IF
 
