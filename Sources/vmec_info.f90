@@ -17,7 +17,8 @@
                          wb_vmec=>wb, wp_vmec=>wp, gamma_vmec=>gamma,          &
                          volume_vmec=>volume, raxis_vmec=>raxis,               &
                          lasym_vmec=>lasym, iasym_vmec=>iasym,                 &
-                         vmec_curtor=>Itor, chi_vmec=>chi, phi_vmec=>phi
+                         vmec_curtor=>Itor, chi_vmec=>chi, phi_vmec=>phi,      &
+                         vmec_version=>version_, vmec_signgs=>isigng
       USE fourier, ONLY: f_cos, f_sin
 
       IMPLICIT NONE
@@ -339,6 +340,10 @@
 !  Set boundary condition. Flux is zero at the axis.
       chif_i(1) = 0.0
       phif_i(1) = 0.0
+
+      IF (vmec_version .gt. 10) THEN
+         chif_i = vmec_signgs*chif_i
+      END IF
 
 !  Pessure should never be negative.
       WHERE (presf_i .lt. 0)

@@ -746,6 +746,8 @@
 !  Local Variables
       REAL (dp)                               :: workcos
       REAL (dp)                               :: worksin
+      REAL (dp)                               :: tempcos
+      REAL (dp)                               :: tempsin
       INTEGER                                 :: j
       INTEGER                                 :: m
       INTEGER                                 :: n
@@ -760,9 +762,11 @@
       xmn(:,:) = 0
       IF (parity .eq. f_cos) THEN
          DO j = 1, SIZE(this%cosnv, 1) !  nzeta
+            tempcos = this%cosnv(j,n0)
+            tempsin = this%sinnv(j,n0)
             DO m = m0, UBOUND(this%cosmu, 2) ! mpol
-               workcos = this%workmj1(m,j)*this%cosnv(j,n0)
-               worksin = this%workmj2(m,j)*this%sinnv(j,n0)
+               workcos = this%workmj1(m,j)*tempcos
+               worksin = this%workmj2(m,j)*tempsin
 
                xmn(m + moff,n0 + noff) = xmn(m + moff,n0 + noff)               &
                                        + workcos - worksin
@@ -777,9 +781,11 @@
                xmn(m0 + moff,n + noff) = xmn(m0 + moff,n + noff)               &
                                        + workcos - worksin
 
+               tempcos = this%cosnv(j,n)
+               tempsin = this%sinnv(j,n)
                DO m = m1, UBOUND(this%cosmu, 2) ! mpol
-                  workcos = this%workmj1(m,j)*this%cosnv(j,n)
-                  worksin = this%workmj2(m,j)*this%sinnv(j,n)
+                  workcos = this%workmj1(m,j)*tempcos
+                  worksin = this%workmj2(m,j)*tempsin
 
                   xmn(m + moff,n + noff) = xmn(m + moff,n + noff)              &
                                          + workcos - worksin
@@ -791,9 +797,11 @@
          xmn(m0 + moff,:-n1 + noff) = zero
       ELSE
          DO j = 1, SIZE(this%cosnv, 1) !  nzeta
+            tempcos = this%cosnv(j,n0)
+            tempsin = this%sinnv(j,n0)
             DO m = m0, UBOUND(this%cosmu, 2) ! mpol
-               workcos = this%workmj2(m,j)*this%cosnv(j,n0)
-               worksin = this%workmj1(m,j)*this%sinnv(j,n0)
+               workcos = this%workmj2(m,j)*tempcos
+               worksin = this%workmj1(m,j)*tempsin
 
                xmn(m + moff,n0 + noff) = xmn(m + moff,n0 + noff)               &
                                        + workcos + worksin
@@ -808,9 +816,11 @@
                xmn(m0 + moff,n + noff) = xmn(m0 + moff,n + noff)               &
                                        + workcos + worksin
 
+               tempcos = this%cosnv(j,n)
+               tempsin = this%sinnv(j,n)
                DO m = m1, UBOUND(this%cosmu, 2) ! mpol
-                  workcos = this%workmj2(m,j)*this%cosnv(j,n)
-                  worksin = this%workmj1(m,j)*this%sinnv(j,n)
+                  workcos = this%workmj2(m,j)*tempcos
+                  worksin = this%workmj1(m,j)*tempsin
 
                   xmn(m + moff,n + noff) = xmn(m + moff,n + noff)              &
                                          + workcos + worksin
