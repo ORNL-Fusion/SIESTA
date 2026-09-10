@@ -341,6 +341,10 @@
       chif_i(1) = 0.0
       phif_i(1) = 0.0
 
+      IF (vmec_version .gt. 10) THEN
+         chif_i = vmec_signgs*chif_i
+      END IF
+
 !  Pessure should never be negative.
       WHERE (presf_i .lt. 0)
          presf_i = 0
@@ -349,10 +353,6 @@
 !  Scale phipf_i and convert to sqrt(flux) mesh by multiplying by 2*s
       phipf_i = phipf_i/twopi
       chipf_i = chipf_i/twopi
-
-      IF (vmec_version .gt. 10) THEN
-         chipf_i = vmec_signgs*chipf_i
-      END IF
 
 !  Mapping s_vmec = (s_siesta)^2, so d(s_vmec)/d(s_siesta) = 2 s_siesta, where
 !  s_siesta = hs_i*(js-1)
