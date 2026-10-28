@@ -772,7 +772,7 @@
              ' |J^s+r12*J^u|/|J^s-r12*J^u| (m=1,r->0, asym) : ',1pe10.3,/, &
              '-JBSUPSH(JS=2-6,M=1)/r12 (asym): ',1p5e10.3,/,             &
              ' JBSUPUH(JS=2-6,M=1)           : ',1p5e10.3)
-1007  FORMAT(' SIESTA Curtor : ',e12.4,' VMEC Curtor : 'e12.4,/)
+1007  FORMAT(' SIESTA Curtor : ',e12.4,' VMEC Curtor : ',e12.4,/)
 
       END SUBROUTINE
 

@@ -1298,7 +1298,7 @@
          WRITE (*,1000) TRIM(name), m, n, expected, received
       END IF
 
-1000  FORMAT('fourier.f90: 'a,' m = ',i3,' n = ',i3,' test failed.',/,         &
+1000  FORMAT('fourier.f90: ',a,' m = ',i3,' n = ',i3,' test failed.',/,        &
              'Expected ',e12.3,' Recieved ',e12.3)
 
       END FUNCTION

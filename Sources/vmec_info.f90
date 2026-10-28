@@ -718,7 +718,7 @@
       currumn(:,:,ns) = 0
       currvmn(:,:,ns) = 0
 
-1000  FORMAT(' It is recommended to increase the number of modes to at' &
+1000  FORMAT(' It is recommended to increase the number of modes to at',       &
              ' least VMEC values mpol=',i4,' ntor=',i4)
 
       END SUBROUTINE
