@@ -165,7 +165,7 @@
              ' PCHELMS HESSIAN COMPUTATION TIME: ',f10.1,'s')
 1002  FORMAT(' PCHELMS HESSIAN SOLVER TIME: ',f10.1,'s')
 1003  FORMAT(/,' |DivB| (normed) = ',1p,e12.3,/,                               &
-             /,' SIESTA Curtor : ',e12.4,' VMEC Curtor : 'e12.4,               &
+             /,' SIESTA Curtor : ',e12.4,' VMEC Curtor : ',e12.4,              &
              /' <chiedge> = ',e12.4,' <phiedge>',e12.4,                        &
              /,'-----------------------------------------------',              &
              /,'ENDING PCHELMS',                                               &
@@ -1085,7 +1085,7 @@ REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: divf
 1008  FORMAT(2i8, 5(1p,e12.4))
 1009  FORMAT(' jac(u=0,v=0,ns): ',1p,e12.3,' jacobh: ',1p,e12.3,/              &
              ' R*B^v(u=0,v=0,ns) : ',1p,e12.3)
-1010  FORMAT(/,'  RAD      CHIP(WOUT)    CHIP(PCH)     CHIP(VP)'               &
+1010  FORMAT(/,'  RAD      CHIP(WOUT)    CHIP(PCH)     CHIP(VP)',              &
                '      PHIP(WOUT)    PHIP(PCH)     PHIP(VP)')
 1011  FORMAT(f7.3,1p,6e14.3)
 
