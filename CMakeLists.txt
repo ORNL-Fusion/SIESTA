@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.14)
 project (siesta C CXX Fortran)
 
 add_library (siesta)
+add_dependencies (siesta pull_siesta)
 
 target_link_libraries (siesta PUBLIC bmw)
 target_include_directories (siesta
@@ -26,6 +27,7 @@ install (TARGETS xsiesta)
 
 #  Build test utilities.
 add_executable (xsiesta_test)
+add_dependencies (siesta pull_siesta)
 
 target_link_libraries (xsiesta_test PUBLIC stell)
 target_compile_features (xsiesta_test PRIVATE cxx_std_11)
