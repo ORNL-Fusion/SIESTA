@@ -1538,8 +1538,9 @@ REAL (dp), DIMENSION(:,:,:), ALLOCATABLE :: divf
       gi%icntl(5) = iortho
 !  Initial guess (use it if = 1, otherwise ignore it)
       gi%icntl(6) = 1
-!  Maximum number of iterations at each step (~ns/5)
-      gi%icntl(7) = 20
+!  Maximum number of iterations. The count needed to reach the tolerance grows
+!  with ns, and a truncated exterior solve leaves a spurious enclosed current.
+      gi%icntl(7) = 200
 !  Default
       gi%icntl(8) = 1
 !  Steps for peek at progress during rev com loop.
