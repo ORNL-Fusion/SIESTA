@@ -117,7 +117,17 @@
          INTEGER, DIMENSION(:), POINTER     :: tor_modes => null()
 !>  Found modes resonances.
          LOGICAL, DIMENSION(:,:), POINTER   :: found_modes => null()
+#ifdef BLAS_FOURIER
+!>  Temp buffer for applying the orthonormal factor.
+         REAL (dp), DIMENSION(:,:), POINTER :: tempmn => null()
+#endif
       CONTAINS
+         PROCEDURE       :: get_mpol => fourier_get_mpol
+         PROCEDURE       :: get_ntor => fourier_get_ntor
+         PROCEDURE       :: get_ntheta => fourier_get_ntheta
+         PROCEDURE       :: get_nzeta => fourier_get_nzeta
+         PROCEDURE       :: get_mpol_size => fourier_get_mpol_size
+         PROCEDURE       :: get_ntor_size => fourier_get_ntor_size
          PROCEDURE, PASS :: toijsp_2d => fourier_toijsp_2d
          PROCEDURE, PASS :: toijsp_3d => fourier_toijsp_3d
          GENERIC         :: toijsp => toijsp_2d, toijsp_3d
@@ -259,13 +269,24 @@
          END DO
       END DO
 
+#ifdef BLAS_FOURIER
+      ALLOCATE(fourier_construct%cosnv(nzeta,-ntor:ntor))
+      ALLOCATE(fourier_construct%cosnvn(nzeta,-ntor:ntor))
+      ALLOCATE(fourier_construct%sinnv(nzeta,-ntor:ntor))
+      ALLOCATE(fourier_construct%sinnvn(nzeta,-ntor:ntor))
+#else
       ALLOCATE(fourier_construct%cosnv(nzeta,0:ntor))
       ALLOCATE(fourier_construct%cosnvn(nzeta,0:ntor))
       ALLOCATE(fourier_construct%sinnv(nzeta,0:ntor))
       ALLOCATE(fourier_construct%sinnvn(nzeta,0:ntor))
+#endif
 
 !  For now we are in one field period.
-      DO j = 0, ntor
+      fourier_construct%cosnv(:,n0) = 1.0_dp
+      fourier_construct%sinnv(:,n0) = 0.0_dp
+      fourier_construct%cosnvn(:,n0) = 0.0_dp
+      fourier_construct%sinnvn(:,n0) = 0.0_dp
+      DO j = 1, ntor
          DO i = 1, nzeta
             arg = (twopi*(i - 1))/nzeta
 
@@ -274,10 +295,23 @@
 
             CALL fourier_round_trig(fourier_construct%cosnv(i,j),              &
      &                              fourier_construct%sinnv(i,j))
+
+#ifdef BLAS_FOURIER
+            fourier_construct%cosnv(i,-j) = fourier_construct%cosnv(i,j)
+            fourier_construct%sinnv(i,-j) = -fourier_construct%sinnv(i,j)
+
+            CALL fourier_round_trig(fourier_construct%cosnv(i,j - ntor),       &
+     &                              fourier_construct%sinnv(i,j - ntor))
+#endif
          END DO
 
          fourier_construct%cosnvn(:,j) = tor_modes(j)*nfp*fourier_construct%cosnv(:,j)
          fourier_construct%sinnvn(:,j) = tor_modes(j)*nfp*fourier_construct%sinnv(:,j)
+
+#ifdef BLAS_FOURIER
+         fourier_construct%cosnvn(:,-j) = -fourier_construct%cosnvn(:,j)
+         fourier_construct%sinnvn(:,-j) = fourier_construct%sinnvn(:,j)
+#endif
       END DO
 
 !  Compute orthonorm factor for cos(mu + nv), sin(mu + nv) basis
@@ -304,6 +338,10 @@
 
       fourier_construct%tor_modes(-ntor:ntor) = tor_modes(-ntor:ntor)
       fourier_construct%found_modes = .false.
+
+#ifdef BLAS_FOURIER
+      ALLOCATE(fourier_construct%tempmn(0:mpol,-ntor:ntor))
+#endif
 
       END FUNCTION
 
@@ -410,7 +448,137 @@
          this%found_modes => null()
       END IF
 
+#ifdef BLAS_FOURIER
+      IF (ASSOCIATED(this%tempmn)) THEN
+         DEALLOCATE(this%tempmn)
+         this%tempmn => null()
+      END IF
+#endif
+
       END SUBROUTINE
+
+!*******************************************************************************
+!  GETTERS
+!*******************************************************************************
+!-------------------------------------------------------------------------------
+!>  @brief Get the number of poloidal modes.
+!>
+!>
+!>  @param[in] this A @ref fourier_class instance.
+!>  @returns The number of poloidal modes.
+!-------------------------------------------------------------------------------
+      PURE FUNCTION fourier_get_mpol(this)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      INTEGER                           :: fourier_get_mpol
+      CLASS (fourier_class), INTENT(in) :: this
+
+!  Start of executable code.
+      fourier_get_mpol = UBOUND(this%orthonorm, 1)
+
+      END FUNCTION
+
+!-------------------------------------------------------------------------------
+!>  @brief Get the number of toroidal modes.
+!>
+!>
+!>  @param[in] this A @ref fourier_class instance.
+!>  @returns The number of toroidal modes.
+!-------------------------------------------------------------------------------
+      PURE FUNCTION fourier_get_ntor(this)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      INTEGER                           :: fourier_get_ntor
+      CLASS (fourier_class), INTENT(in) :: this
+
+!  Start of executable code.
+      fourier_get_ntor = UBOUND(this%orthonorm, 2)
+
+      END FUNCTION
+
+!-------------------------------------------------------------------------------
+!>  @brief Get the number of theta grid points.
+!>
+!>
+!>  @param[in] this A @ref fourier_class instance.
+!>  @returns The number of theta grid points.
+!-------------------------------------------------------------------------------
+      PURE FUNCTION fourier_get_ntheta(this)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      INTEGER                           :: fourier_get_ntheta
+      CLASS (fourier_class), INTENT(in) :: this
+
+!  Start of executable code.
+      fourier_get_ntheta = SIZE(this%cosmu, 1)
+
+      END FUNCTION
+
+!-------------------------------------------------------------------------------
+!>  @brief Get the number of zeta grid points.
+!>
+!>
+!>  @param[in] this A @ref fourier_class instance.
+!>  @returns The number of zeta grid points.
+!-------------------------------------------------------------------------------
+      PURE FUNCTION fourier_get_nzeta(this)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      INTEGER                           :: fourier_get_nzeta
+      CLASS (fourier_class), INTENT(in) :: this
+
+!  Start of executable code.
+fourier_get_nzeta = SIZE(this%cosnv, 1)
+
+      END FUNCTION
+
+!-------------------------------------------------------------------------------
+!>  @brief Get the size of poloidal modes.
+!>
+!>
+!>  @param[in] this A @ref fourier_class instance.
+!>  @returns The size of poloidal modes.
+!-------------------------------------------------------------------------------
+      PURE FUNCTION fourier_get_mpol_size(this)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      INTEGER                           :: fourier_get_mpol_size
+      CLASS (fourier_class), INTENT(in) :: this
+
+!  Start of executable code.
+      fourier_get_mpol_size = SIZE(this%orthonorm, 1)
+
+      END FUNCTION
+
+!-------------------------------------------------------------------------------
+!>  @brief Get the size of toroidal modes.
+!>
+!>
+!>  @param[in] this A @ref fourier_class instance.
+!>  @returns The number of toroidal modes.
+!-------------------------------------------------------------------------------
+      PURE FUNCTION fourier_get_ntor_size(this)
+
+      IMPLICIT NONE
+
+!  Declare Arguments
+      INTEGER                           :: fourier_get_ntor_size
+      CLASS (fourier_class), INTENT(in) :: this
+
+!  Start of executable code.
+      fourier_get_ntor_size = SIZE(this%orthonorm, 2)
+
+      END FUNCTION
 
 !*******************************************************************************
 !  UTILITY SUBROUTINES
@@ -550,7 +718,10 @@
 !>  @param[out]   xmn    Real space quantity.
 !>  @param[in]    parity Fourier parity flag.
 !-------------------------------------------------------------------------------
-      PURE SUBROUTINE fourier_tomnsp_2d(this, xuv, xmn, parity)
+#ifndef BLAS_FOURIER
+      PURE
+#endif
+      SUBROUTINE fourier_tomnsp_2d(this, xuv, xmn, parity)
 
       IMPLICIT NONE
 
@@ -582,8 +753,11 @@
 !>  @param[in]    parity Fourier parity flag.
 !>  @param[in]    asym   Add stellarator asymmetric terms.
 !-------------------------------------------------------------------------------
-      PURE SUBROUTINE fourier_tomnsp_2d_pest(this, xuv, xmn, lambda, dupdu,    &
-                                             parity, asym)
+#ifndef BLAS_FOURIER
+      PURE
+#endif
+      SUBROUTINE fourier_tomnsp_2d_pest(this, xuv, xmn, lambda, dupdu, parity, &
+                                        asym)
 
       IMPLICIT NONE
 
@@ -612,10 +786,17 @@
 !>  version uses the regular poloidal sum.
 !>
 !>  @param[inout] this A @ref fourier_class instance.
-!>  @param[in]    xuv  Fourier space quantity.
+!>  @param[in]    xuv  Real space quantity.
 !-------------------------------------------------------------------------------
-      PURE SUBROUTINE fourier_tomnsp_2d_u(this, xuv)
-
+#ifndef BLAS_FOURIER
+      PURE
+#endif
+      SUBROUTINE fourier_tomnsp_2d_u(this, xuv)
+#ifdef BLAS_FOURIER
+#ifdef ACCELERATE_NEW_LAPACK
+      USE accelerate_blas_lp64
+#endif
+#endif
       IMPLICIT NONE
 
 !  Declare Arguments
@@ -623,19 +804,43 @@
       REAL (dp), DIMENSION(:,:), INTENT(in) :: xuv
 
 !  Local Variables
+#ifndef BLAS_FOURIER
       INTEGER                               :: j
       INTEGER                               :: m
+#endif
 
 !  Start of executable code.
 
 !  First, add over poloidal collocation angles. Note use of cosmui/sinmui
 !  include normalization factors.
-      DO j = 1, SIZE(xuv, 2) !  nzeta
-         DO m = m0, UBOUND(this%cosmu, 2) !  mpol
+#ifdef BLAS_FOURIER
+#ifdef ACCELERATE_NEW_LAPACK
+      CALL DGEMM('T', 'N', this%get_mpol_size(), this%get_nzeta(),             &
+                 this%get_ntheta(), 1.0_dp, this%cosmui(1,m0),                 &
+                 this%get_ntheta(), xuv(1,1), this%get_ntheta(), 0.0_dp,       &
+                 this%workmj1(m0,1), this%get_mpol_size())
+      CALL DGEMM('T', 'N', this%get_mpol_size(), this%get_nzeta(),             &
+                 this%get_ntheta(), 1.0_dp, this%sinmui(1,m0),                 &
+                 this%get_ntheta(), xuv(1,1), this%get_ntheta(), 0.0_dp,       &
+                 this%workmj2(m0,1), this%get_mpol_size())
+#else
+      CALL DGEMM('T', 'N', this%get_mpol_size(), this%get_nzeta(),             &
+                 this%get_ntheta(), 1.0_dp, this%cosmui, this%get_ntheta(),    &
+                 xuv, this%get_ntheta(), 0.0_dp, this%workmj1,                 &
+                 this%get_mpol_size())
+      CALL DGEMM('T', 'N', this%get_mpol_size(), this%get_nzeta(),             &
+                 this%get_ntheta(), 1.0_dp, this%sinmui, this%get_ntheta(),    &
+                 xuv, this%get_ntheta(), 0.0_dp, this%workmj2,                 &
+                 this%get_mpol_size())
+#endif
+#else
+      DO j = 1, this%get_nzeta()
+         DO m = m0, this%get_mpol()
             this%workmj1(m,j) = DOT_PRODUCT(xuv(:,j), this%cosmui(:,m))
             this%workmj2(m,j) = DOT_PRODUCT(xuv(:,j), this%sinmui(:,m))
          END DO
       END DO
+#endif
 
       END SUBROUTINE
 
@@ -694,11 +899,11 @@
 
 !  First, add over poloidal collocation angles. Note use of cosmui/sinmui
 !  include normalization factors.
-      DO j = 1, SIZE(xuv, 2) !  nzeta
-         DO m = m0, UBOUND(this%cosmu, 2) !  mpol
+      DO j = 1, this%get_nzeta()
+         DO m = m0, this%get_mpol()
             this%workmj1(m,j) = 0
             this%workmj2(m,j) = 0
-            DO i = 1, SIZE(xuv, 1) !  ntheta
+            DO i = 1, this%get_ntheta()
                IF (m .eq. m0) THEN
                   cosml = dupdu(i,j)
                   sinml = 0
@@ -734,7 +939,10 @@
 !>  @param[out] xmn    Real space quantity.
 !>  @param[in]  parity Fourier parity flag.
 !-------------------------------------------------------------------------------
-      PURE SUBROUTINE fourier_tomnsp_2d_v(this, xmn, parity)
+#ifndef BLAS_FOURIER
+      PURE
+#endif
+      SUBROUTINE fourier_tomnsp_2d_v(this, xmn, parity)
 
       IMPLICIT NONE
 
@@ -744,10 +952,12 @@
       INTEGER, INTENT(in)                    :: parity
 
 !  Local Variables
+#ifndef BLAS_FOURIER
       REAL (dp)                               :: workcos
       REAL (dp)                               :: worksin
       REAL (dp)                               :: tempcos
       REAL (dp)                               :: tempsin
+#endif
       INTEGER                                 :: j
       INTEGER                                 :: m
       INTEGER                                 :: n
@@ -756,15 +966,56 @@
 
 !  Start of executable code.
       moff = LBOUND(xmn,1)
-      noff = LBOUND(xmn,2) + UBOUND(this%cosnv,2)
+
+#ifdef BLAS_FOURIER
+      m = this%get_mpol_size()
+      n = this%get_ntor_size()
+      j = this%get_nzeta()
+
+      noff = LBOUND(xmn,2)
+#ifdef ACCELERATE_NEW_LAPACK
+      IF (parity .eq. f_cos) THEN
+         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj1(m0,1), m,          &
+                    this%cosnv(1,LBOUND(this%cosnv,2)), j, 0.0_dp,             &
+                    xmn(moff, noff), m)
+         CALL DGEMM('N', 'N', m, n, j, -1.0_dp, this%workmj2(m0,1), m,         &
+                    this%sinnv(1,LBOUND(this%sinnv,2)), j, 1.0_dp,             &
+                    xmn(moff, noff), m)
+         xmn(m0 + moff,:-n1 + noff + this%get_ntor()) = zero
+      ELSE
+         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj2(m0,1), m,          &
+                    this%cosnv(1,LBOUND(this%cosnv,2)), j, 0.0_dp,             &
+                    xmn(moff, noff), m)
+         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj1(m0,1), m,          &
+                    this%sinnv(1,LBOUND(this%sinnv,2)), j, 1.0_dp,             &
+                    xmn(moff, noff), m)
+         xmn(m0 + moff,:n0 + noff + this%get_ntor()) = zero
+      END IF
+#else
+      IF (parity .eq. f_cos) THEN
+         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj1, j, this%cosnv, j, &
+                    0.0_dp, xmn, m)
+         CALL DGEMM('N', 'N', m, n, j, -1.0_dp, this%workmj2, j, this%sinnv,   &
+                    n, 1.0_dp, xmn, m)
+         xmn(m0 + moff,:-n1 + noff + this%get_ntor()) = zero
+      ELSE
+         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj2, j, this%cosnv, j, &
+                    0.0_dp, xmn, m)
+         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj1, j, this%sinnv,    &
+                    n, 1.0_dp, xmn, m)
+         xmn(m0 + moff,:n0 + noff + this%get_ntor()) = zero
+      END IF
+#endif
+#else
+      noff = LBOUND(xmn,2) + this%get_ntor()
 
 !  Then add over toroidal collocation angles.
       xmn(:,:) = 0
       IF (parity .eq. f_cos) THEN
-         DO j = 1, SIZE(this%cosnv, 1) !  nzeta
+         DO j = 1, this%get_nzeta()
             tempcos = this%cosnv(j,n0)
             tempsin = this%sinnv(j,n0)
-            DO m = m0, UBOUND(this%cosmu, 2) ! mpol
+            DO m = m0, this%get_mpol()
                workcos = this%workmj1(m,j)*tempcos
                worksin = this%workmj2(m,j)*tempsin
 
@@ -773,8 +1024,8 @@
             END DO
          END DO
 
-         DO n = n1, UBOUND(this%cosnv, 2) !  ntor
-            DO j = 1, SIZE(this%cosnv, 1) !  nzeta
+         DO n = n1, this%get_ntor()
+            DO j = 1, this%get_nzeta()
                workcos = this%workmj1(m0,j)*this%cosnv(j,n)
                worksin = this%workmj2(m0,j)*this%sinnv(j,n)
 
@@ -783,7 +1034,7 @@
 
                tempcos = this%cosnv(j,n)
                tempsin = this%sinnv(j,n)
-               DO m = m1, UBOUND(this%cosmu, 2) ! mpol
+               DO m = m1, this%get_mpol()
                   workcos = this%workmj1(m,j)*tempcos
                   worksin = this%workmj2(m,j)*tempsin
 
@@ -796,10 +1047,10 @@
          END DO
          xmn(m0 + moff,:-n1 + noff) = zero
       ELSE
-         DO j = 1, SIZE(this%cosnv, 1) !  nzeta
+         DO j = 1, this%get_nzeta()
             tempcos = this%cosnv(j,n0)
             tempsin = this%sinnv(j,n0)
-            DO m = m0, UBOUND(this%cosmu, 2) ! mpol
+            DO m = m0, this%get_mpol()
                workcos = this%workmj2(m,j)*tempcos
                worksin = this%workmj1(m,j)*tempsin
 
@@ -808,8 +1059,8 @@
             END DO
          END DO
 
-         DO n = n1, UBOUND(this%cosnv, 2) !  ntor
-            DO j = 1, SIZE(this%cosnv, 1) !  nzeta
+         DO n = n1, this%get_ntor()
+            DO j = 1, this%get_nzeta()
                workcos = this%workmj2(m0,j)*this%cosnv(j,n)
                worksin = this%workmj1(m0,j)*this%sinnv(j,n)
 
@@ -818,7 +1069,7 @@
 
                tempcos = this%cosnv(j,n)
                tempsin = this%sinnv(j,n)
-               DO m = m1, UBOUND(this%cosmu, 2) ! mpol
+               DO m = m1, this%get_mpol()
                   workcos = this%workmj2(m,j)*tempcos
                   worksin = this%workmj1(m,j)*tempsin
 
@@ -831,6 +1082,7 @@
          END DO
          xmn(m0 + moff,:n0 + noff) = zero
       END IF
+#endif
 
       xmn = this%orthonorm*xmn
 
@@ -893,7 +1145,15 @@
 !>  @param[in]    dflag  Derivative and sum control flags.
 !>  @param[in]    parity Fourier parity flag.
 !-------------------------------------------------------------------------------
-      PURE SUBROUTINE fourier_toijsp_2d(this, xmn, xuv, dflag, parity)
+#ifndef BLAS_FOURIER
+      PURE
+#endif
+      SUBROUTINE fourier_toijsp_2d(this, xmn, xuv, dflag, parity)
+#ifdef BLAS_FOURIER
+#ifdef ACCELERATE_NEW_LAPACK
+      USE accelerate_blas_lp64
+#endif
+#endif
 
       IMPLICIT NONE
 
@@ -905,24 +1165,29 @@
       INTEGER, INTENT(in)                      :: dflag
 
 !  Local Variables
+      INTEGER                                  :: moff
+      INTEGER                                  :: noff
+      REAL (dp), DIMENSION(:,:), POINTER       :: anglem1
+      REAL (dp), DIMENSION(:,:), POINTER       :: anglem2
+      REAL (dp), DIMENSION(:,:), POINTER       :: anglen1
+      REAL (dp), DIMENSION(:,:), POINTER       :: anglen2
+#ifdef BLAS_FOURIER
+      REAL (dp)                                :: msign
+      REAL (dp)                                :: nsign1
+      REAL (dp)                                :: nsign2
+#else
       INTEGER                                  :: j
       INTEGER                                  :: m
       INTEGER                                  :: n
-      INTEGER                                  :: moff
-      INTEGER                                  :: noff
       REAL (dp)                                :: workmn
-      REAL (dp), DIMENSION(:,:), POINTER       :: anglem1
-      REAL (dp), DIMENSION(:,:), POINTER       :: anglem2
       INTEGER                                  :: msign
-      REAL (dp), DIMENSION(:,:), POINTER       :: anglen1
-      REAL (dp), DIMENSION(:,:), POINTER       :: anglen2
       INTEGER                                  :: nsign1
       INTEGER                                  :: nsign2
       INTEGER                                  :: nsign3
+#endif
 
 !  Start of executable code.
       moff = LBOUND(xmn,1)
-      noff = LBOUND(xmn,2) + UBOUND(this%cosnv,2)
 
 !  Poloidal derivative requested use cosmum, sinmum.
       IF (BTEST(dflag, b_du)) THEN
@@ -935,21 +1200,51 @@
          msign = 1
       END IF
 
+#ifdef BLAS_FOURIER
+      noff = LBOUND(xmn,2)
+      this%tempmn = this%orthonorm*xmn
+#ifdef ACCELERATE_NEW_LAPACK
+      CALL DGEMM('N', 'N', this%get_ntheta(), this%get_ntor_size(),            &
+                 this%get_mpol_size(), msign, anglem1(1,m0),                   &
+                 this%get_ntheta(), this%tempmn(m0,-this%get_ntor()),          &
+                 this%get_mpol_size(), 0.0_dp,                                 &
+                 this%workin1(1,-this%get_ntor()), this%get_ntheta())
+      CALL DGEMM('N', 'N', this%get_ntheta(), this%get_ntor_size(),            &
+                 this%get_mpol_size(), 1.0_dp, anglem1(1,m0),                  &
+                 this%get_ntheta(), this%tempmn(m0,-this%get_ntor()),          &
+                 this%get_mpol_size(), 0.0_dp,                                 &
+                 this%workin1(1,-this%get_ntor()), this%get_ntheta())
+#else
+      CALL DGEMM('N', 'N', this%get_ntheta(), this%get_ntor_size(),            &
+                 this%get_mpol_size(), msign, anglem1, this%get_ntheta(),      &
+                 this%tempmn, this%get_mpol_size(), 0.0_dp, this%workin1,      &
+                 this%get_ntheta())
+      CALL DGEMM('N', 'N', this%get_ntheta(), this%get_ntor_size(),            &
+                 this%get_mpol_size(), 1.0_dp, anglem2, this%get_ntheta(),     &
+                 this%tempmn, this%get_mpol_size(), 0.0_dp, this%workin2,      &
+                 this%get_ntheta())
+#endif
+#else
+      noff = LBOUND(xmn,2) + this%get_ntor()
+
       this%workin1 = 0
       this%workin2 = 0
 
 !  Sum over poloidal angles.
-      DO n = LBOUND(this%workin1, 2), UBOUND(this%workin1, 2) !  -ntor:ntor
-         DO m = 0, UBOUND(this%cosmu, 2) !  mpol
+      DO n = -this%get_ntor(), this%get_ntor()
+         DO m = 0, this%get_mpol()
             workmn = this%orthonorm(m,n)*xmn(m + moff,n + noff)
 
             this%workin1(:,n) = this%workin1(:,n) + msign*workmn*anglem1(:,m)
             this%workin2(:,n) = this%workin2(:,n) + workmn*anglem2(:,m)
          END DO
       END DO
+#endif
 
       IF (parity .eq. f_cos) THEN
+#ifndef BLAS_FOURIER
          nsign3 = 1
+#endif
          IF (BTEST(dflag, b_dv)) THEN
             anglen1 => this%sinnvn
             anglen2 => this%cosnvn
@@ -962,7 +1257,9 @@
             nsign2 = -1
          END IF
       ELSE
+#ifndef BLAS_FOURIER
          nsign3 = -1
+#endif
          IF (BTEST(dflag, b_dv)) THEN
             anglen1 => this%cosnvn
             anglen2 => this%sinnvn
@@ -976,6 +1273,29 @@
          END IF
       END IF
 
+#ifdef BLAS_FOURIER
+#ifdef ACCELERATE_NEW_LAPACK
+      CALL DGEMM('N', 'T', this%get_ntheta(), this%get_nzeta(),                &
+                 this%get_ntor_size(), nsign1,                                 &
+                 this%workin1(1,-this%get_ntor()), this%get_ntheta(),          &
+                 anglen1(1,-this%get_ntor()), this%get_nzeta(), 0.0_dp,        &
+                 xuv(1,1), this%get_ntheta())
+      CALL DGEMM('N', 'T', this%get_ntheta(), this%get_nzeta(),                &
+                 this%get_ntor_size(), nsign2,                                 &
+                 this%workin2(1,-this%get_ntor()), this%get_ntheta(),          &
+                 anglen2(1,-this%get_ntor()), this%get_nzeta(), 1.0_dp,        &
+                 xuv(1,1), this%get_ntheta())
+#else
+      CALL DGEMM('N', 'T', this%get_ntheta(), this%get_nzeta(),                &
+                 this%get_ntor_size(), nsign1, this%workin1,                   &
+                 this%get_ntheta(), anglen1, this%get_nzeta(), 0.0_dp,         &
+                 xuv, this%get_ntheta())
+      CALL DGEMM('N', 'T', this%get_ntheta(), this%get_nzeta(),                &
+                 this%get_ntor_size(), nsign2, this%workin2,                   &
+                 this%get_ntheta(), anglen2, this%get_nzeta(), 1.0_dp,         &
+                 xuv, this%get_ntheta())
+#endif
+#else
       IF (.not.BTEST(dflag, b_sum)) THEN
          xuv(:,:) = 0
       END IF
@@ -983,19 +1303,19 @@
 !  First do the n = 0 mode.
       IF (.not.BTEST(dflag, b_dv)) THEN
          IF (parity .eq. f_cos) THEN
-            DO j = 1, SIZE(xuv, 2) !  nzeta
+            DO j = 1, this%get_nzeta()
                xuv(:,j) = this%workin1(:,n0) + xuv(:,j)
             END DO
          ELSE
-            DO j = 1, SIZE(xuv, 2) !  nzeta
+            DO j = 1, this%get_nzeta()
                xuv(:,j) = this%workin2(:,n0) + xuv(:,j)
             END DO
          END IF
       END IF
 
 !  Sum over remaining toroidal modes.
-      DO n = n1, UBOUND(this%cosnv, 2) !  ntor
-         DO j = 1, SIZE(xuv, 2) !  nzeta
+      DO n = n1, this%get_ntor()
+         DO j = 1, this%get_nzeta()
             xuv(:,j) = xuv(:,j)                                                &
                      + nsign1*(this%workin1(:,n) +                             &
                                nsign3*this%workin1(:,-n))*anglen1(j,n)         &
@@ -1003,6 +1323,7 @@
                                nsign3*this%workin2(:,-n))*anglen2(j,n)
          END DO
       END DO
+#endif
 
       END SUBROUTINE
 

@@ -19,6 +19,16 @@ target_link_libraries (xsiesta PUBLIC siesta)
 
 add_subdirectory (Sources)
 
+#  Enable blas routines for Fourier transforms.
+OPTION (USE_BLAS_FOURIER "Use BLAS routines for Fourier transforms." OFF)
+
+target_compile_definitions (siesta
+
+                            PUBLIC
+
+                            $<$<BOOL:${USE_BLAS_FOURIER}>:BLAS_FOURIER>
+)
+
 install (TARGETS xsiesta)
 
 ################################################################################
