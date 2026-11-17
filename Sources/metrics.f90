@@ -285,12 +285,12 @@
       n = IOR(sum_f, f_dv)
 
       CALL fourier_context%toijsp(rmn, r1_i, sum_f, rmode)
-      CALL fourier_context%toijsp(rmn, ru_i, m,   rmode)
-      CALL fourier_context%toijsp(rmn, rv_i, n,   rmode)
+      CALL fourier_context%toijsp(rmn, ru_i, m,     rmode)
+      CALL fourier_context%toijsp(rmn, rv_i, n,     rmode)
 
       CALL fourier_context%toijsp(zmn, z1_i, sum_f, zmode)
-      CALL fourier_context%toijsp(zmn, zu_i, m,   zmode)
-      CALL fourier_context%toijsp(zmn, zv_i, n,   zmode)
+      CALL fourier_context%toijsp(zmn, zu_i, m,     zmode)
+      CALL fourier_context%toijsp(zmn, zv_i, n,     zmode)
 
       END SUBROUTINE
 

@@ -719,7 +719,7 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
 !>  @param[in]    parity Fourier parity flag.
 !-------------------------------------------------------------------------------
 #ifndef BLAS_FOURIER
-      PURE
+      PURE                                                                     &
 #endif
       SUBROUTINE fourier_tomnsp_2d(this, xuv, xmn, parity)
 
@@ -754,7 +754,7 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
 !>  @param[in]    asym   Add stellarator asymmetric terms.
 !-------------------------------------------------------------------------------
 #ifndef BLAS_FOURIER
-      PURE
+      PURE                                                                     &
 #endif
       SUBROUTINE fourier_tomnsp_2d_pest(this, xuv, xmn, lambda, dupdu, parity, &
                                         asym)
@@ -789,7 +789,7 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
 !>  @param[in]    xuv  Real space quantity.
 !-------------------------------------------------------------------------------
 #ifndef BLAS_FOURIER
-      PURE
+      PURE                                                                     &
 #endif
       SUBROUTINE fourier_tomnsp_2d_u(this, xuv)
 #ifdef BLAS_FOURIER
@@ -940,7 +940,7 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
 !>  @param[in]  parity Fourier parity flag.
 !-------------------------------------------------------------------------------
 #ifndef BLAS_FOURIER
-      PURE
+      PURE                                                                     &
 #endif
       SUBROUTINE fourier_tomnsp_2d_v(this, xmn, parity)
 
@@ -993,16 +993,16 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
       END IF
 #else
       IF (parity .eq. f_cos) THEN
-         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj1, j, this%cosnv, j, &
+         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj1, m, this%cosnv, j, &
                     0.0_dp, xmn, m)
-         CALL DGEMM('N', 'N', m, n, j, -1.0_dp, this%workmj2, j, this%sinnv,   &
-                    n, 1.0_dp, xmn, m)
+         CALL DGEMM('N', 'N', m, n, j, -1.0_dp, this%workmj2, m, this%sinnv,   &
+                    j, 1.0_dp, xmn, m)
          xmn(m0 + moff,:-n1 + noff + this%get_ntor()) = zero
       ELSE
-         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj2, j, this%cosnv, j, &
+         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj2, m, this%cosnv, j, &
                     0.0_dp, xmn, m)
-         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj1, j, this%sinnv,    &
-                    n, 1.0_dp, xmn, m)
+         CALL DGEMM('N', 'N', m, n, j, 1.0_dp, this%workmj1, m, this%sinnv,    &
+                    j, 1.0_dp, xmn, m)
          xmn(m0 + moff,:n0 + noff + this%get_ntor()) = zero
       END IF
 #endif
@@ -1146,7 +1146,7 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
 !>  @param[in]    parity Fourier parity flag.
 !-------------------------------------------------------------------------------
 #ifndef BLAS_FOURIER
-      PURE
+      PURE                                                                     &
 #endif
       SUBROUTINE fourier_toijsp_2d(this, xmn, xuv, dflag, parity)
 #ifdef BLAS_FOURIER
@@ -1175,6 +1175,7 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
       REAL (dp)                                :: msign
       REAL (dp)                                :: nsign1
       REAL (dp)                                :: nsign2
+      REAL (dp)                                :: nsign3
 #else
       INTEGER                                  :: j
       INTEGER                                  :: m
@@ -1210,10 +1211,10 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
                  this%get_mpol_size(), 0.0_dp,                                 &
                  this%workin1(1,-this%get_ntor()), this%get_ntheta())
       CALL DGEMM('N', 'N', this%get_ntheta(), this%get_ntor_size(),            &
-                 this%get_mpol_size(), 1.0_dp, anglem1(1,m0),                  &
+                 this%get_mpol_size(), 1.0_dp, anglem2(1,m0),                  &
                  this%get_ntheta(), this%tempmn(m0,-this%get_ntor()),          &
                  this%get_mpol_size(), 0.0_dp,                                 &
-                 this%workin1(1,-this%get_ntor()), this%get_ntheta())
+                 this%workin2(1,-this%get_ntor()), this%get_ntheta())
 #else
       CALL DGEMM('N', 'N', this%get_ntheta(), this%get_ntor_size(),            &
                  this%get_mpol_size(), msign, anglem1, this%get_ntheta(),      &
@@ -1242,7 +1243,13 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
 #endif
 
       IF (parity .eq. f_cos) THEN
-#ifndef BLAS_FOURIER
+#ifdef BLAS_FOURIER
+         IF (BTEST(dflag, b_sum)) THEN
+            nsign3 = 1
+         ELSE
+            nsign3 = 0
+         END IF
+#else
          nsign3 = 1
 #endif
          IF (BTEST(dflag, b_dv)) THEN
@@ -1257,7 +1264,13 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
             nsign2 = -1
          END IF
       ELSE
-#ifndef BLAS_FOURIER
+#ifdef BLAS_FOURIER
+         IF (BTEST(dflag, b_sum)) THEN
+            nsign3 = 1
+         ELSE
+            nsign3 = 0
+         END IF
+#else
          nsign3 = -1
 #endif
          IF (BTEST(dflag, b_dv)) THEN
@@ -1278,7 +1291,7 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
       CALL DGEMM('N', 'T', this%get_ntheta(), this%get_nzeta(),                &
                  this%get_ntor_size(), nsign1,                                 &
                  this%workin1(1,-this%get_ntor()), this%get_ntheta(),          &
-                 anglen1(1,-this%get_ntor()), this%get_nzeta(), 0.0_dp,        &
+                 anglen1(1,-this%get_ntor()), this%get_nzeta(), nsign3,        &
                  xuv(1,1), this%get_ntheta())
       CALL DGEMM('N', 'T', this%get_ntheta(), this%get_nzeta(),                &
                  this%get_ntor_size(), nsign2,                                 &
@@ -1288,7 +1301,7 @@ fourier_get_nzeta = SIZE(this%cosnv, 1)
 #else
       CALL DGEMM('N', 'T', this%get_ntheta(), this%get_nzeta(),                &
                  this%get_ntor_size(), nsign1, this%workin1,                   &
-                 this%get_ntheta(), anglen1, this%get_nzeta(), 0.0_dp,         &
+                 this%get_ntheta(), anglen1, this%get_nzeta(), nsign3,         &
                  xuv, this%get_ntheta())
       CALL DGEMM('N', 'T', this%get_ntheta(), this%get_nzeta(),                &
                  this%get_ntor_size(), nsign2, this%workin2,                   &
